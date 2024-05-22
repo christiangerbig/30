@@ -214,7 +214,7 @@ vp1_data_fetch_width           EQU vp1_pixel_per_line/8
 vp1_pf1_plane_moduli           EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+extra_pf1_plane_width-vp1_data_fetch_width
 
 BPLCON0BITS                    EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) ;lores
-BPLCON3BITS1                   EQU BPLCON3F_BRDSPRT+BPLCON3F_SPRES0
+BPLCON3BITS1                   EQU BPLCON3F_SPRES0
 BPLCON3BITS2                   EQU BPLCON3BITS1+BPLCON3F_LOCT
 BPLCON4BITS                    EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)+(BPLCON4F_ESPRM4*spr_even_color_table_select)
 DIWHIGHBITS                    EQU (((display_window_HSTOP&$100)>>8)*DIWHIGHF_HSTOP8)+(((display_window_VSTOP&$700)>>8)*DIWHIGHF_VSTOP8)+(((display_window_HSTART&$100)>>8)*DIWHIGHF_HSTART8)+((display_window_VSTART&$700)>>8)
@@ -229,9 +229,13 @@ vp1_BPLCON3BITS2               EQU vp1_BPLCON3BITS1+BPLCON3F_LOCT
 vp1_BPLCON4BITS                EQU BPLCON4BITS
 vp1_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp1_COLOR00BITS                EQU COLOR00BITS
+vp1_COLOR01HIGHBITS            EQU $012
+vp1_COLOR01LOWBITS             EQU $012
 
-cl2_HSTART                     EQU $00
-cl2_VSTART                     EQU beam_position&$ff
+cl2_HSTART1                    EQU $00
+cl2_VSTART1                    EQU MINROW
+cl2_HSTART2                    EQU $00
+cl2_VSTART2                    EQU beam_position&$ff
 
 ; **** PT-Replay ****
 pt_fade_out_delay              EQU 2 ;Ticks
@@ -330,6 +334,20 @@ cl2_ext1_BPL1PTL    RS.L 1
 
 cl2_extension1_SIZE RS.B 0
 
+
+  RSRESET
+
+cl2_extension2        RS.B 0
+
+cl2_ext2_WAIT         RS.L 1
+cl2_ext2_BPLCON3_1    RS.L 1
+cl2_ext2_COLOR01_high RS.L 1
+cl2_ext2_BPLCON3_2    RS.L 1
+cl2_ext2_COLOR01_low  RS.L 1
+
+cl2_extension2_SIZE   RS.B 0
+
+
   RSRESET
 
 cl2_begin            RS.B 0
@@ -338,6 +356,7 @@ cl2_begin            RS.B 0
 cl2_extension1_entry RS.B cl2_extension1_SIZE
 cl2_WAIT1            RS.L 1
 cl2_BPLCON0_1        RS.L 1
+cl2_extension2_entry RS.B cl2_extension2_SIZE*vp1_visible_lines_number
 
 cl1_WAIT1            RS.L 1
 cl1_WAIT2            RS.L 1
@@ -735,7 +754,6 @@ init_sprites
   CNOP 0,4
 init_first_copperlist
   move.l  cl1_display(a3),a0
-  move.l  a0,$140000
   bsr.s   cl1_init_playfield_registers
   bsr     cl1_init_sprite_pointers
   bsr     cl1_init_color_registers
@@ -771,10 +789,12 @@ init_second_copperlist
   bsr     cl2_vp1_init_bitplane_pointers
   COPWAIT 0,vp1_VSTART
   COPMOVEQ vp1_BPLCON0BITS,BPLCON0
+  bsr     cl2_vp1_init_COLOR01_registers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copint
   COPLISTEND
   bsr     cl2_vp1_set_bitplane_pointers
+  bsr     cl2_vp1_set_color_gradient
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
   bra     swap_vp1_playfield1
@@ -793,7 +813,27 @@ cl2_vp1_init_bitplane_pointers_loop
   dbf     d7,cl2_vp1_init_bitplane_pointers_loop
   rts
 
-  COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART,YWRAP
+  CNOP 0,4
+cl2_vp1_init_COLOR01_registers
+  move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
+  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS1,d1 ;High-Werte
+  move.l  #(COLOR01<<16)|vp1_COLOR01HIGHBITS,d2
+  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS2,d3 ;Low-RGB-Werte
+  move.l  #(COLOR01<<16)|vp1_COLOR01LOWBITS,d4
+  moveq   #1,d6
+  ror.l   #8,d6              ;$01000000 Additionswert
+  MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
+cl2_vp1__init_COLOR01_registers_loop
+  move.l  d0,(a0)+           ;WAIT x,y
+  move.l  d1,(a0)+           ;High-Werte
+  move.l  d2,(a0)+           ;COLOR01
+  move.l  d3,(a0)+           ;Low-Werte
+  add.l   d6,d0              ;nächste Zeile
+  move.l  d4,(a0)+           ;COLOR01
+  dbf     d7,cl2_vp1__init_COLOR01_registers_loop
+  rts
+
+  COP_INIT_COPINT cl2,cl2_HSTART2,cl2_VSTART2,YWRAP
 
   CNOP 0,4
 cl2_vp1_set_bitplane_pointers
@@ -806,6 +846,25 @@ cl2_vp1_set_bitplane_pointers_loop
   addq.w  #8,a0              ;nächter Playfieldzeiger
   move.w  (a1)+,4-8(a0)      ;Low-Wert
   dbf     d7,cl2_vp1_set_bitplane_pointers_loop
+  rts
+
+  CNOP 0,4
+cl2_vp1_set_color_gradient
+  move.w  #$0f0f,d3          ;RGB-Maske
+  lea     hst_color_gradient(pc),a0
+  move.l  cl2_construction2(a3),a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR01_high+2,a1
+  move.w  #cl2_extension2_SIZE,a2
+  MOVEF.W vp1_visible_lines_number-1,d7
+cl2_vp1_set_color_gradient_loop
+  move.l  (a0)+,d0
+  move.l  d0,d2
+  RGB8_TO_RGB4HI d0,d1,d3
+  move.w  d0,(a1)            ;High-Werte
+  RGB8_TO_RGB4LO d2,d1,d3
+  move.w  d2,cl2_ext2_COLOR01_low-cl2_ext2_COLOR01_high(a1) ;Low-Werte
+  add.l   a2,a1
+  dbf     d7,cl2_vp1_set_color_gradient_loop
   rts
 
   COPY_COPPERLIST cl2,2
@@ -1102,6 +1161,9 @@ spr_pointers_display
   INCLUDE "music-tracker/pt-finetune-starts-table.i"
 
 ; **** Horiz-Scrolltext ****
+hst_color_gradient
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/26-Colorgradient.ct"
+
 ; ** ASCII-Buchstaben **
 ; ----------------------
 hst_ASCII

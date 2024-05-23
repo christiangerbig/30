@@ -7,20 +7,21 @@ VP2=2 Bitplanes (Schachbrett) 48 Zeilen
 
 V-Blank:
 Copper initialisiert DIWSTR/DIWSTOP/DIWHIGH
-Copper initialisiert SPR0-7 und Spritefarben COLOR48-63 (BPLCON4:ESPRM/OSPRM=4) Bits von BPLCON3/BPLCON4 werden von VP1-3 übernommen
-Copper initialisiert BP1-2 und COLOR02-03 für VP1
+Copper initialisiert SPR0-7 und Spritefarben COLOR32-47 (BPLCON4:ESPRM/OSPRM=4) Bits von BPLCON3/BPLCON4 werden von VP1-3 übernommen
+Copper initialisiert Bar-Farben: COLOR48-95 (1x3) / 48-239 (4x3)
 Copper initialisiert DDFSTRT/DDFSTOP für VP1
-Copper initialisiert BPLCON0/1/2/3/4 und FMODE für VP1
+Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD und FMODE für VP1
+Copper initialisiert BP1 für VP1
 Copper initialisiert BP3/5/7 für VP2
-Copper initialisiert alle Farben für VP2 COLOR16-31(PF1)/32-38(PF2) (Zugriff über BPLCON4 für VP2)
+Copper initialisiert alle Farben für VP2 COLOR00-15(PF1)/16-31(PF2) (Zugriff über BPLCON4 für VP2)
 
-H-Blank (17 CMOVEs, CWAIT schon zum Zeilenende der vorherigen Zeile):
+H-Blank (18 CMOVEs, CWAIT schon zum Zeilenende der vorherigen Zeile):
 Copper initialisiert BP1/2/4/6 für VP2
 Copper initialisiert DDFSTRT/DDFSTOP für VP2
-Copper initialisiert BPLCON0/1/2/3/4 und FMODE für VP2 (BPLCON3:PF2PRI&PF2OF=4, BPLCON4:BPLAM=16)
+Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD, BPL2MOD und FMODE für VP2 (BPLCON3:PF2PRI&PF2OF=4, BPLCON4:BPLAM=16)
 
-H-Blank (13 CMOVEs):
-Copper initialisiert BP1-2 für VP3
+H-Blank (20 CMOVEs), CWAIT schon zum Zeilenende der vorherigen Zeile):
+Copper initialisiert BP1/3/5/2/4 für VP3
 Copper initialisiert DDFSTRT/DDFSTOP für VP3
-Copper initialisiert BPLCON0/1/2/3/4 und FMODE für VP3
+Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD, BPL2MOD und FMODE für VP3
 

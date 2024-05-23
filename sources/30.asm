@@ -138,8 +138,8 @@ spr_x_size1                    EQU 0
 spr_x_size2                    EQU 64
 spr_depth                      EQU 2
 spr_colors_number              EQU 16
-spr_odd_color_table_select     EQU 1
-spr_even_color_table_select    EQU 1
+spr_odd_color_table_select     EQU 2
+spr_even_color_table_select    EQU 2
 spr_used_number                EQU 8
 
   IFD pt_v2.3a
@@ -344,6 +344,7 @@ cl2_ext2_BPLCON3_1    RS.L 1
 cl2_ext2_COLOR01_high RS.L 1
 cl2_ext2_BPLCON3_2    RS.L 1
 cl2_ext2_COLOR01_low  RS.L 1
+cl2_ext2_BPLCON4      RS.L 1
 
 cl2_extension2_SIZE   RS.B 0
 
@@ -767,11 +768,14 @@ init_first_copperlist
   CNOP 0,4
 cl1_init_color_registers
   COP_INIT_COLORHI COLOR00,1,pf1_color_table
-  COP_INIT_COLORHI COLOR16,16,spr_color_table
+  COP_SELECT_COLORHI_BANK 1
+  COP_INIT_COLORHI COLOR00,16,spr_color_table
 
+  COP_INIT_COLORLO COLOR00,1,pf1_color_table
   COP_SELECT_COLORLO_BANK 0
   COP_INIT_COLORLO COLOR00,1,pf1_color_table
-  COP_INIT_COLORLO COLOR16,16,spr_color_table
+  COP_SELECT_COLORLO_BANK 1
+  COP_INIT_COLORLO COLOR00,16,spr_color_table
   rts
 
   COP_INIT_BITPLANE_POINTERS cl1
@@ -789,12 +793,12 @@ init_second_copperlist
   bsr     cl2_vp1_init_bitplane_pointers
   COPWAIT 0,vp1_VSTART
   COPMOVEQ vp1_BPLCON0BITS,BPLCON0
-  bsr     cl2_vp1_init_COLOR01_registers
+  bsr     cl2_vp1_init_colorgradient_registers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copint
   COPLISTEND
   bsr     cl2_vp1_set_bitplane_pointers
-  bsr     cl2_vp1_set_color_gradient
+  bsr     cl2_vp1_set_colorgradient
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
   bra     swap_vp1_playfield1
@@ -814,23 +818,25 @@ cl2_vp1_init_bitplane_pointers_loop
   rts
 
   CNOP 0,4
-cl2_vp1_init_COLOR01_registers
+cl2_vp1_init_colorgradient_registers
   move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS1,d1 ;High-Werte
   move.l  #(COLOR01<<16)|vp1_COLOR01HIGHBITS,d2
   move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS2,d3 ;Low-RGB-Werte
   move.l  #(COLOR01<<16)|vp1_COLOR01LOWBITS,d4
+  move.l  #(BPLCON4<<16)|vp1_BPLCON4BITS,d5
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
-cl2_vp1__init_COLOR01_registers_loop
+cl2_vp1_init_colorgradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
   move.l  d1,(a0)+           ;High-Werte
   move.l  d2,(a0)+           ;COLOR01
   move.l  d3,(a0)+           ;Low-Werte
-  add.l   d6,d0              ;nächste Zeile
   move.l  d4,(a0)+           ;COLOR01
-  dbf     d7,cl2_vp1__init_COLOR01_registers_loop
+  add.l   d6,d0              ;nächste Zeile
+  move.l  d5,(a0)+           ;BPLCON4
+  dbf     d7,cl2_vp1_init_colorgradient_registers_loop
   rts
 
   COP_INIT_COPINT cl2,cl2_HSTART2,cl2_VSTART2,YWRAP
@@ -849,14 +855,14 @@ cl2_vp1_set_bitplane_pointers_loop
   rts
 
   CNOP 0,4
-cl2_vp1_set_color_gradient
+cl2_vp1_set_colorgradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR01_high+2,a1
   move.w  #cl2_extension2_SIZE,a2
   MOVEF.W vp1_visible_lines_number-1,d7
-cl2_vp1_set_color_gradient_loop
+cl2_vp1_set_colorgradient_loop
   move.l  (a0)+,d0
   move.l  d0,d2
   RGB8_TO_RGB4HI d0,d1,d3
@@ -864,7 +870,7 @@ cl2_vp1_set_color_gradient_loop
   RGB8_TO_RGB4LO d2,d1,d3
   move.w  d2,cl2_ext2_COLOR01_low-cl2_ext2_COLOR01_high(a1) ;Low-Werte
   add.l   a2,a1
-  dbf     d7,cl2_vp1_set_color_gradient_loop
+  dbf     d7,cl2_vp1_set_colorgradient_loop
   rts
 
   COPY_COPPERLIST cl2,2

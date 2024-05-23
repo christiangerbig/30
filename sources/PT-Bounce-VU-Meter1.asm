@@ -256,8 +256,9 @@ pt_fade_out_delay          EQU 2 ;Ticks
 
 ; **** Bounce-VU-Meter ****
 bvm_bar_height             EQU 6
-bvm_max_amplitude          EQU 22-bvm_bar_height
-bvm_y_centre               EQU 22-bvm_bar_height
+bvm_bar_field_height       EQU 26
+bvm_max_amplitude          EQU bvm_bar_field_height-bvm_bar_height
+bvm_y_centre               EQU bvm_bar_field_height-bvm_bar_height
 bvm_y_angle_speed          EQU 4
 
 

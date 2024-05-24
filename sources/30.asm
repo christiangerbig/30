@@ -79,7 +79,7 @@ pt_finetune                    EQU FALSE
   IFD pt_v3.0b
 pt_metronome                   EQU FALSE
   ENDC
-pt_track_channel_volumes       EQU FALSE
+pt_track_channel_volumes       EQU TRUE
 pt_track_channel_periods       EQU FALSE
 pt_music_fader                 EQU TRUE
 pt_split_module                EQU TRUE
@@ -110,7 +110,7 @@ pf1_depth2                     EQU 0
 pf1_x_size3                    EQU 0
 pf1_y_size3                    EQU 0
 pf1_depth3                     EQU 0
-pf1_colors_number              EQU 1
+pf1_colors_number              EQU 240
 
 pf2_x_size1                    EQU 0
 pf2_y_size1                    EQU 0
@@ -188,7 +188,7 @@ display_window_HSTART          EQU HSTART_320_pixel
 display_window_VSTART          EQU MINROW
 DIWSTRTBITS                    EQU ((display_window_VSTART&$ff)*DIWSTRTF_V0)+(display_window_HSTART&$ff)
 display_window_HSTOP           EQU HSTOP_320_pixel
-display_window_VSTOP           EQU VSTOP_256_lines
+display_window_VSTOP           EQU MINROW+26 ;VSTOP_256_lines
 DIWSTOPBITS                    EQU ((display_window_VSTOP&$ff)*DIWSTOPF_V0)+(display_window_HSTOP&$ff)
 
 spr_pixel_per_datafetch        EQU 64 ;4x
@@ -237,6 +237,8 @@ cl2_VSTART1                    EQU MINROW
 cl2_HSTART2                    EQU $00
 cl2_VSTART2                    EQU beam_position&$ff
 
+sine_table_length              EQU 256
+
 ; **** PT-Replay ****
 pt_fade_out_delay              EQU 2 ;Ticks
 
@@ -271,6 +273,13 @@ hst_text_characters_number     EQU hst_horiz_scroll_window_x_size/hst_text_chara
 
 hst_text_x_position            EQU 32
 hst_text_y_position            EQU 0
+
+; **** Bounce-VU-Meter ****
+bvm_bar_height                 EQU 6
+bvm_bars_number                EQU 4
+bvm_max_amplitude              EQU vp1_visible_lines_number-bvm_bar_height
+bvm_y_centre                   EQU vp1_visible_lines_number-bvm_bar_height
+bvm_y_angle_speed              EQU 4
 
 
 vp1_pf1_bitplanes_x_offset     EQU 1*vp1_pf_pixel_per_datafetch
@@ -638,6 +647,18 @@ variables_SIZE             RS.B 0
 ; ---------------------------------
   INCLUDE "music-tracker/pt-temp-channel-structure.i"
 
+; **** Bounce-VU-Meter ****
+; ** Structure for channel info **
+; --------------------------------
+  RSRESET
+
+bvm_audchaninfo      RS.B 0
+
+bvm_aci_yangle       RS.W 1
+bvm_aci_amplitude    RS.W 1
+
+bvm_audchaninfo_SIZE RS.B 0
+
 
 ; ## Beginn des Initialisierungsprogramms ##
 ; ------------------------------------------
@@ -686,6 +707,8 @@ init_all
   bsr     hst_init_characters_offsets
   bsr     hst_init_characters_x_positions
   bsr     hst_init_characters_images
+  bsr     bvm_init_audio_channel_info_tables
+  bsr     bvm_init_color_table
   bsr     init_first_copperlist
   bra     init_second_copperlist
 
@@ -720,7 +743,6 @@ init_CIA_timers
     PT_INIT_FINETUNING_PERIOD_TABLE_STARTS
   ENDC
 
-
 ; ** Sprites initialisieren **
 ; ----------------------------
   CNOP 0,4
@@ -749,6 +771,48 @@ init_sprites
 ; --------------------------------
   INIT_CHARACTERS_IMAGES hst
 
+; **** Bouncing-VU-Meter ****
+; ** Audiochannel-Info-Tabellen initialisieren **
+; -----------------------------------------------
+  CNOP 0,4
+bvm_init_audio_channel_info_tables
+  lea     bvm_audio_channel1_info(pc),a0
+  moveq   #sine_table_length/4,d0 ;90 Grad = Maximaler Ausschlag der Sinuskurve
+  move.w  d0,(a0)+           ;Y-Winkel
+  moveq   #TRUE,d1
+  move.w  d1,(a0)            ;Amplitude = 0
+  lea     bvm_audio_channel2_info(pc),a0
+  move.w  d0,(a0)+
+  move.w  d1,(a0)
+  lea     bvm_audio_channel3_info(pc),a0
+  move.w  d0,(a0)+
+  move.w  d1,(a0)
+  lea     bvm_audio_channel4_info(pc),a0
+  move.w  d0,(a0)+
+  move.w  d1,(a0)
+  rts
+
+; ** Farbwerte der Bar initialisieren **
+; --------------------------------------
+  CNOP 0,4
+bvm_init_color_table
+  move.l  #COLOR00BITS,d1
+  lea     bvm_color_gradients(pc),a0 ;Quelle Farbverlauf
+  lea     bvm_color_table(pc),a1 ;Ziel
+  moveq   #bvm_bars_number-1,d7 ;Anzahl der Abschnitte
+bvm_init_color_table_loop1
+  moveq   #(bvm_bar_height/2)-1,d6 ;Anzahl der Zeilen
+bvm_init_color_table_loop2
+  move.l  (a0)+,d0           ;RGB8-Farbwert
+  move.l  d1,(a1)+           ;COLOR00
+  moveq   #(spr_colors_number-1)-1,d5 ;Anzahl der Farbwerte pro Palettenabschnitt
+bvm_init_color_table_loop3
+  move.l  d0,(a1)+           ;Farbwert eintragen
+  dbf     d5,bvm_init_color_table_loop3
+  dbf     d6,bvm_init_color_table_loop2
+  dbf     d7,bvm_init_color_table_loop1
+  rts
+
 
 ; ** 1. Copperliste initialisieren **
 ; -----------------------------------
@@ -770,12 +834,38 @@ cl1_init_color_registers
   COP_INIT_COLORHI COLOR00,1,pf1_color_table
   COP_SELECT_COLORHI_BANK 1
   COP_INIT_COLORHI COLOR00,16,spr_color_table
+  COP_INIT_COLORHI COLOR16,16,bvm_color_table
+  COP_SELECT_COLORHI_BANK 2
+  COP_INIT_COLORHI COLOR00,32
+  COP_SELECT_COLORHI_BANK 3
+  COP_INIT_COLORHI COLOR00,32
+  COP_SELECT_COLORHI_BANK 4
+  COP_INIT_COLORHI COLOR00,32
+  COP_SELECT_COLORHI_BANK 5
+  COP_INIT_COLORHI COLOR00,32
+  COP_SELECT_COLORHI_BANK 6
+  COP_INIT_COLORHI COLOR00,32
+  COP_SELECT_COLORHI_BANK 7
+  COP_INIT_COLORHI COLOR00,16
 
   COP_INIT_COLORLO COLOR00,1,pf1_color_table
   COP_SELECT_COLORLO_BANK 0
   COP_INIT_COLORLO COLOR00,1,pf1_color_table
   COP_SELECT_COLORLO_BANK 1
   COP_INIT_COLORLO COLOR00,16,spr_color_table
+  COP_INIT_COLORLO COLOR16,16,bvm_color_table
+  COP_SELECT_COLORLO_BANK 2
+  COP_INIT_COLORLO COLOR00,32
+  COP_SELECT_COLORLO_BANK 3
+  COP_INIT_COLORLO COLOR00,32
+  COP_SELECT_COLORLO_BANK 4
+  COP_INIT_COLORLO COLOR00,32
+  COP_SELECT_COLORLO_BANK 5
+  COP_INIT_COLORLO COLOR00,32
+  COP_SELECT_COLORLO_BANK 6
+  COP_INIT_COLORLO COLOR00,32
+  COP_SELECT_COLORLO_BANK 7
+  COP_INIT_COLORLO COLOR00,16
   rts
 
   COP_INIT_BITPLANE_POINTERS cl1
@@ -793,12 +883,12 @@ init_second_copperlist
   bsr     cl2_vp1_init_bitplane_pointers
   COPWAIT 0,vp1_VSTART
   COPMOVEQ vp1_BPLCON0BITS,BPLCON0
-  bsr     cl2_vp1_init_colorgradient_registers
+  bsr     cl2_vp1_init_color_gradient_registers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copint
   COPLISTEND
   bsr     cl2_vp1_set_bitplane_pointers
-  bsr     cl2_vp1_set_colorgradient
+  bsr     cl2_vp1_set_color_gradient
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
   bra     swap_vp1_playfield1
@@ -818,7 +908,7 @@ cl2_vp1_init_bitplane_pointers_loop
   rts
 
   CNOP 0,4
-cl2_vp1_init_colorgradient_registers
+cl2_vp1_init_color_gradient_registers
   move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS1,d1 ;High-Werte
   move.l  #(COLOR01<<16)|vp1_COLOR01HIGHBITS,d2
@@ -828,7 +918,7 @@ cl2_vp1_init_colorgradient_registers
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
-cl2_vp1_init_colorgradient_registers_loop
+cl2_vp1_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
   move.l  d1,(a0)+           ;High-Werte
   move.l  d2,(a0)+           ;COLOR01
@@ -836,7 +926,7 @@ cl2_vp1_init_colorgradient_registers_loop
   move.l  d4,(a0)+           ;COLOR01
   add.l   d6,d0              ;nächste Zeile
   move.l  d5,(a0)+           ;BPLCON4
-  dbf     d7,cl2_vp1_init_colorgradient_registers_loop
+  dbf     d7,cl2_vp1_init_color_gradient_registers_loop
   rts
 
   COP_INIT_COPINT cl2,cl2_HSTART2,cl2_VSTART2,YWRAP
@@ -855,14 +945,14 @@ cl2_vp1_set_bitplane_pointers_loop
   rts
 
   CNOP 0,4
-cl2_vp1_set_colorgradient
+cl2_vp1_set_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR01_high+2,a1
   move.w  #cl2_extension2_SIZE,a2
   MOVEF.W vp1_visible_lines_number-1,d7
-cl2_vp1_set_colorgradient_loop
+cl2_vp1_set_color_gradient_loop
   move.l  (a0)+,d0
   move.l  d0,d2
   RGB8_TO_RGB4HI d0,d1,d3
@@ -870,7 +960,7 @@ cl2_vp1_set_colorgradient_loop
   RGB8_TO_RGB4LO d2,d1,d3
   move.w  d2,cl2_ext2_COLOR01_low-cl2_ext2_COLOR01_high(a1) ;Low-Werte
   add.l   a2,a1
-  dbf     d7,cl2_vp1_set_colorgradient_loop
+  dbf     d7,cl2_vp1_set_color_gradient_loop
   rts
 
   COPY_COPPERLIST cl2,2
@@ -910,6 +1000,9 @@ beam_routines
   bsr     swap_vp1_playfield1
   bsr     horiz_scrolltext
   bsr     hst_horiz_scroll
+  bsr     bvm_get_channels_amplitudes
+  bsr     bvm_clear_second_copperlist
+  bsr     bvm_set_bars
   IFEQ pt_music_fader
     bsr     pt_mouse_handler
   ENDC
@@ -1027,6 +1120,98 @@ hst_horiz_scroll
   move.w  #(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth*64)+(hst_horiz_scroll_window_x_size/16),BLTSIZE-DMACONR(a6) ;Blitter starten
   rts
 
+; ** Amplituden der einzelnen Kanäle in Erfahrung bringen **
+; ----------------------------------------------------------
+  CNOP 0,4
+bvm_get_channels_amplitudes
+  MOVEF.W bvm_max_amplitude,d2
+  moveq   #sine_table_length/4,d3
+  lea	  pt_audchan1temp(pc),a0 ;Zeiger auf temporäre Struktur des 1. Kanals
+  lea     bvm_audio_channel1_info(pc),a1
+  bsr.s   bvm_get_channel_amplitude
+  lea	  pt_audchan2temp(pc),a0 ;Zeiger auf temporäre Struktur des 2. Kanals
+  bsr.s   bvm_get_channel_amplitude
+  lea	  pt_audchan3temp(pc),a0 ;Zeiger auf temporäre Struktur des 3. Kanals
+  bsr.s   bvm_get_channel_amplitude
+  lea	  pt_audchan4temp(pc),a0 ;Zeiger auf temporäre Struktur des 4. Kanals
+
+; ** Routine get-channel-amplitude **
+; d2 ... Maximale Amplitude
+; d3 ... Y-Winkel 90 Grad
+; a0 ... Temporäre Struktur des Audiokanals
+; a1 ... Zeiger auf Amplitudenwert des Kanals
+bvm_get_channel_amplitude
+  tst.b   n_note_trigger(a0) ;Neue Note angespielt ?
+  bne.s   bvm_no_get_channel_amplitude ;Nein -> verzweige
+  moveq   #TRUE,d0           ;NULL wegen Wortzugriff
+  move.b  n_volume(a0),d0    ;Aktuelle Lautstärke
+  moveq   #FALSE,d1
+  move.b  d1,n_note_trigger(a0) ;Note Trigger Flag zurücksetzen
+  MULUF.W bvm_max_amplitude,d0,d1 ;Aktuelle Lautstärke * maximale Amplitude
+  lsr.w   #6,d0              ;/maximale Lautstärke
+  cmp.w	  d2,d0              ;Amplitude <= maximale Amplitude ?
+  ble.s   bvm_set_amplitude  ;Ja -> verzweige
+  move.w  d2,d0              ;Maximale Amplitude setzen
+bvm_set_amplitude
+  move.w  d3,(a1)+           ;Y-Winkel retten
+  move.w  d0,(a1)+           ;Amplitudenwert retten
+bvm_no_get_channel_amplitude
+  rts
+
+; ** Switchwerte in Copperliste löschen **
+; ----------------------------------------
+  CNOP 0,4
+bvm_clear_second_copperlist
+  MOVEF.W vp1_BPLCON4BITS&FALSEB,d0
+  move.l  cl2_construction2(a3),a0
+  ADDF.W  cl2_extension2_entry+cl2_ext2_BPLCON4+3,a0
+  move.w  #cl2_extension2_SIZE,a1
+  moveq   #vp1_visible_lines_number-1,d7
+bvm_clear_second_copperlist_loop
+  move.b  d0,(a0)            ;BPLCON4-Low
+  add.l   a1,a0              ;nächste Rasterzeile
+  dbf     d7,bvm_clear_second_copperlist_loop
+  rts
+
+; ** Bars darstellen **
+; ---------------------
+  CNOP 0,4
+bvm_set_bars
+  movem.l a3-a6,-(a7)
+  moveq   #(sine_table_length/2)-1,d5
+  lea     sine_table(pc),a0  
+  lea     bvm_audio_channel1_info(pc),a1 ;Zeiger auf Amplitude und Y-Winkeldes Kanals
+  lea     bvm_switch_table(pc),a4 ;Zeiger auf Switchtabelle
+  move.l  cl2_construction2(a3),a5 ;CL
+  ADDF.W  cl2_extension2_entry+cl2_ext2_BPLCON4+3,a5
+  move.w  #bvm_y_centre,a3
+  move.w  #cl2_extension2_SIZE,a6
+  moveq   #bvm_bars_number-1,d7 ;Anzahl der Bars
+bvm_set_bars_loop1
+  move.w  (a1)+,d3           ;Y-Winkel
+  move.w  (a0,d3.w*2),d0     ;sin(w)
+  addq.w  #bvm_y_angle_speed,d3 ;nächster Y-Winkel
+  muls.w  (a1)+,d0           ;y'=(yr*sin(w))/2^15
+  MULUF.L 2,d0
+  swap    d0
+  cmp.w   d5,d3              ;180 Grad erreicht ?
+  ble.s   bvm_y_angle_ok     ;Nein -> verzweige
+  lsr.w   -2(a1)             ;Amplitude/2
+bvm_y_angle_ok
+  and.w   d5,d3              ;Überlauf bei 180 Grad
+  move.w  d3,-4(a1)          ;Y-Winkel retten
+  add.w   a3,d0              ;y' + Y-Mittelpunkt
+  MULUF.W cl2_extension2_SIZE/4,d0,d1 ;Y-Offset in CL
+  lea     (a5,d0.w*4),a2     ;Y-Offset
+  moveq   #bvm_bar_height-1,d6 ;Höhe der Bar
+bvm_set_bars_loop2
+  move.b  (a4)+,(a2)         ;BPLCON4-Low
+  add.l   a6,a2              ;nächste Rasterzeile in CL
+  dbf     d6,bvm_set_bars_loop2
+  dbf     d7,bvm_set_bars_loop1
+  movem.l (a7)+,a3-a6
+  rts
+
 
   IFEQ pt_music_fader
 ; ** Mouse-Handler **
@@ -1137,6 +1322,12 @@ spr_color_table
 spr_pointers_display
   DS.L spr_number
 
+; ** Sinus / Cosinustabelle **
+; ----------------------------
+  CNOP 0,2
+sine_table
+  INCLUDE "sine-table-256x16.i"
+
 ; **** PT-Replay ****
 ; ** Tables for effect commands **
 ; --------------------------------
@@ -1194,6 +1385,40 @@ hst_characters_x_positions
 hst_characters_image_pointers
   DS.L hst_text_characters_number
 
+; **** Bounce-VU-Meter ****
+; ** Farbverlauf **
+; -----------------
+bvm_color_gradients
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x3-Colorgradient3.ct"
+
+; ** Farbtabelle **
+; -----------------
+bvm_color_table
+  DS.L spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+
+; ** Tabelle mit Switchwerten **
+; ------------------------------
+bvm_switch_table
+  DC.B $33,$44,$55,$55,$44,$33 ;Bar1
+  DC.B $66,$77,$88,$88,$77,$66 ;Bar2
+  DC.B $99,$aa,$bb,$bb,$aa,$99 ;Bar3
+  DC.B $cc,$dd,$ee,$ee,$dd,$cc ;Bar4
+
+; Tabellen mit Amplituden und Y-Winkeln der einzelnen Kanäle **
+; -------------------------------------------------------------
+  CNOP 0,2
+bvm_audio_channel1_info
+  DS.B bvm_audchaninfo_SIZE
+
+bvm_audio_channel2_info
+  DS.B bvm_audchaninfo_SIZE
+
+bvm_audio_channel3_info
+  DS.B bvm_audchaninfo_SIZE
+
+bvm_audio_channel4_info
+  DS.B bvm_audchaninfo_SIZE
+
 
 ; ## Speicherstellen allgemein ##
 ; -------------------------------
@@ -1224,7 +1449,7 @@ hst_text
   REPT hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size)
     DC.B " "
   ENDR
-  DC.B "DIESER TEXT WIRD PIXELWEISE MIT DEM BLTCON0-REGISTER GESCROLLED..."
+  DC.B "RESISTANCE CELEBRATES THE 35TH ANNIVERSARY!"
   DC.B FALSE
   EVEN
 

@@ -128,10 +128,10 @@ pf_depth                       EQU pf1_depth3+pf2_depth3
 extra_pf_number                EQU 2
 extra_pf1_x_size               EQU 384
 extra_pf1_y_size               EQU 26
-extra_pf1_depth                EQU 1
+extra_pf1_depth                EQU 2
 extra_pf2_x_size               EQU 384
 extra_pf2_y_size               EQU 26
-extra_pf2_depth                EQU 1
+extra_pf2_depth                EQU 2
 
 spr_number                     EQU 8
 spr_x_size1                    EQU 0
@@ -205,8 +205,8 @@ vp1_pf_pixel_per_datafetch     EQU 64 ;4x
 vp1_DDFSTRTBITS                EQU DDFSTART_320_pixel
 vp1_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
 
-vp1_pf1_depth                  EQU 1
-vp1_pf1_colors_number          EQU 2
+vp1_pf1_depth                  EQU 2
+vp1_pf1_colors_number          EQU 4
 
 extra_pf1_plane_width          EQU extra_pf1_x_size/8
 extra_pf2_plane_width          EQU extra_pf2_x_size/8
@@ -220,6 +220,8 @@ BPLCON4BITS                    EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)+
 DIWHIGHBITS                    EQU (((display_window_HSTOP&$100)>>8)*DIWHIGHF_HSTOP8)+(((display_window_VSTOP&$700)>>8)*DIWHIGHF_VSTOP8)+(((display_window_HSTART&$100)>>8)*DIWHIGHF_HSTART8)+((display_window_VSTART&$700)>>8)
 FMODEBITS                      EQU FMODEF_SPR32+FMODEF_SPAGEM+FMODEF_SSCAN2
 COLOR00BITS                    EQU $001122
+COLOR00HIGHBITS                EQU $012
+COLOR00LOWBITS                 EQU $012
 
 vp1_BPLCON0BITS                EQU BPLCON0F_ECSENA+((extra_pf1_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((extra_pf1_depth&$07)*BPLCON0F_BPU0) ;lores
 vp1_BPLCON1BITS                EQU TRUE
@@ -229,8 +231,6 @@ vp1_BPLCON3BITS2               EQU vp1_BPLCON3BITS1+BPLCON3F_LOCT
 vp1_BPLCON4BITS                EQU BPLCON4BITS
 vp1_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp1_COLOR00BITS                EQU COLOR00BITS
-vp1_COLOR01HIGHBITS            EQU $012
-vp1_COLOR01LOWBITS             EQU $012
 
 cl2_HSTART1                    EQU $00
 cl2_VSTART1                    EQU MINROW
@@ -253,7 +253,7 @@ bg_image_y_position            EQU MINROW
 ; **** Horiz-Scrolltext ****
 hst_image_x_size               EQU 320
 hst_image_plane_width          EQU hst_image_x_size/8
-hst_image_depth                EQU 1
+hst_image_depth                EQU 2
 hst_origin_character_x_size    EQU 32
 hst_origin_character_y_size    EQU 26
 
@@ -340,6 +340,8 @@ cl2_ext1_BPLCON4    RS.L 1
 cl2_ext1_FMODE      RS.L 1
 cl2_ext1_BPL1PTH    RS.L 1
 cl2_ext1_BPL1PTL    RS.L 1
+cl2_ext1_BPL2PTH    RS.L 1
+cl2_ext1_BPL2PTL    RS.L 1
 
 cl2_extension1_SIZE RS.B 0
 
@@ -351,8 +353,10 @@ cl2_extension2        RS.B 0
 cl2_ext2_WAIT         RS.L 1
 cl2_ext2_BPLCON3_1    RS.L 1
 cl2_ext2_COLOR01_high RS.L 1
+cl2_ext2_COLOR02_high RS.L 1
 cl2_ext2_BPLCON3_2    RS.L 1
 cl2_ext2_COLOR01_low  RS.L 1
+cl2_ext2_COLOR02_low  RS.L 1
 cl2_ext2_BPLCON4      RS.L 1
 
 cl2_extension2_SIZE   RS.B 0
@@ -888,7 +892,8 @@ init_second_copperlist
   bsr     cl2_init_copint
   COPLISTEND
   bsr     cl2_vp1_set_bitplane_pointers
-  bsr     cl2_vp1_set_color_gradient
+  bsr     cl2_vp1_set_fill_color_gradient
+  bsr     cl2_vp1_set_outline_color_gradient
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
   bra     swap_vp1_playfield1
@@ -911,21 +916,25 @@ cl2_vp1_init_bitplane_pointers_loop
 cl2_vp1_init_color_gradient_registers
   move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS1,d1 ;High-Werte
-  move.l  #(COLOR01<<16)|vp1_COLOR01HIGHBITS,d2
-  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS2,d3 ;Low-RGB-Werte
-  move.l  #(COLOR01<<16)|vp1_COLOR01LOWBITS,d4
-  move.l  #(BPLCON4<<16)|vp1_BPLCON4BITS,d5
+  move.l  #(COLOR01<<16)|COLOR00HIGHBITS,d2
+  move.l  #(COLOR02<<16)|COLOR00HIGHBITS,d3
+  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS2,d4 ;Low-RGB-Werte
+  move.l  #(COLOR01<<16)|COLOR00LOWBITS,d5
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
+  move.l  #(COLOR02<<16)|COLOR00LOWBITS,a1
+  move.l  #(BPLCON4<<16)|vp1_BPLCON4BITS,a2
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp1_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
   move.l  d1,(a0)+           ;High-Werte
   move.l  d2,(a0)+           ;COLOR01
-  move.l  d3,(a0)+           ;Low-Werte
-  move.l  d4,(a0)+           ;COLOR01
+  move.l  d3,(a0)+           ;COLOR02
+  move.l  d4,(a0)+           ;Low-Werte
+  move.l  d5,(a0)+           ;COLOR01
+  move.l  a1,(a0)+           ;COLOR02
   add.l   d6,d0              ;nächste Zeile
-  move.l  d5,(a0)+           ;BPLCON4
+  move.l  a2,(a0)+           ;BPLCON4
   dbf     d7,cl2_vp1_init_color_gradient_registers_loop
   rts
 
@@ -945,14 +954,15 @@ cl2_vp1_set_bitplane_pointers_loop
   rts
 
   CNOP 0,4
-cl2_vp1_set_color_gradient
+cl2_vp1_set_fill_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
-  lea     hst_color_gradient(pc),a0
+  lea     hst_fill_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR01_high+2,a1
   move.w  #cl2_extension2_SIZE,a2
-  MOVEF.W vp1_visible_lines_number-1,d7
-cl2_vp1_set_color_gradient_loop
+  lea     (a1,a2.l*2),a1     ;Zwei Rasterzeilen überspringen
+  MOVEF.W (vp1_visible_lines_number-4)-1,d7
+cl2_vp1_set_fill_color_gradient_loop
   move.l  (a0)+,d0
   move.l  d0,d2
   RGB8_TO_RGB4HI d0,d1,d3
@@ -960,7 +970,26 @@ cl2_vp1_set_color_gradient_loop
   RGB8_TO_RGB4LO d2,d1,d3
   move.w  d2,cl2_ext2_COLOR01_low-cl2_ext2_COLOR01_high(a1) ;Low-Werte
   add.l   a2,a1
-  dbf     d7,cl2_vp1_set_color_gradient_loop
+  dbf     d7,cl2_vp1_set_fill_color_gradient_loop
+  rts
+
+  CNOP 0,4
+cl2_vp1_set_outline_color_gradient
+  move.w  #$0f0f,d3          ;RGB-Maske
+  lea     hst_outline_color_gradient(pc),a0
+  move.l  cl2_construction2(a3),a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR02_high+2,a1
+  move.w  #cl2_extension2_SIZE,a2
+  MOVEF.W vp1_visible_lines_number-1,d7
+cl2_vp1_set_outline_color_gradient_loop
+  move.l  (a0)+,d0
+  move.l  d0,d2
+  RGB8_TO_RGB4HI d0,d1,d3
+  move.w  d0,(a1)            ;High-Werte
+  RGB8_TO_RGB4LO d2,d1,d3
+  move.w  d2,cl2_ext2_COLOR02_low-cl2_ext2_COLOR02_high(a1) ;Low-Werte
+  add.l   a2,a1
+  dbf     d7,cl2_vp1_set_outline_color_gradient_loop
   rts
 
   COPY_COPPERLIST cl2,2
@@ -1358,8 +1387,11 @@ sine_table
   INCLUDE "music-tracker/pt-finetune-starts-table.i"
 
 ; **** Horiz-Scrolltext ****
-hst_color_gradient
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/26-Colorgradient.ct"
+hst_fill_color_gradient
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/24-Colorgradient.ct"
+
+hst_outline_color_gradient
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/26-Colorgradient2.ct"
 
 ; ** ASCII-Buchstaben **
 ; ----------------------
@@ -1478,6 +1510,6 @@ bg_image_data SECTION bg_gfx,DATA
 
 ; **** Horiz-Scrolltext ****
 hst_image_data SECTION hst_gfx,DATA_C
-  INCBIN "Daten:Asm-Sources.AGA/30/fonts/32x26x2-Font.rawblit"
+  INCBIN "Daten:Asm-Sources.AGA/30/fonts/32x26x4-Font.rawblit"
 
   END

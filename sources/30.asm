@@ -125,13 +125,27 @@ pf2_colors_number              EQU 0
 pf_colors_number               EQU pf1_colors_number+pf2_colors_number
 pf_depth                       EQU pf1_depth3+pf2_depth3
 
-extra_pf_number                EQU 2
+extra_pf_number                EQU 5
+; **** Viewport 1 ****
+; ** Playfield 1 **
 extra_pf1_x_size               EQU 384
 extra_pf1_y_size               EQU 26
 extra_pf1_depth                EQU 2
 extra_pf2_x_size               EQU 384
 extra_pf2_y_size               EQU 26
 extra_pf2_depth                EQU 2
+; **** Viewport 2 ****
+; ** Playfield 1 **
+extra_pf3_x_size               EQU 320
+extra_pf3_y_size               EQU 208
+extra_pf3_depth                EQU 4
+; ** Playfield 2 **
+extra_pf4_x_size               EQU 320
+extra_pf4_y_size               EQU 208
+extra_pf4_depth                EQU 3
+extra_pf5_x_size               EQU 320
+extra_pf5_y_size               EQU 208
+extra_pf5_depth                EQU 3
 
 spr_number                     EQU 8
 spr_x_size1                    EQU 0
@@ -208,10 +222,41 @@ vp1_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
 vp1_pf1_depth                  EQU 2
 vp1_pf1_colors_number          EQU 4
 
+; **** Viewport 2 ****
+vp2_pixel_per_line             EQU 320
+vp2_visible_pixels_number      EQU 320
+vp2_visible_lines_number       EQU 208
+
+vp2_VSTART                     EQU vp1_VSTOP
+vp2_VSTOP                      EQU vp2_VSTART+vp2_visible_lines_number
+
+vp2_pf_pixel_per_datafetch     EQU 64 ;4x
+vp2_DDFSTRTBITS                EQU DDFSTART_320_pixel
+vp2_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
+
+vp2_pf1_depth                  EQU 4
+vp2_pf2_depth                  EQU 3
+vp2_pf1_colors_number          EQU 16
+vp2_pf2_colors_number          EQU 8
+
+; **** Viewport 1 ****
+; ** Playfield 1 **
 extra_pf1_plane_width          EQU extra_pf1_x_size/8
 extra_pf2_plane_width          EQU extra_pf2_x_size/8
+; **** Viewport 2 ****
+; ** Playfield1 **
+extra_pf3_plane_width          EQU extra_pf3_x_size/8
+; ** Playfield2 **
+extra_pf4_plane_width          EQU extra_pf4_x_size/8
+extra_pf5_plane_width          EQU extra_pf5_x_size/8
+; **** Viewport 1 ****
 vp1_data_fetch_width           EQU vp1_pixel_per_line/8
 vp1_pf1_plane_moduli           EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+extra_pf1_plane_width-vp1_data_fetch_width
+; **** Viewport 2 ****
+vp2_data_fetch_width           EQU vp2_pixel_per_line/8
+vp2_pf1_plane_moduli           EQU (extra_pf3_plane_width*(extra_pf3_depth-1))+extra_pf3_plane_width-vp2_data_fetch_width
+vp2_pf2_plane_moduli           EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_plane_width-vp2_data_fetch_width
+
 
 BPLCON0BITS                    EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) ;lores
 BPLCON3BITS1                   EQU BPLCON3F_SPRES0
@@ -234,23 +279,43 @@ vp1_BPLCON4BITS                EQU BPLCON4BITS+(BPLCON4F_BPLAM0*240)
 vp1_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp1_COLOR00BITS                EQU COLOR00BITS
 
-cl2_HSTART1                    EQU $00
-cl2_VSTART1                    EQU MINROW
-cl2_HSTART2                    EQU $00
-cl2_VSTART2                    EQU beam_position&$ff
+vp2_BPLCON0BITS                EQU BPLCON0F_ECSENA+(((extra_pf3_depth+extra_pf4_depth)>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+BPLCON0F_DPF+(((extra_pf3_depth+extra_pf4_depth)&$07)*BPLCON0F_BPU0)
+vp2_BPLCON1BITS                EQU TRUE
+vp2_BPLCON2BITS                EQU BPLCON2F_PF2PRI
+vp2_BPLCON3BITS1               EQU BPLCON3BITS1+(BPLCON3F_PF2OF0*16)
+vp2_BPLCON3BITS2               EQU vp2_BPLCON3BITS1+BPLCON3F_LOCT
+vp2_BPLCON4BITS                EQU BPLCON4BITS
+vp2_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
+vp2_COLOR00BITS                EQU COLOR00BITS
+
+; **** Viewport 1 ****
+cl2_vp1_HSTART                 EQU $00
+cl2_vp1_VSTART                 EQU MINROW
+; **** Viewport 2 ****
+cl2_vp2_HSTART                 EQU HSTOP_320_pixel-16
+cl2_vp2_VSTART                 EQU vp1_VSTOP
+
+cl2_HSTART                     EQU $00
+cl2_VSTART                     EQU beam_position&$ff
 
 sine_table_length              EQU 256
 
 ; **** PT-Replay ****
 pt_fade_out_delay              EQU 2 ;Ticks
 
-; **** Hintergrundbild ****
-bg_image_x_size                EQU 256
-bg_image_plane_width           EQU bg_image_x_size/8
-bg_image_y_size                EQU 208
-bg_image_depth                 EQU 4
-bg_image_x_position            EQU 16
-bg_image_y_position            EQU MINROW
+; **** Background-Image-1 ****
+bg1_image_x_size               EQU 256
+bg1_image_plane_width          EQU bg1_image_x_size/8
+bg1_image_y_size               EQU 208
+bg1_image_depth                EQU 4
+bg1_image_x_position           EQU 16
+bg1_image_y_position           EQU MINROW
+
+; **** Background-Image-2 ****
+bg2_image_x_size               EQU 320
+bg2_image_plane_width          EQU bg2_image_x_size/8
+bg2_image_y_size               EQU 182
+bg2_image_depth                EQU 4
 
 ; **** Horiz-Scrolltext ****
 hst_image_x_size               EQU 320
@@ -316,9 +381,25 @@ vp1_pf1_bitplanes_y_offset     EQU 0
 ; -----------------------------------------------------------------------
   RSRESET
 
+cl1_extension1      RS.B 0
+
+cl1_ext1_BPL3PTH    RS.L 1
+cl1_ext1_BPL3PTL    RS.L 1
+cl1_ext1_BPL5PTH    RS.L 1
+cl1_ext1_BPL5PTL    RS.L 1
+cl1_ext1_BPL7PTH    RS.L 1
+cl1_ext1_BPL7PTL    RS.L 1
+
+cl1_extension1_SIZE RS.B 0
+
+
+  RSRESET
+
 cl1_begin            RS.B 0
 
   INCLUDE "copperlist1-offsets.i"
+
+cl1_extension1_entry RS.B cl1_extension1_SIZE
 
 cl1_COPJMP2          RS.L 1
 
@@ -366,6 +447,33 @@ cl2_extension2_SIZE   RS.B 0
 
   RSRESET
 
+cl2_extension3      RS.B 0
+
+cl2_ext3_WAIT       RS.L 1
+cl2_ext3_DDFSTRT    RS.L 1
+cl2_ext3_DDFSTOP    RS.L 1
+cl2_ext3_BPLCON0    RS.L 1
+cl2_ext3_BPLCON1    RS.L 1
+cl2_ext3_BPLCON2    RS.L 1
+cl2_ext3_BPLCON3_1  RS.L 1
+cl2_ext3_BPL1MOD    RS.L 1
+cl2_ext3_BPL2MOD    RS.L 1
+cl2_ext3_BPLCON4    RS.L 1
+cl2_ext3_FMODE      RS.L 1
+cl2_ext3_BPL1PTH    RS.L 1
+cl2_ext3_BPL1PTL    RS.L 1
+cl2_ext3_BPL2PTH    RS.L 1
+cl2_ext3_BPL2PTL    RS.L 1
+cl2_ext3_BPL4PTH    RS.L 1
+cl2_ext3_BPL4PTL    RS.L 1
+cl2_ext3_BPL6PTH    RS.L 1
+cl2_ext3_BPL6PTL    RS.L 1
+
+cl2_extension3_SIZE RS.B 0
+
+
+  RSRESET
+
 cl2_begin            RS.B 0
 
 ; **** Viewport 1 ****
@@ -373,6 +481,8 @@ cl2_extension1_entry RS.B cl2_extension1_SIZE
 cl2_WAIT1            RS.L 1
 cl2_BPLCON0_1        RS.L 1
 cl2_extension2_entry RS.B cl2_extension2_SIZE*vp1_visible_lines_number
+; **** Viewport 2 ****
+cl2_extension3_entry RS.B cl2_extension3_SIZE
 
 cl1_WAIT1            RS.L 1
 cl1_WAIT2            RS.L 1
@@ -400,7 +510,7 @@ cl2_size3              EQU copperlist2_SIZE
 spr0_extension1       RS.B 0
 
 spr0_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr0_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr0_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr0_extension1_SIZE  RS.B 0
 
@@ -423,7 +533,7 @@ sprite0_SIZE          RS.B 0
 spr1_extension1       RS.B 0
 
 spr1_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr1_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr1_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr1_extension1_SIZE  RS.B 0
 
@@ -446,7 +556,7 @@ sprite1_SIZE          RS.B 0
 spr2_extension1       RS.B 0
 
 spr2_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr2_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr2_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr2_extension1_SIZE  RS.B 0
 
@@ -469,7 +579,7 @@ sprite2_SIZE          RS.B 0
 spr3_extension1       RS.B 0
 
 spr3_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr3_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr3_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr3_extension1_SIZE  RS.B 0
 
@@ -492,7 +602,7 @@ sprite3_SIZE          RS.B 0
 spr4_extension1       RS.B 0
 
 spr4_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr4_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr4_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr4_extension1_SIZE  RS.B 0
 
@@ -515,7 +625,7 @@ sprite4_SIZE          RS.B 0
 spr5_extension1       RS.B 0
 
 spr5_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr5_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr5_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr5_extension1_SIZE  RS.B 0
 
@@ -538,7 +648,7 @@ sprite5_SIZE          RS.B 0
 spr6_extension1       RS.B 0
 
 spr6_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr6_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr6_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr6_extension1_SIZE  RS.B 0
 
@@ -561,7 +671,7 @@ sprite6_SIZE          RS.B 0
 spr7_extension1       RS.B 0
 
 spr7_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
-spr7_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg_image_y_size
+spr7_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr7_extension1_SIZE  RS.B 0
 
@@ -635,6 +745,10 @@ spr7_y_size2        EQU sprite7_SIZE/(spr_x_size2/8)
 vp1_pf1_construction2      RS.L 1
 vp1_pf1_display            RS.L 1
 
+; **** Viewport 2 ****
+vp2_pf2_construction2      RS.L 1
+vp2_pf2_display            RS.L 1
+
 ; **** Horiz-Scrolltext ****
 hst_image                  RS.L 1
 hst_text_table_start       RS.W 1
@@ -688,6 +802,10 @@ init_own_variables
   move.l  extra_pf1(a3),vp1_pf1_construction2(a3)
   move.l  extra_pf2(a3),vp1_pf1_display(a3)
 
+; **** Viewport 2 ****
+  move.l  extra_pf4(a3),vp2_pf2_construction2(a3)
+  move.l  extra_pf5(a3),vp2_pf2_display(a3)
+
 ; **** Horiz-Scrolltext ****
   lea     hst_image_data,a0
   move.l  a0,hst_image(a3)
@@ -715,6 +833,7 @@ init_all
   bsr     hst_init_characters_images
   bsr     bvm_init_audio_channel_info_tables
   bsr     bvm_init_color_table
+  bsr     bg2_copy_image_to_bitplane
   bsr     init_first_copperlist
   bra     init_second_copperlist
 
@@ -754,7 +873,7 @@ init_CIA_timers
   CNOP 0,4
 init_sprites
   bsr.s   spr_init_pointers_table
-  bra.s   bg_init_attached_sprites_cluster
+  bra.s   bg1_init_attached_sprites_cluster
 
 ; ** Tabelle mit Zeigern auf Sprites initialisieren **
 ; ----------------------------------------------------
@@ -762,7 +881,7 @@ init_sprites
 
 ; ** Spritestrukturen initialisieren **
 ; -------------------------------------
-  INIT_ATTACHED_SPRITES_CLUSTER bg,spr_pointers_display,bg_image_x_position,bg_image_y_position,spr_x_size2,bg_image_y_size,,,REPEAT
+  INIT_ATTACHED_SPRITES_CLUSTER bg1,spr_pointers_display,bg1_image_x_position,bg1_image_y_position,spr_x_size2,bg1_image_y_size,,,REPEAT
 
 ; **** Horiz-Scrolltext ****
 ; ** Offsets der Buchstaben im Characters-Pic berechnen **
@@ -819,6 +938,11 @@ bvm_init_color_table_loop3
   dbf     d7,bvm_init_color_table_loop1
   rts
 
+; **** Background-Image-2 ****
+; ** Objekt ins Playfield kopieren **
+; -----------------------------------
+  COPY_IMAGE_TO_BITPLANE bg2,,,extra_pf3
+
 
 ; ** 1. Copperliste initialisieren **
 ; -----------------------------------
@@ -828,8 +952,10 @@ init_first_copperlist
   bsr.s   cl1_init_playfield_registers
   bsr     cl1_init_sprite_pointers
   bsr     cl1_init_color_registers
+  bsr     cl1_vp2_init_bitplane_pointers
   COPMOVEQ TRUE,COPJMP2
-  bra     cl1_set_sprite_pointers
+  bsr     cl1_set_sprite_pointers
+  bra     cl1_vp2_pf1_set_bitplane_pointers
 
   COP_INIT_PLAYFIELD_REGISTERS cl1,NOBITPLANESSPR
 
@@ -837,7 +963,7 @@ init_first_copperlist
 
   CNOP 0,4
 cl1_init_color_registers
-  COP_INIT_COLORHI COLOR00,1,pf1_color_table
+  COP_INIT_COLORHI COLOR00,32,pf1_color_table
   COP_SELECT_COLORHI_BANK 1
   COP_INIT_COLORHI COLOR00,16,spr_color_table
   COP_INIT_COLORHI COLOR16,16,bvm_color_table
@@ -854,9 +980,8 @@ cl1_init_color_registers
   COP_SELECT_COLORHI_BANK 7
   COP_INIT_COLORHI COLOR00,16
 
-  COP_INIT_COLORLO COLOR00,1,pf1_color_table
   COP_SELECT_COLORLO_BANK 0
-  COP_INIT_COLORLO COLOR00,1,pf1_color_table
+  COP_INIT_COLORLO COLOR00,32,pf1_color_table
   COP_SELECT_COLORLO_BANK 1
   COP_INIT_COLORLO COLOR00,16,spr_color_table
   COP_INIT_COLORLO COLOR16,16,bvm_color_table
@@ -874,31 +999,59 @@ cl1_init_color_registers
   COP_INIT_COLORLO COLOR00,16
   rts
 
-  COP_INIT_BITPLANE_POINTERS cl1
+  CNOP 0,4
+cl1_vp2_init_bitplane_pointers
+  COPMOVEQ TRUE,BPL3PTH
+  COPMOVEQ TRUE,BPL3PTL
+  COPMOVEQ TRUE,BPL5PTH
+  COPMOVEQ TRUE,BPL5PTL
+  COPMOVEQ TRUE,BPL7PTH
+  COPMOVEQ TRUE,BPL7PTL
+  rts
 
   COP_SET_SPRITE_POINTERS cl1,display,spr_number
 
+  CNOP 0,4
+cl1_vp2_pf1_set_bitplane_pointers
+  move.l  cl1_display(a3),a0
+  ADDF.L  cl1_extension1_entry+cl1_ext1_BPL3PTH+2,a0
+  move.l  extra_pf3(a3),a1
+  addq.w  #4,a1              ;Zeiger auf zweite Plane
+  moveq   #(vp2_pf1_depth-1)-1,d7 ;Anzahl der Bitplanes
+cl1_vp2_pf1_set_bitplane_pointers_loop
+  move.w  (a1)+,(a0)         ;High-Wert
+  addq.w  #8,a0              ;nächter Playfieldzeiger
+  move.w  (a1)+,4-8(a0)      ;Low-Wert
+  dbf     d7,cl1_vp2_pf1_set_bitplane_pointers_loop
+  rts
 
 ; ** 2. Copperliste initialisieren **
 ; -----------------------------------
   CNOP 0,4
 init_second_copperlist
   move.l  cl2_construction2(a3),a0
+  move.l  a0,$140000
 ; **** Viewport 1 ****
   bsr     cl2_vp1_init_playfield_registers
   bsr     cl2_vp1_init_bitplane_pointers
-  COPWAIT 0,vp1_VSTART
+  COPWAIT 0,cl2_vp1_VSTART
   COPMOVEQ vp1_BPLCON0BITS,BPLCON0
   bsr     cl2_vp1_init_color_gradient_registers
+; **** Viewport 2 ****
+  COPWAIT cl2_vp2_HSTART,cl2_vp2_VSTART
+  bsr     cl2_vp2_init_playfield_registers
+  bsr     cl2_vp2_init_bitplane_pointers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copint
   COPLISTEND
-  bsr     cl2_vp1_set_bitplane_pointers
+  bsr     cl2_vp1_pf1_set_bitplane_pointers
   bsr     cl2_vp1_set_fill_color_gradient
   bsr     cl2_vp1_set_outline_color_gradient
+  bsr     cl2_vp2_pf1_set_bitplane_pointers
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
-  bra     swap_vp1_playfield1
+  bsr     swap_vp1_playfield1
+  bra     swap_vp2_playfield2
 
 ; **** Viewport 1 ****
   COP_INIT_PLAYFIELD_REGISTERS cl2,,vp1
@@ -916,7 +1069,7 @@ cl2_vp1_init_bitplane_pointers_loop
 
   CNOP 0,4
 cl2_vp1_init_color_gradient_registers
-  move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
+  move.l  #(((cl2_vp1_VSTART<<24)|(((cl2_vp1_HSTART/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS3,d1 ;High-Werte
   move.l  #(COLOR17<<16)|COLOR00HIGHBITS,d2
   move.l  #(COLOR18<<16)|COLOR00HIGHBITS,d3
@@ -940,19 +1093,34 @@ cl2_vp1_init_color_gradient_registers_loop
   dbf     d7,cl2_vp1_init_color_gradient_registers_loop
   rts
 
-  COP_INIT_COPINT cl2,cl2_HSTART2,cl2_VSTART2,YWRAP
+; **** Viewport 2 ****
+  COP_INIT_PLAYFIELD_REGISTERS cl2,,vp2,TRIGGERBITPLANES
 
   CNOP 0,4
-cl2_vp1_set_bitplane_pointers
+cl2_vp2_init_bitplane_pointers
+  COPMOVEQ TRUE,BPL1PTH
+  COPMOVEQ TRUE,BPL1PTL
+  COPMOVEQ TRUE,BPL2PTH
+  COPMOVEQ TRUE,BPL2PTL
+  COPMOVEQ TRUE,BPL4PTH
+  COPMOVEQ TRUE,BPL4PTL
+  COPMOVEQ TRUE,BPL6PTH
+  COPMOVEQ TRUE,BPL6PTL
+  rts
+
+  COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART,YWRAP
+
+  CNOP 0,4
+cl2_vp1_pf1_set_bitplane_pointers
   move.l  cl2_display(a3),a0 ;CL
   ADDF.W  cl2_extension1_entry+cl2_ext1_BPL1PTH+2,a0
   move.l  vp1_pf1_display(a3),a1 ;Zeiger auf erste Plane
   moveq   #vp1_pf1_depth-1,d7 ;Anzahl der Bitplanes
-cl2_vp1_set_bitplane_pointers_loop
+cl2_vp1_pf1_set_bitplane_pointers_loop
   move.w  (a1)+,(a0)         ;High-Wert
   addq.w  #8,a0              ;nächter Playfieldzeiger
   move.w  (a1)+,4-8(a0)      ;Low-Wert
-  dbf     d7,cl2_vp1_set_bitplane_pointers_loop
+  dbf     d7,cl2_vp1_pf1_set_bitplane_pointers_loop
   rts
 
   CNOP 0,4
@@ -994,6 +1162,19 @@ cl2_vp1_set_outline_color_gradient_loop
   dbf     d7,cl2_vp1_set_outline_color_gradient_loop
   rts
 
+  CNOP 0,4
+cl2_vp2_pf1_set_bitplane_pointers
+  move.l  cl2_construction2(a3),a0
+  ADDF.L  cl2_extension3_entry+cl2_ext3_BPL1PTH+2,a0
+  move.l  extra_pf3(a3),a1   ;Zeiger auf erste Plane
+  moveq   #(vp2_pf1_depth-3)-1,d7 ;Anzahl der Bitplanes
+cl2_vp2_pf1_set_bitplane_pointers_loop
+  move.w  (a1)+,(a0)         ;High-Wert
+  addq.w  #8,a0              ;nächter Playfieldzeiger
+  move.w  (a1)+,4-8(a0)      ;Low-Wert
+  dbf     d7,cl1_vp2_pf1_set_bitplane_pointers_loop
+  rts
+
   COPY_COPPERLIST cl2,2
 
 
@@ -1029,6 +1210,7 @@ beam_routines
   bsr     wait_copint
   bsr     swap_second_copperlist
   bsr     swap_vp1_playfield1
+  bsr     swap_vp2_playfield2
   bsr     horiz_scrolltext
   bsr     hst_horiz_scroll
   bsr     bvm_get_channels_amplitudes
@@ -1046,8 +1228,8 @@ beam_routines
 ; ------------------------------
   SWAP_COPPERLIST cl2,2
 
-; ** Playfield1 vertauschen **
-; ----------------------------
+; ** VP1-Playfield1 vertauschen **
+; --------------------------------
   CNOP 0,4
 swap_vp1_playfield1
   move.l  cl2_display(a3),a0
@@ -1065,6 +1247,23 @@ swap_vp1_playfield1_loop
   move.w  d0,(a0)            ;BPLxPTH
   addq.w  #8,a0
   dbf     d7,swap_vp1_playfield1_loop
+  rts
+
+; ** VP2-Playfield1 vertauschen **
+; --------------------------------
+  CNOP 0,4
+swap_vp2_playfield2
+  move.l  cl2_display(a3),a0
+  move.l  vp2_pf2_construction2(a3),a1
+  ADDF.W  cl2_extension3_entry+cl2_ext3_BPL2PTH+2,a0
+  move.l  vp2_pf2_display(a3),vp2_pf2_construction2(a3)
+  move.l  a1,vp2_pf2_display(a3)
+  moveq   #vp2_pf2_depth-1,d7   ;Anzahl der Planes
+swap_vp2_playfield2_loop
+  move.w  (a1)+,(a0)          ;BPLxPTH
+  addq.w  #8,a0
+  move.w  (a1)+,4-8(a0)       ;BPLxPTL
+  dbf     d7,swap_vp2_playfield2_loop
   rts
 
 
@@ -1341,7 +1540,11 @@ NMI_int_server
 ; ----------------------------------
   CNOP 0,4
 pf1_color_table
-  DC.L COLOR00BITS
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls.ct"
+  REPT 8
+    DC.L COLOR00BITS
+  ENDR
 
 ; ** Farben der Sprites **
 ; ------------------------
@@ -1506,9 +1709,13 @@ pt_auddata SECTION pt_audio,DATA_C
 ; ## Grafikdaten nachladen ##
 ; ---------------------------
 
-; **** Hintergrundbild ****
-bg_image_data SECTION bg_gfx,DATA
+; **** Background-Image-1 ****
+bg1_image_data SECTION bg1_gfx,DATA
   INCBIN "Daten:Asm-Sources.AGA/30/graphics/256x208x16-Desert-Sunset2.rawblit"
+
+; **** Background-Image-2 ****
+bg2_image_data SECTION bg2_gfx,DATA
+  INCBIN "Daten:Asm-Sources.AGA/30/graphics/320x182x16-Temple.rawblit"
 
 ; **** Horiz-Scrolltext ****
 hst_image_data SECTION hst_gfx,DATA_C

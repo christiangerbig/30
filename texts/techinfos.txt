@@ -21,9 +21,9 @@ Copper initialisiert Bar-Farben: 48-239 (4x3)
 
 H-Blank (18 CMOVEs, CWAIT schon zum Zeilenende der vorherigen Zeile):
 VP2
-Copper initialisiert BP1/2/4/6 für VP2
-Copper initialisiert DDFSTRT/DD»FSTOP für VP2
+Copper initialisiert DDFSTRT/DDFSTOP für VP2
 Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD, BPL2MOD und FMODE für VP2 (BPLCON3:PF2PRI&PF2OF=4, BPLCON4:BPLAM=16)
+Copper initialisiert BP1/2/4/6 für VP2
 
 H-Blank (20 CMOVEs), CWAIT schon zum Zeilenende der vorherigen Zeile):
 VP3

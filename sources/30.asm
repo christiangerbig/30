@@ -292,8 +292,8 @@ vp2_COLOR00BITS                EQU COLOR00BITS
 cl2_vp1_HSTART                 EQU $00
 cl2_vp1_VSTART                 EQU MINROW
 ; **** Viewport 2 ****
-cl2_vp2_HSTART                 EQU HSTOP_320_pixel-16
-cl2_vp2_VSTART                 EQU vp1_VSTOP
+cl2_vp2_HSTART                 EQU HSTOP_320_pixel-16-8
+cl2_vp2_VSTART                 EQU vp1_VSTOP-1
 
 cl2_HSTART                     EQU $00
 cl2_VSTART                     EQU beam_position&$ff

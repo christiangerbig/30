@@ -188,7 +188,7 @@ display_window_HSTART          EQU HSTART_320_pixel
 display_window_VSTART          EQU MINROW
 DIWSTRTBITS                    EQU ((display_window_VSTART&$ff)*DIWSTRTF_V0)+(display_window_HSTART&$ff)
 display_window_HSTOP           EQU HSTOP_320_pixel
-display_window_VSTOP           EQU MINROW+26 ;VSTOP_256_lines
+display_window_VSTOP           EQU VSTOP_256_lines
 DIWSTOPBITS                    EQU ((display_window_VSTOP&$ff)*DIWSTOPF_V0)+(display_window_HSTOP&$ff)
 
 spr_pixel_per_datafetch        EQU 64 ;4x
@@ -228,7 +228,9 @@ vp1_BPLCON1BITS                EQU TRUE
 vp1_BPLCON2BITS                EQU TRUE
 vp1_BPLCON3BITS1               EQU BPLCON3BITS1
 vp1_BPLCON3BITS2               EQU vp1_BPLCON3BITS1+BPLCON3F_LOCT
-vp1_BPLCON4BITS                EQU BPLCON4BITS
+vp1_BPLCON3BITS3               EQU vp1_BPLCON3BITS1+(BPLCON3F_BANK0*7)
+vp1_BPLCON3BITS4               EQU vp1_BPLCON3BITS3+BPLCON3F_LOCT
+vp1_BPLCON4BITS                EQU BPLCON4BITS+(BPLCON4F_BPLAM0*240)
 vp1_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp1_COLOR00BITS                EQU COLOR00BITS
 
@@ -352,11 +354,11 @@ cl2_extension2        RS.B 0
 
 cl2_ext2_WAIT         RS.L 1
 cl2_ext2_BPLCON3_1    RS.L 1
-cl2_ext2_COLOR01_high RS.L 1
-cl2_ext2_COLOR02_high RS.L 1
+cl2_ext2_COLOR17_high RS.L 1
+cl2_ext2_COLOR18_high RS.L 1
 cl2_ext2_BPLCON3_2    RS.L 1
-cl2_ext2_COLOR01_low  RS.L 1
-cl2_ext2_COLOR02_low  RS.L 1
+cl2_ext2_COLOR17_low  RS.L 1
+cl2_ext2_COLOR18_low  RS.L 1
 cl2_ext2_BPLCON4      RS.L 1
 
 cl2_extension2_SIZE   RS.B 0
@@ -915,22 +917,22 @@ cl2_vp1_init_bitplane_pointers_loop
   CNOP 0,4
 cl2_vp1_init_color_gradient_registers
   move.l  #(((cl2_VSTART1<<24)|(((cl2_HSTART1/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
-  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS1,d1 ;High-Werte
-  move.l  #(COLOR01<<16)|COLOR00HIGHBITS,d2
-  move.l  #(COLOR02<<16)|COLOR00HIGHBITS,d3
-  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS2,d4 ;Low-RGB-Werte
-  move.l  #(COLOR01<<16)|COLOR00LOWBITS,d5
+  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS3,d1 ;High-Werte
+  move.l  #(COLOR17<<16)|COLOR00HIGHBITS,d2
+  move.l  #(COLOR18<<16)|COLOR00HIGHBITS,d3
+  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS4,d4 ;Low-RGB-Werte
+  move.l  #(COLOR17<<16)|COLOR00LOWBITS,d5
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
-  move.l  #(COLOR02<<16)|COLOR00LOWBITS,a1
+  move.l  #(COLOR18<<16)|COLOR00LOWBITS,a1
   move.l  #(BPLCON4<<16)|vp1_BPLCON4BITS,a2
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp1_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
-  move.l  d1,(a0)+           ;High-Werte
+  move.l  d1,(a0)+           ;BPLCON3 High-Werte
   move.l  d2,(a0)+           ;COLOR01
   move.l  d3,(a0)+           ;COLOR02
-  move.l  d4,(a0)+           ;Low-Werte
+  move.l  d4,(a0)+           ;BPLCON3 Low-Werte
   move.l  d5,(a0)+           ;COLOR01
   move.l  a1,(a0)+           ;COLOR02
   add.l   d6,d0              ;nächste Zeile
@@ -958,7 +960,7 @@ cl2_vp1_set_fill_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_fill_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
-  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR01_high+2,a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR17_high+2,a1
   move.w  #cl2_extension2_SIZE,a2
   lea     (a1,a2.l*2),a1     ;Zwei Rasterzeilen überspringen
   MOVEF.W (vp1_visible_lines_number-4)-1,d7
@@ -968,7 +970,7 @@ cl2_vp1_set_fill_color_gradient_loop
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl2_ext2_COLOR01_low-cl2_ext2_COLOR01_high(a1) ;Low-Werte
+  move.w  d2,cl2_ext2_COLOR17_low-cl2_ext2_COLOR17_high(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_fill_color_gradient_loop
   rts
@@ -978,7 +980,7 @@ cl2_vp1_set_outline_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_outline_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
-  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR02_high+2,a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR18_high+2,a1
   move.w  #cl2_extension2_SIZE,a2
   MOVEF.W vp1_visible_lines_number-1,d7
 cl2_vp1_set_outline_color_gradient_loop
@@ -987,7 +989,7 @@ cl2_vp1_set_outline_color_gradient_loop
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl2_ext2_COLOR02_low-cl2_ext2_COLOR02_high(a1) ;Low-Werte
+  move.w  d2,cl2_ext2_COLOR18_low-cl2_ext2_COLOR18_high(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_outline_color_gradient_loop
   rts

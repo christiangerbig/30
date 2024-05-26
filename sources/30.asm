@@ -84,6 +84,9 @@ pt_track_channel_periods       EQU FALSE
 pt_music_fader                 EQU TRUE
 pt_split_module                EQU TRUE
 
+mvb_premorph_start_shape       EQU TRUE
+mvb_morph_loop                 EQU TRUE
+
 DMABITS                        EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
 
   IFEQ pt_ciatiming
@@ -125,7 +128,7 @@ pf2_colors_number              EQU 0
 pf_colors_number               EQU pf1_colors_number+pf2_colors_number
 pf_depth                       EQU pf1_depth3+pf2_depth3
 
-extra_pf_number                EQU 5
+extra_pf_number                EQU 6
 ; **** Viewport 1 ****
 ; ** Playfield 1 **
 extra_pf1_x_size               EQU 384
@@ -146,6 +149,9 @@ extra_pf4_depth                EQU 3
 extra_pf5_x_size               EQU 320
 extra_pf5_y_size               EQU 208
 extra_pf5_depth                EQU 3
+extra_pf6_x_size               EQU 320
+extra_pf6_y_size               EQU 208
+extra_pf6_depth                EQU 3
 
 spr_number                     EQU 8
 spr_x_size1                    EQU 0
@@ -298,10 +304,7 @@ cl2_vp2_VSTART                 EQU vp1_VSTOP-1
 cl2_HSTART                     EQU $00
 cl2_VSTART                     EQU beam_position&$ff
 
-sine_table_length              EQU 256
-
-; **** PT-Replay ****
-pt_fade_out_delay              EQU 2 ;Ticks
+sine_table_length              EQU 512
 
 ; **** Background-Image-1 ****
 bg1_image_x_size               EQU 256
@@ -316,6 +319,16 @@ bg2_image_x_size               EQU 320
 bg2_image_plane_width          EQU bg2_image_x_size/8
 bg2_image_y_size               EQU 182
 bg2_image_depth                EQU 4
+
+; **** Ball-Image ****
+mvb_image_x_size               EQU 16
+mvb_image_width                EQU mvb_image_x_size/8
+mvb_image_y_size               EQU 11
+mvb_image_depth                EQU 3
+mvb_image_objects_number       EQU 4
+
+; **** PT-Replay ****
+pt_fade_out_delay              EQU 2 ;Ticks
 
 ; **** Horiz-Scrolltext ****
 hst_image_x_size               EQU 320
@@ -346,7 +359,39 @@ bvm_bar_height                 EQU 6
 bvm_bars_number                EQU 4
 bvm_max_amplitude              EQU vp1_visible_lines_number-bvm_bar_height
 bvm_y_centre                   EQU vp1_visible_lines_number-bvm_bar_height
-bvm_y_angle_speed              EQU 4
+bvm_y_angle_speed              EQU 8
+
+; **** Morph-Vector-Balls ****
+mvb_balls_number               EQU 30
+
+mvb_rotation_d                 EQU 256
+mvb_rotation_x_center          EQU (extra_pf4_x_size-mvb_image_x_size)/2
+mvb_rotation_y_center          EQU (extra_pf4_y_size-mvb_image_y_size)/2
+mvb_rotation_x_angle_speed     EQU 4
+mvb_rotation_y_angle_speed     EQU 1
+mvb_rotation_z_angle_speed     EQU 1
+
+mvb_object_points_number       EQU mvb_balls_number
+
+  IFEQ mvb_morph_loop
+mvb_morph_shapes_number        EQU 2
+  ELSE
+mvb_morph_shapes_number        EQU 3
+  ENDC
+mvb_morph_speed                EQU 8
+mvb_morph_delay                EQU 6*PALFPS
+
+mvb_observer_z                 EQU 35
+mvb_z_plane1                   EQU -32+mvb_observer_z
+mvb_z_plane2                   EQU 0+mvb_observer_z
+mvb_z_plane3                   EQU 32+mvb_observer_z
+mvb_z_plane4                   EQU 64+mvb_observer_z
+
+mvb_clear_blit_x_size          EQU extra_pf4_x_size
+mvb_clear_blit_y_size          EQU extra_pf4_y_size*(extra_pf4_depth-2)
+
+mvb_copy_blit_x_size           EQU mvb_image_x_size+16
+mvb_copy_blit_y_size           EQU mvb_image_y_size*mvb_image_depth
 
 
 vp1_pf1_bitplanes_x_offset     EQU 1*vp1_pf_pixel_per_datafetch
@@ -730,8 +775,7 @@ spr7_y_size2        EQU sprite7_SIZE/(spr_x_size2/8)
 
   INCLUDE "variables-offsets.i"
 
-; ** Relative offsets for variables **
-; ------------------------------------
+save_a7                      RS.L 1
 
 ; **** PT-Replay ****
   IFD pt_v2.3a
@@ -742,20 +786,30 @@ spr7_y_size2        EQU sprite7_SIZE/(spr_x_size2/8)
   ENDC
 
 ; **** Viewport 1 ****
-vp1_pf1_construction2      RS.L 1
-vp1_pf1_display            RS.L 1
+vp1_pf1_construction2        RS.L 1
+vp1_pf1_display              RS.L 1
 
 ; **** Viewport 2 ****
-vp2_pf2_construction2      RS.L 1
-vp2_pf2_display            RS.L 1
+vp2_pf2_construction1        RS.L 1
+vp2_pf2_construction2        RS.L 1
+vp2_pf2_display              RS.L 1
 
 ; **** Horiz-Scrolltext ****
-hst_image                  RS.L 1
-hst_text_table_start       RS.W 1
-hst_text_BLTCON0BITS       RS.W 1
-hst_character_toggle_image RS.W 1
+hst_image                    RS.L 1
+hst_text_table_start         RS.W 1
+hst_text_BLTCON0BITS         RS.W 1
+hst_character_toggle_image   RS.W 1
 
-variables_SIZE             RS.B 0
+; **** Morph-Vector-Balls ****
+mvb_rotation_x_angle         RS.W 1
+mvb_rotation_y_angle         RS.W 1
+mvb_rotation_z_angle         RS.W 1
+
+mvb_morph_state              RS.W 1
+mvb_morph_shapes_table_start RS.W 1
+mvb_morph_delay_counter      RS.W 1
+
+variables_SIZE               RS.B 0
 
 
 ; **** PT-Replay ****
@@ -778,6 +832,17 @@ bvm_aci_yangle       RS.W 1
 bvm_aci_amplitude    RS.W 1
 
 bvm_audchaninfo_SIZE RS.B 0
+
+; **** Morph-Vector-Balls ****
+; ** Morph-Shape-Struktur **
+; --------------------------
+  RSRESET
+
+mvb_morph_shape              RS.B 0
+
+mvb_morph_shape_object_table RS.L 1
+
+mvb_morph_shape_SIZE         RS.B 0
 
 
 ; ## Beginn des Initialisierungsprogramms ##
@@ -803,8 +868,9 @@ init_own_variables
   move.l  extra_pf2(a3),vp1_pf1_display(a3)
 
 ; **** Viewport 2 ****
-  move.l  extra_pf4(a3),vp2_pf2_construction2(a3)
-  move.l  extra_pf5(a3),vp2_pf2_display(a3)
+  move.l  extra_pf4(a3),vp2_pf2_construction1(a3)
+  move.l  extra_pf5(a3),vp2_pf2_construction2(a3)
+  move.l  extra_pf6(a3),vp2_pf2_display(a3)
 
 ; **** Horiz-Scrolltext ****
   lea     hst_image_data,a0
@@ -813,6 +879,16 @@ init_own_variables
   move.w  d0,hst_text_table_start(a3)
   move.w  d0,hst_text_BLTCON0BITS(a3)
   move.w  d0,hst_character_toggle_image(a3)
+
+; **** Morph-Vector-Balls *****
+  move.w  d0,mvb_rotation_x_angle(a3)
+  move.w  d0,mvb_rotation_y_angle(a3)
+  move.w  d0,mvb_rotation_z_angle(a3)
+
+  move.w  d0,mvb_morph_state(a3)
+  move.w  d0,mvb_morph_shapes_table_start(a3)
+  moveq   #1,d2
+  move.w  d2,mvb_morph_delay_counter(a3) ;Delay-Counter aktivieren
   rts
 
 ; ** Alle Initialisierungsroutinen ausführen **
@@ -834,6 +910,12 @@ init_all
   bsr     bvm_init_audio_channel_info_tables
   bsr     bvm_init_color_table
   bsr     bg2_copy_image_to_bitplane
+  bsr     mvb_init_object_coordinates_offsets
+  bsr     mvb_init_morph_shapes_table
+  IFEQ mvb_premorph_start_shape
+    bsr     mvb_init_start_shape
+  ENDC
+  bsr     mvb_rotation
   bsr     init_first_copperlist
   bra     init_second_copperlist
 
@@ -902,8 +984,7 @@ init_sprites
   CNOP 0,4
 bvm_init_audio_channel_info_tables
   lea     bvm_audio_channel1_info(pc),a0
-  moveq   #sine_table_length/4,d0 ;90 Grad = Maximaler Ausschlag der Sinuskurve
-  move.w  d0,(a0)+           ;Y-Winkel
+  move.w  #sine_table_length/4,(a0)+ ;Y-Winkel 90 Grad = maximaler Ausschlag
   moveq   #TRUE,d1
   move.w  d1,(a0)            ;Amplitude = 0
   lea     bvm_audio_channel2_info(pc),a0
@@ -942,6 +1023,49 @@ bvm_init_color_table_loop3
 ; ** Objekt ins Playfield kopieren **
 ; -----------------------------------
   COPY_IMAGE_TO_BITPLANE bg2,,,extra_pf3
+
+; **** Morph-Vector-Balls ****
+; ** XYZ-Koordinaten-Offsets initialisieren **
+; --------------------------------------------
+  CNOP 0,4
+mvb_init_object_coordinates_offsets
+  lea     mvb_object_coordinates_offsets(pc),a0 ;Zeiger auf Offset-Tabelle
+  moveq   #TRUE,d0           ;Startwert
+  moveq   #mvb_object_points_number-1,d7 ;Anzahl der Einträge
+mvb_init_object_coordinates_offsets_loop
+  move.w  d0,(a0)+           ;Startwert eintragen
+  addq.w  #3,d0              ;nächste XYZ-Koordinate
+  dbf     d7,mvb_init_object_coordinates_offsets_loop
+  rts
+
+; ** Object-Tabelle initialisieren **
+; -----------------------------------
+  CNOP 0,4
+mvb_init_morph_shapes_table
+; ** Form 1 **
+  lea     mvb_object_shape1_coordinates(pc),a0 ;Zeiger auf 1. Form
+  lea     mvb_morph_shapes_table(pc),a1 ;Tabelle mit Zeigern auf Objektdaten
+  move.l  a0,(a1)+           ;Zeiger auf Form-Tabelle
+; ** Form 2 **
+  lea     mvb_object_shape2_coordinates(pc),a0 ;Zeiger auf 2. Form
+  IFEQ mvb_morph_loop
+    move.l  a0,(a1)         ;Zeiger auf Form-Tabelle
+  ELSE
+    move.l  a0,(a1)+        ;Zeiger auf Form-Tabelle
+; ** Form 3 **
+    lea     mvb_object_shape3_coordinates(pc),a0 ;Zeiger auf 6. Form
+    move.l  a0,(a1)         ;Zeiger auf Form-Tabelle
+  ENDC
+  rts
+
+  IFEQ mvb_premorph_start_shape
+    CNOP 0,4
+mvb_init_start_shape
+    bsr     mvb_morph_object
+    tst.w   mvb_morph_state(a3) ;Morphing beendet?
+    beq.s   mvb_init_start_shape ;Nein -> verzweige
+    rts
+  ENDC
 
 
 ; ** 1. Copperliste initialisieren **
@@ -1216,6 +1340,15 @@ beam_routines
   bsr     bvm_get_channels_amplitudes
   bsr     bvm_clear_second_copperlist
   bsr     bvm_set_bars
+  bsr     set_vector_balls
+  bsr     mvb_clear_playfield1_1
+  bsr     mvb_rotation
+  bsr     mvb_morph_object
+  movem.l a4-a6,-(a7)
+  bsr     mvb_quicksort_coordinates
+  movem.l (a7)+,a4-a6
+  bsr     mvb_clear_playfield1_2
+  bsr     control_counters
   IFEQ pt_music_fader
     bsr     pt_mouse_handler
   ENDC
@@ -1249,20 +1382,22 @@ swap_vp1_playfield1_loop
   dbf     d7,swap_vp1_playfield1_loop
   rts
 
-; ** VP2-Playfield1 vertauschen **
+; ** VP2-Playfield2 vertauschen **
 ; --------------------------------
   CNOP 0,4
 swap_vp2_playfield2
   move.l  cl2_display(a3),a0
-  move.l  vp2_pf2_construction2(a3),a1
+  move.l  vp2_pf2_construction1(a3),a1
+  move.l  vp2_pf2_construction2(a3),a2
+  move.l  vp2_pf2_display(a3),vp2_pf2_construction1(a3)
+  move.l  a1,vp2_pf2_construction2(a3)
   ADDF.W  cl2_extension3_entry+cl2_ext3_BPL2PTH+2,a0
-  move.l  vp2_pf2_display(a3),vp2_pf2_construction2(a3)
-  move.l  a1,vp2_pf2_display(a3)
-  moveq   #vp2_pf2_depth-1,d7   ;Anzahl der Planes
+  move.l  a2,vp2_pf2_display(a3)
+  moveq   #vp2_pf2_depth-1,d7 ;Anzahl der Planes
 swap_vp2_playfield2_loop
-  move.w  (a1)+,(a0)          ;BPLxPTH
+  move.w  (a2)+,(a0)         ;BPLxPTH
   addq.w  #8,a0
-  move.w  (a1)+,4-8(a0)       ;BPLxPTL
+  move.w  (a2)+,4-8(a0)      ;BPLxPTL
   dbf     d7,swap_vp2_playfield2_loop
   rts
 
@@ -1355,7 +1490,7 @@ hst_horiz_scroll
   CNOP 0,4
 bvm_get_channels_amplitudes
   MOVEF.W bvm_max_amplitude,d2
-  moveq   #sine_table_length/4,d3
+  MOVEF.W sine_table_length/4,d3
   lea	  pt_audchan1temp(pc),a0 ;Zeiger auf temporäre Struktur des 1. Kanals
   lea     bvm_audio_channel1_info(pc),a1
   bsr.s   bvm_get_channel_amplitude
@@ -1408,7 +1543,7 @@ bvm_clear_second_copperlist_loop
   CNOP 0,4
 bvm_set_bars
   movem.l a3-a6,-(a7)
-  moveq   #(sine_table_length/2)-1,d5
+  MOVEF.W (sine_table_length/2)-1,d5
   lea     sine_table(pc),a0  
   lea     bvm_audio_channel1_info(pc),a1 ;Zeiger auf Amplitude und Y-Winkeldes Kanals
   lea     bvm_switch_table(pc),a4 ;Zeiger auf Switchtabelle
@@ -1442,6 +1577,363 @@ bvm_set_bars_loop2
   movem.l (a7)+,a3-a6
   rts
 
+; ** Playfield löschen (Blitter) **
+; ---------------------------------
+  CNOP 0,4
+mvb_clear_playfield1_1
+  move.l  vp2_pf2_construction1(a3),a0
+  WAITBLITTER
+  move.l  #BC0F_DEST<<16,BLTCON0-DMACONR(a6)
+  move.l  (a0),BLTDPT-DMACONR(a6)
+  moveq   #TRUE,d0
+  move.w  d0,BLTDMOD-DMACONR(a6) ;D-Mod
+  move.w  #(mvb_clear_blit_y_size*64)+(mvb_clear_blit_x_size/16),BLTSIZE-DMACONR(a6) ;Blitter starten
+  rts
+
+; ** Playfield löschen (CPU) **
+; -----------------------------
+  CNOP 0,4
+mvb_clear_playfield1_2
+  movem.l a3-a6,-(a7)
+  move.l  a7,save_a7(a3)     ;Stackpointer retten
+  moveq   #TRUE,d0
+  moveq   #TRUE,d1
+  moveq   #TRUE,d2
+  moveq   #TRUE,d3
+  moveq   #TRUE,d4
+  moveq   #TRUE,d5
+  moveq   #TRUE,d6
+  move.l  d0,a0
+  move.l  d0,a1
+  move.l  d0,a2
+  move.l  d0,a4
+  move.l  d0,a5
+  move.l  d0,a6
+  move.l  vp2_pf2_construction1(a3),a7 ;Zeiger erste Plane
+  move.l  (a7),a7
+  ADDF.L  extra_pf4_plane_width*extra_pf4_y_size*extra_pf4_depth,a7 ;Ende des Playfields
+  move.l  d0,a3
+  moveq   #5-1,d7            ;Anzahl der Durchläufe
+mvb_clear_playfield1_2_loop
+  REPT ((extra_pf4_plane_width*extra_pf4_y_size*(extra_pf4_depth-1))/56)/5
+  movem.l d0-d6/a0-a6,-(a7)  ;56 Bytes löschen
+  ENDR
+  dbf     d7,mvb_clear_playfield1_2_loop
+; Rest 120 Bytes
+  movem.l d0-d6/a0-a6,-(a7)
+  movem.l d0-d6/a0-a6,-(a7)
+  movem.l d0-d6/a0-a4,-(a7)
+  move.l  variables+save_a7(pc),a7 ;Alter Stack
+  movem.l (a7)+,a3-a6
+  rts
+
+; ** Rotate-Routine **
+; --------------------
+  CNOP 0,4
+mvb_rotation
+  movem.l a4-a6,-(a7)
+  move.w  mvb_rotation_x_angle(a3),d1 ;X-Winkel
+  move.w  d1,d0              ;X-Winkel -> d7
+  lea     sine_table(pc),a2  ;Sinus-Tabelle
+  move.w  (a2,d0.w*2),d4     ;sin(a)
+  move.w  #sine_table_length/4,a4
+  IFEQ sine_table_length-512
+    MOVEF.W sine_table_length-1,d3
+  ELSE
+    MOVEF.W sine_table_length,d3
+  ENDC
+  add.w   a4,d0              ;+ 90 Grad
+  swap    d4                 ;Bits 16-31 = sin(a)
+  IFEQ sine_table_length-512
+    and.w   d3,d0            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d0            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_x_angle_restart1
+    sub.w   d3,d0            ;Neustart
+mvb_rotation_no_x_angle_restart1
+  ENDC
+  move.w  (a2,d0.w*2),d4     ;Bits  0-15 = cos(a)
+  addq.w  #mvb_rotation_x_angle_speed,d1 ;nächster X-Winkel
+  IFEQ sine_table_length-512
+    and.w   d3,d1            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d1            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_x_angle_restart2
+    sub.w   d3,d1            ;Neustart
+mvb_rotation_no_x_angle_restart2
+  ENDC
+  move.w  d1,mvb_rotation_x_angle(a3) ;X-Winkel retten
+  move.w  mvb_rotation_y_angle(a3),d1 ;Y-Winkel
+  move.w  d1,d0              ;retten
+  move.w  (a2,d0.w*2),d5     ;sin(b)
+  add.w   a4,d0              ;+ 90 Grad
+  swap    d5                 ;Bits 16-31 = sin(b)
+  IFEQ sine_table_length-512
+    and.w   d3,d0            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d0            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_y_angle_restart1
+    sub.w   d3,d0            ;Neustart
+mvb_rotation_no_y_angle_restart1
+  ENDC
+  move.w  (a2,d0.w*2),d5     ;Bits  0-15 = cos(b)
+  addq.w  #mvb_rotation_y_angle_speed,d1 ;nächster Y-Winkel
+  IFEQ sine_table_length-512
+    and.w   d3,d1            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d1            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_y_angle_restart2
+    sub.w   d3,d1            ;Neustart
+mvb_rotation_no_y_angle_restart2
+  ENDC
+  move.w  d1,mvb_rotation_y_angle(a3) ;Y-Winkel retten
+  move.w  mvb_rotation_z_angle(a3),d1 ;Z-Winkel
+  move.w  d1,d0              ;retten
+  move.w  (a2,d0.w*2),d6     ;sin(c)
+  add.w   a4,d0              ;+ 90 Grad
+  swap    d6                 ;Bits 16-31 = sin(c)
+  IFEQ sine_table_length-512
+    and.w   d3,d0            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d0            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_z_angle_restart1
+    sub.w   d3,d0            ;Neustart
+mvb_rotation_no_z_angle_restart1
+  ENDC
+  move.w  (a2,d0.w*2),d6     ;Bits  0-15 = cos(c)
+  addq.w  #mvb_rotation_z_angle_speed,d1 ;nächster Z-Winkel
+  IFEQ sine_table_length-512
+    and.w   d3,d1            ;Übertrag entfernen
+  ELSE
+    cmp.w   d3,d1            ;360 Grad erreicht ?
+    blt.s   mvb_rotation_no_z_angle_restart2
+    sub.w   d3,d1            ;Neustart
+mvb_rotation_no_z_angle_restart2
+  ENDC
+  move.w  d1,mvb_rotation_z_angle(a3) ;Z-Winkel retten
+  lea     mvb_object_coordinates(pc),a0 ;Koordinaten der Linien
+  lea     mvb_rotation_xyz_coordinates(pc),a1 ;Koord.-Tab.
+  move.w  #mvb_rotation_d*8,a4 ;d
+  move.w  #mvb_rotation_x_center,a5 ;X-Mittelpunkt
+  move.w  #mvb_rotation_y_center,a6 ;Y-Mittelpunkt
+  moveq   #mvb_object_points_number-1,d7 ;Anzahl der Punkte
+mvb_rotation_loop
+  move.w  (a0)+,d0           ;X-Koord.
+  move.l  d7,a2              ;Schleifenzähler retten
+  move.w  (a0)+,d1           ;Y-Koord.
+  move.w  (a0)+,d2           ;Z-Koord.
+  ROTATE_X_AXIS
+  ROTATE_Y_AXIS
+  ROTATE_Z_AXIS
+; ** Zentralprojektion und Translation **
+  move.w  d2,d3              ;z -> d3
+  ext.l   d0                 ;Auf 32 Bit erweitern
+  add.w   a4,d3              ;z+d
+  MULUF.L mvb_rotation_d,d0,d7 ;x*d  X-Projektion
+  ext.l   d1                 ;Auf 32 Bit erweitern
+  divs.w  d3,d0              ;x'=(x*d)/(z+d)
+  MULUF.L mvb_rotation_d,d1,d7 ;y*d  Y-Projektion
+  add.w   a5,d0              ;x' + X-Mittelpunkt
+  move.w  d0,(a1)+           ;X-Pos.
+  divs.w  d3,d1              ;y'=(y*d)/(z+d)
+  add.w   a6,d1              ;y' + Y-Mittelpunkt
+  move.w  d1,(a1)+           ;Y-Pos.
+  asr.w   #3,d2              ;Z/8
+  move.l  a2,d7              ;Schleifenzähler holen
+  move.w  d2,(a1)+           ;Z-Pos.
+  dbf     d7,mvb_rotation_loop
+  movem.l (a7)+,a4-a6
+  rts
+
+; ** Form des Objekts ändern **
+; -----------------------------
+  CNOP 0,4
+mvb_morph_object
+  tst.w   mvb_morph_state(a3) ;Morphing an ?
+  bne.s   mvb_no_morph_object ;Nein -> verzweige
+  move.w  mvb_morph_shapes_table_start(a3),d1 ;Startwert
+  moveq   #TRUE,d2           ;Koordinatenzähler
+  lea     mvb_object_coordinates(pc),a0 ;Aktuelle Objektdaten
+  lea     mvb_morph_shapes_table(pc),a1 ;Tabelle mit Adressen der Formen-Tabellen
+  move.l  (a1,d1.w*4),a1     ;Zeiger auf Tabelle holen
+  moveq   #mvb_object_points_number*3-1,d7 ;Anzahl der Koordinaten
+mvb_morph_object_loop
+  move.w  (a0),d0            ;aktuelle Koordinate lesen
+  cmp.w   (a1)+,d0           ;mit Ziel-Koordinate vergleichen
+  beq.s   mvb_morph_object_next_coordinate ;Wenn aktuelle Koordinate = Ziel-Koordinate, dann verzweige
+  bgt.s   mvb_morph_object_zoom_size ;Wenn aktuelle Koordinate < Ziel-Koordinate, dann Koordinate erhöhen
+mvb_morph_object_reduce_size
+  addq.w  #mvb_morph_speed,d0 ;aktuelle Koordinate erhöhen
+  bra.s   mvb_morph_object_save_coordinate
+  CNOP 0,4
+mvb_morph_object_zoom_size
+  subq.w  #mvb_morph_speed,d0 ;aktuelle Koordinate verringern
+mvb_morph_object_save_coordinate
+  move.w  d0,(a0)            ;und retten
+  addq.w  #1,d2              ;Koordinatenzähler erhöhen
+mvb_morph_object_next_coordinate
+  addq.w  #2,a0              ;Nächste Koordinate
+  dbf     d7,mvb_morph_object_loop
+
+  tst.w   d2                 ;Morphing beendet?
+  bne.s   mvb_no_morph_object ;Nein -> verzweige
+  addq.w  #1,d1              ;nächster Eintrag in Objekttablelle
+  cmp.w   #mvb_morph_shapes_number,d1 ;Ende der Tabelle ?
+  IFEQ mvb_morph_loop
+    bne.s   mvb_save_morph_shapes_table_start ;Nein -> verzweige
+    moveq   #TRUE,d1         ;Neustart
+mvb_save_morph_shapes_table_start
+  ELSE
+    beq.s   mvb_morph_object_disable ;Ja -> verzweige
+  ENDC
+  move.w  d1,mvb_morph_shapes_table_start(a3) ;retten
+  move.w  #mvb_morph_delay,mvb_morph_delay_counter(a3) ;Zähler zurücksetzen
+mvb_morph_object_disable
+  moveq   #FALSE,d0
+  move.w  d0,mvb_morph_state(a3) ;Morhing aus
+mvb_no_morph_object
+  rts
+
+; ** Z-Koordinaten sortieren **
+; -----------------------------
+  CNOP 0,4
+mvb_quicksort_coordinates
+  moveq   #-2,d2             ;Maske, um Bit 0 zu löschen
+  lea     mvb_object_coordinates_offsets(pc),a0 ;Zeiger auf XYZ-Offsets-Tabelle
+  move.l  a0,a1              ;Zeiger -> a1
+  lea     (mvb_object_points_number-1)*2(a0),a2 ;Letzter Eintrag
+  move.l  a2,a5
+  lea     mvb_rotation_xyz_coordinates(pc),a6 ;Zeiger auf XYZ-Koords
+mvb_quicks
+  move.l  a5,d0              ;Zeiger auf letzten Eintrag
+  add.l   a0,d0              ;Adr. des ersten Eintrags + Adr. des letzten Eintrags
+  lsr.l   #1,d0              ;Adresse / 2
+  and.b   d2,d0              ;Nur gerade Werte
+  move.l  d0,a4              ;Adresse der Mitte der Tabelle -> a4
+  move.w  (a4),d1            ;XYZ-Offset lesen
+  move.w  4(a6,d1.w*2),d0    ;Z-Wert lesen
+mvb_quick
+  move.w  (a1)+,d1           ;XYZ-Offset lesen
+  cmp.w   4(a6,d1.w*2),d0    ;1. Z-Wert < mittlerer Z-Wert ?
+  blt.s   mvb_quick           ;Ja -> weiter
+  addq.w  #2,a2              ;nächstes XYZ-Offset
+  subq.w  #2,a1              ;Zeiger wieder zurücksetzen
+mvb_quick2
+  move.w  -(a2),d1           ;XYZ-Offset
+  cmp.w   4(a6,d1.w*2),d0    ;vorletzter Z-Wert > mittlerer Z-Wert
+  bgt.s   mvb_quick2          ;Ja -> weiter
+mvb_quick3
+  cmp.l   a2,a1              ;Zeiger auf Ende der Tab > Zeiger auf Anfang der Tab. ?
+  bgt.s   mvb_quick4          ;Ja -> verzweige
+  move.w  (a2),d1            ;letztes Offset holen
+  move.w  (a1),(a2)          ;erstes Offset -> letztes Offset
+  subq.w  #2,a2              ;vorletztes Offset
+  move.w  d1,(a1)+           ;letztes Offset -> erstes Offset
+mvb_quick4
+  cmp.l   a2,a1              ;Zeiger auf Anfang <= Zeiger auf Ende der Tab. ?
+  ble.s   mvb_quick           ;Ja -> verzweige
+  cmp.l   a2,a0              ;Zeiger auf Anfang >= Zeiger auf Ende der Tab. ?
+  bge.s   mvb_quick5          ;Ja -> verzweige
+  move.l  a5,-(a7)
+  move.l  a2,a5              ;Zeiger auf Ende der Tab. -> a5
+  move.l  a0,a1
+  bsr.s   mvb_quicks
+  move.l  (a7)+,a5
+mvb_quick5
+  cmp.l   a5,a1              ;Zeiger auf Anfang >= Zeiger auf Ende der Tab. ?
+  bge.s   mvb_quick6          ;Ja -> verzweige
+  move.l  a0,-(a7)
+  move.l  a1,a0
+  move.l  a5,a2
+  bsr.s   mvb_quicks
+  move.l  (a7)+,a0
+mvb_quick6
+  rts
+
+; ** Vektor-Bälle in Playfield kopieren **
+; ----------------------------------------
+  CNOP 0,4
+set_vector_balls
+  movem.l a3-a5,-(a7)
+  move.l  a7,save_a7(a3)     ;Stackpointer retten
+  bsr     mvb_init_balls_blit
+  move.w  #BC0F_SRCA+BC0F_SRCB+BC0F_SRCC+BC0F_DEST+NANBC+NABC+ABNC+ABC,d3 ;Minterm D=A+B
+  move.w  #(mvb_copy_blit_y_size*64)+(mvb_copy_blit_x_size/16),a4
+  move.l  vp2_pf2_construction2(a3),a0
+  move.l  (a0),d4
+  lea     mvb_object_coordinates_offsets(pc),a0
+  lea     mvb_rotation_xyz_coordinates(pc),a1
+  move.w  #mvb_z_plane1,a2
+  move.w  #mvb_z_plane2,a3
+  lea     mvb_image_data,a5  ;Ball-Grafik
+  lea     mvb_image_mask,a7  ;Ball-Maske
+  moveq   #mvb_balls_number-1,d7 ;Anzahl der Bälle
+set_vector_balls_loop
+  move.w  (a0)+,d0           ;Startwert für XY-Koordinate
+  moveq   #TRUE,d5
+  movem.w (a1,d0.w*2),d0-d2  ;XYZ lesen
+mvb_check_z_plane1
+  cmp.w   a2,d2              ;1. Z-Plane ?
+  blt.s   mvb_z_plane1_found ;Ja -> verzweige
+mvb_check_z_plane2
+  cmp.w   a3,d2              ;2. Z-Plane ?
+  blt.s   mvb_z_plane2_found ;Ja -> verzweige
+mvb_check_z_plane3
+  cmp.w   #mvb_z_plane3,d2   ;3. Z-Plane ?
+  blt.s   mvb_z_plane3_found ;Ja -> verzweige
+  ADDF.W  mvb_image_width,d5
+mvb_z_plane3_found
+  ADDF.W  mvb_image_width,d5
+mvb_z_plane2_found
+  ADDF.W  mvb_image_width,d5
+mvb_z_plane1_found
+  MULUF.W (extra_pf4_plane_width*extra_pf4_depth)/2,d1,d2 ;Y-Offset in Playfield
+  ror.l   #4,d0              ;Shift-Bits in richtige Position bringen
+  move.l  d5,d6
+  add.w   d0,d1              ;+ Y-Offset
+  add.l   a5,d5              ;+ Adresse Ball-Grafiken
+  MULUF.L 2,d1               ;*2 = XY-Offset
+  swap    d0                 ;Shift-Bits holen
+  add.l   d4,d1              ;+ Playfield-Adresse
+  add.l   a7,d6              ;+ Adresse Ball-Masken
+  WAITBLITTER
+  move.w  d0,BLTCON1-DMACONR(a6)
+  or.w    d3,d0              ;restliche Bits von BLTCON0
+  move.w  d0,BLTCON0-DMACONR(a6)
+  move.l  d1,BLTCPT-DMACONR(a6) ;Playfield lesen
+  move.l  d5,BLTBPT-DMACONR(a6) ;Ball-Grafiken
+  move.l  d6,BLTAPT-DMACONR(a6) ;Ball-Masken
+  move.l  d1,BLTDPT-DMACONR(a6) ;Playfield schreiben
+  move.w  a4,BLTSIZE-DMACONR(a6) ;Blitter starten
+  dbf     d7,set_vector_balls_loop
+  move.w  #DMAF_BLITHOG,DMACON-DMACONR(a6) ;BLTPRI aus
+  move.l  variables+save_a7(pc),a7 ;Alter Stackpointer
+  movem.l (a7)+,a3-a5
+  rts
+  CNOP 0,4
+mvb_init_balls_blit
+  move.w  #DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
+  WAITBLITTER
+  move.l  #$ffff0000,BLTAFWM-DMACONR(a6) ;Ausmaskierung
+  move.l  #((extra_pf4_plane_width-(mvb_image_width+2))<<16)+((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2)),BLTCMOD-DMACONR(a6) ;C+B-Moduli
+  move.l  #(((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2))<<16)+(extra_pf4_plane_width-(mvb_image_width+2)),BLTAMOD-DMACONR(a6) ;A+D-Moduli
+  rts
+
+
+; ** Zähler kontrollieren **
+; --------------------------
+  CNOP 0,4
+control_counters
+  move.w  mvb_morph_delay_counter(a3),d0
+  bmi.s   mvb_morph_no_delay_counter ;Wenn Zähler negativ -> verzweige
+  subq.w  #1,d0              ;Zähler verringern
+  bpl.s   mvb_morph_save_delay_counter ;Wenn positiv -> verzweige
+mvb_morph_enable
+  clr.w   mvb_morph_state(a3) ;Morphing an
+mvb_morph_save_delay_counter
+  move.w  d0,mvb_morph_delay_counter(a3) ;retten
+mvb_morph_no_delay_counter
+  rts
 
   IFEQ pt_music_fader
 ; ** Mouse-Handler **
@@ -1560,7 +2052,7 @@ spr_pointers_display
 ; ----------------------------
   CNOP 0,2
 sine_table
-  INCLUDE "sine-table-256x16.i"
+  INCLUDE "sine-table-512x16.i"
 
 ; **** PT-Replay ****
 ; ** Tables for effect commands **
@@ -1587,7 +2079,7 @@ sine_table
 ; -------------------------
   INCLUDE "music-tracker/pt-sample-starts-table.i"
 
-; ** Pionters to priod tables for different tuning **
+; ** Pointers to priod tables for different tuning **
 ; ---------------------------------------------------
   INCLUDE "music-tracker/pt-finetune-starts-table.i"
 
@@ -1656,6 +2148,124 @@ bvm_audio_channel3_info
 bvm_audio_channel4_info
   DS.B bvm_audchaninfo_SIZE
 
+; **** Morp-Vector-Balls ****
+; ** Objektdaten **
+; -----------------
+  CNOP 0,2
+mvb_object_coordinates
+; * Zoom-In *
+  DS.W mvb_object_points_number*3
+
+; ** Formen des Objekts **
+; ------------------------
+; ** Form 1 **
+mvb_object_shape1_coordinates
+; * "R" *
+  DC.W -(69*8),-(32*8),0   ;P0
+  DC.W -(69*8),-(19*8),0   ;P1
+  DC.W -(69*8),-(6*8),0    ;P2
+  DC.W -(69*8),6*8,0       ;P3
+  DC.W -(69*8),19*8,0      ;P4
+
+  DC.W -(57*8),-(32*8),0   ;P5
+  DC.W -(57*8),-(6*8),0    ;P6
+
+  DC.W -(44*8),-(25*8),0   ;P6
+  DC.W -(44*8),-(13*8),0   ;P8
+  DC.W -(44*8),6*8,0       ;P9
+  DC.W -(44*8),19*8,0      ;P10
+
+; * "S" *
+  DC.W -(19*8),-(25*8),0   ;P11
+  DC.W -(19*8),-(13*8),0   ;P12
+  DC.W -(19*8),19*8,0      ;P13
+
+  DC.W -(6*8),-(32*8),0    ;P13
+  DC.W -(6*8),-(6*8),0     ;P15
+  DC.W -(6*8),19*8,0       ;P16
+
+  DC.W 6*8,-(32*8),0       ;P16
+  DC.W 6*8,0,0             ;P18
+  DC.W 6*8,13*8,0          ;P19
+
+; * "E" *
+  DC.W 32*8,-(32*8),0      ;P20
+  DC.W 32*8,-(19*8),0      ;P19
+  DC.W 32*8,-(6*8),0       ;P22
+  DC.W 32*8,6*8,0          ;P23
+  DC.W 32*8,19*8,0         ;P24
+
+  DC.W 44*8,-(32*8),0      ;P25
+  DC.W 44*8,-(6*8),0       ;P26
+  DC.W 44*8,19*8,0         ;P26
+
+  DC.W 57*8,-(32*8),0      ;P25
+  DC.W 57*8,19*8,0         ;P29
+
+; ** Form 2 **
+mvb_object_shape2_coordinates
+; * "3" *
+  DC.W -(44*8),-(44*8),0   ;P0
+  DC.W -(38*8),-(6*8),0    ;P1
+  DC.W -(44*8),32*8,0      ;P2
+
+  DC.W -(32*8),-(44*8),0   ;P3
+  DC.W -(25*8),-(6*8),0    ;P4
+  DC.W -(32*8),32*8,0      ;P5
+
+  DC.W -(19*8),-(44*8),0   ;P6
+  DC.W -(13*8),-(32*8),0   ;P6
+  DC.W -(13*8),-(19*8),0   ;P8
+  DC.W -(13*8),-(6*8),0    ;P9
+  DC.W -(13*8),6*8,0       ;P10
+  DC.W -(13*8),19*8,0      ;P11
+  DC.W -(19*8),32*8,0      ;P12
+
+; * "0" *
+  DC.W 13*8,-(44*8),0      ;P13
+  DC.W 6*8,-(32*8),0       ;P13
+  DC.W 6*8,-(19*8),0       ;P15
+  DC.W 6*8,-(6*8),0        ;P16
+  DC.W 6*8,6*8,0           ;P16
+  DC.W 6*8,19*8,0          ;P18
+  DC.W 13*8,32*8,0         ;P19
+
+  DC.W 25*8,-(44*8),0      ;P20
+  DC.W 25*8,32*8,0         ;P19
+
+  DC.W 38*8,-(44*8),0      ;P22
+  DC.W 44*8,-(32*8),0      ;P23
+  DC.W 44*8,-(19*8),0      ;P24
+  DC.W 44*8,-(6*8),0       ;P25
+  DC.W 44*8,6*8,0          ;P26
+  DC.W 44*8,19*8,0         ;P26
+  DC.W 38*8,32*8,0         ;P25
+
+  DC.W 38*8,32*8,0         ;P29 überzählig
+
+  IFNE mvb_morph_loop
+; ** Form 3 **
+mvb_object_shape3_coordinates
+; * Zoom-Out *
+    DS.W mvb_object_points_number*3
+  ENDC
+
+; ** Tabelle mit Offsetwerten der XYZ-Koordinaten **
+; --------------------------------------------------
+mvb_object_coordinates_offsets
+  DS.W mvb_object_points_number
+
+; ** Tabelle mit XYZ-Koordinaten **
+; ---------------------------------
+mvb_rotation_xyz_coordinates
+  DS.W mvb_object_points_number*4
+
+; ** Tabelle mit Adressen der Objekttabellen **
+; ---------------------------------------------
+  CNOP 0,4
+mvb_morph_shapes_table
+  DS.B mvb_morph_shape_SIZE*mvb_morph_shapes_number
+
 
 ; ## Speicherstellen allgemein ##
 ; -------------------------------
@@ -1720,5 +2330,12 @@ bg2_image_data SECTION bg2_gfx,DATA
 ; **** Horiz-Scrolltext ****
 hst_image_data SECTION hst_gfx,DATA_C
   INCBIN "Daten:Asm-Sources.AGA/30/fonts/32x26x4-Font.rawblit"
+
+; **** Morph-Vector-Balls ****
+mvb_image_data SECTION mvb_gfx1,DATA_C
+  INCBIN "Daten:Asm-Sources.AGA/30/graphics/4x16x11x8-Balls.rawblit"
+
+mvb_image_mask SECTION mvb_gfx2,DATA_C
+  INCBIN "Daten:Asm-Sources.AGA/30/graphics/4x16x11x8-Balls.mask"
 
   END

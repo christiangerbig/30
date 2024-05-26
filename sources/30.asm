@@ -113,7 +113,7 @@ pf1_depth2                     EQU 0
 pf1_x_size3                    EQU 0
 pf1_y_size3                    EQU 0
 pf1_depth3                     EQU 0
-pf1_colors_number              EQU 240
+pf1_colors_number              EQU 256
 
 pf2_x_size1                    EQU 0
 pf2_y_size1                    EQU 0
@@ -128,7 +128,7 @@ pf2_colors_number              EQU 0
 pf_colors_number               EQU pf1_colors_number+pf2_colors_number
 pf_depth                       EQU pf1_depth3+pf2_depth3
 
-extra_pf_number                EQU 6
+extra_pf_number                EQU 7
 ; **** Viewport 1 ****
 ; ** Playfield 1 **
 extra_pf1_x_size               EQU 384
@@ -140,18 +140,23 @@ extra_pf2_depth                EQU 2
 ; **** Viewport 2 ****
 ; ** Playfield 1 **
 extra_pf3_x_size               EQU 320
-extra_pf3_y_size               EQU 208
+extra_pf3_y_size               EQU 182
 extra_pf3_depth                EQU 4
 ; ** Playfield 2 **
 extra_pf4_x_size               EQU 320
-extra_pf4_y_size               EQU 208
+extra_pf4_y_size               EQU 182
 extra_pf4_depth                EQU 3
 extra_pf5_x_size               EQU 320
-extra_pf5_y_size               EQU 208
+extra_pf5_y_size               EQU 182
 extra_pf5_depth                EQU 3
 extra_pf6_x_size               EQU 320
-extra_pf6_y_size               EQU 208
+extra_pf6_y_size               EQU 182
 extra_pf6_depth                EQU 3
+; **** Viewport 3 ****
+; ** Playfield 2 **
+extra_pf7_x_size               EQU 320
+extra_pf7_y_size               EQU 48
+extra_pf7_depth                EQU 2
 
 spr_number                     EQU 8
 spr_x_size1                    EQU 0
@@ -226,12 +231,14 @@ vp1_DDFSTRTBITS                EQU DDFSTART_320_pixel
 vp1_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
 
 vp1_pf1_depth                  EQU 2
+vp1_pf_depth                   EQU vp1_pf1_depth
 vp1_pf1_colors_number          EQU 4
+vp1_pf_colors_number           EQU vp1_pf1_colors_number
 
 ; **** Viewport 2 ****
 vp2_pixel_per_line             EQU 320
 vp2_visible_pixels_number      EQU 320
-vp2_visible_lines_number       EQU 208
+vp2_visible_lines_number       EQU 182
 
 vp2_VSTART                     EQU vp1_VSTOP
 vp2_VSTOP                      EQU vp2_VSTART+vp2_visible_lines_number
@@ -242,8 +249,30 @@ vp2_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
 
 vp2_pf1_depth                  EQU 4
 vp2_pf2_depth                  EQU 3
+vp2_pf_depth                   EQU vp2_pf1_depth+vp2_pf2_depth
 vp2_pf1_colors_number          EQU 16
 vp2_pf2_colors_number          EQU 8
+vp2_pf_colors_number           EQU vp2_pf1_colors_number+vp2_pf2_colors_number
+
+; **** Viewport 3 ****
+vp3_pixel_per_line             EQU 320
+vp3_visible_pixels_number      EQU 320
+vp3_visible_lines_number       EQU 48
+
+vp3_VSTART                     EQU vp2_VSTOP
+vp3_VSTOP                      EQU vp3_VSTART+vp3_visible_lines_number
+
+vp3_pf_pixel_per_datafetch     EQU 64 ;4x
+vp3_DDFSTRTBITS                EQU DDFSTART_320_pixel
+vp3_DDFSTOPBITS                EQU DDFSTOP_320_pixel_4x
+
+vp3_pf1_depth                  EQU 3
+vp3_pf2_depth                  EQU 2
+vp3_pf_depth                   EQU vp3_pf1_depth+vp3_pf2_depth
+vp3_pf1_colors_number          EQU 8
+vp3_pf2_colors_number          EQU 4
+vp3_pf_colors_number           EQU vp3_pf1_colors_number+vp3_pf2_colors_number
+
 
 ; **** Viewport 1 ****
 ; ** Playfield 1 **
@@ -255,6 +284,11 @@ extra_pf3_plane_width          EQU extra_pf3_x_size/8
 ; ** Playfield2 **
 extra_pf4_plane_width          EQU extra_pf4_x_size/8
 extra_pf5_plane_width          EQU extra_pf5_x_size/8
+extra_pf6_plane_width          EQU extra_pf6_x_size/8
+; **** Viewport 3 ****
+; ** Playfield2 **
+extra_pf7_plane_width          EQU extra_pf7_x_size/8
+
 ; **** Viewport 1 ****
 vp1_data_fetch_width           EQU vp1_pixel_per_line/8
 vp1_pf1_plane_moduli           EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+extra_pf1_plane_width-vp1_data_fetch_width
@@ -262,8 +296,12 @@ vp1_pf1_plane_moduli           EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+e
 vp2_data_fetch_width           EQU vp2_pixel_per_line/8
 vp2_pf1_plane_moduli           EQU (extra_pf3_plane_width*(extra_pf3_depth-1))+extra_pf3_plane_width-vp2_data_fetch_width
 vp2_pf2_plane_moduli           EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_plane_width-vp2_data_fetch_width
+; **** Viewport 4 ****
+vp3_data_fetch_width           EQU vp3_pixel_per_line/8
+vp3_pf1_plane_moduli           EQU -(extra_pf4_plane_width-(extra_pf4_plane_width-vp3_data_fetch_width))
+vp3_pf2_plane_moduli           EQU (extra_pf7_plane_width*(extra_pf7_depth-1))+extra_pf7_plane_width-vp3_data_fetch_width
 
-
+; **** View ****
 BPLCON0BITS                    EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) ;lores
 BPLCON3BITS1                   EQU BPLCON3F_SPRES0
 BPLCON3BITS2                   EQU BPLCON3BITS1+BPLCON3F_LOCT
@@ -273,8 +311,8 @@ FMODEBITS                      EQU FMODEF_SPR32+FMODEF_SPAGEM+FMODEF_SSCAN2
 COLOR00BITS                    EQU $001122
 COLOR00HIGHBITS                EQU $012
 COLOR00LOWBITS                 EQU $012
-
-vp1_BPLCON0BITS                EQU BPLCON0F_ECSENA+((extra_pf1_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((extra_pf1_depth&$07)*BPLCON0F_BPU0) ;lores
+; **** Viewport 1 ****
+vp1_BPLCON0BITS                EQU BPLCON0F_ECSENA+((vp1_pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((vp1_pf_depth&$07)*BPLCON0F_BPU0) ;lores
 vp1_BPLCON1BITS                EQU TRUE
 vp1_BPLCON2BITS                EQU TRUE
 vp1_BPLCON3BITS1               EQU BPLCON3BITS1
@@ -284,8 +322,8 @@ vp1_BPLCON3BITS4               EQU vp1_BPLCON3BITS3+BPLCON3F_LOCT
 vp1_BPLCON4BITS                EQU BPLCON4BITS+(BPLCON4F_BPLAM0*240)
 vp1_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp1_COLOR00BITS                EQU COLOR00BITS
-
-vp2_BPLCON0BITS                EQU BPLCON0F_ECSENA+(((extra_pf3_depth+extra_pf4_depth)>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+BPLCON0F_DPF+(((extra_pf3_depth+extra_pf4_depth)&$07)*BPLCON0F_BPU0)
+; **** Viewport 2 ****
+vp2_BPLCON0BITS                EQU BPLCON0F_ECSENA+((vp2_pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+BPLCON0F_DPF+((vp2_pf_depth&$07)*BPLCON0F_BPU0)
 vp2_BPLCON1BITS                EQU TRUE
 vp2_BPLCON2BITS                EQU BPLCON2F_PF2PRI
 vp2_BPLCON3BITS1               EQU BPLCON3BITS1+(BPLCON3F_PF2OF0*16)
@@ -293,6 +331,15 @@ vp2_BPLCON3BITS2               EQU vp2_BPLCON3BITS1+BPLCON3F_LOCT
 vp2_BPLCON4BITS                EQU BPLCON4BITS
 vp2_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
 vp2_COLOR00BITS                EQU COLOR00BITS
+; **** Viewport 3 ****
+vp3_BPLCON0BITS                EQU BPLCON0F_ECSENA+((vp3_pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+BPLCON0F_DPF+((vp3_pf_depth&$07)*BPLCON0F_BPU0)
+vp3_BPLCON1BITS                EQU TRUE
+vp3_BPLCON2BITS                EQU TRUE
+vp3_BPLCON3BITS1               EQU BPLCON3BITS1+(BPLCON3F_PF2OF0*8)
+vp3_BPLCON3BITS2               EQU vp3_BPLCON3BITS1+BPLCON3F_LOCT
+vp3_BPLCON4BITS                EQU BPLCON4BITS+(BPLCON4F_BPLAM0*244)
+vp3_FMODEBITS                  EQU FMODEBITS+FMODEF_BPL32+FMODEF_BPAGEM
+vp3_COLOR00BITS                EQU COLOR00BITS
 
 ; **** Viewport 1 ****
 cl2_vp1_HSTART                 EQU $00
@@ -300,7 +347,10 @@ cl2_vp1_VSTART                 EQU MINROW
 ; **** Viewport 2 ****
 cl2_vp2_HSTART                 EQU HSTOP_320_pixel-(3*CMOVE_slot_period)
 cl2_vp2_VSTART                 EQU vp1_VSTOP-1
-
+; **** Viewport 3 ****
+cl2_vp3_HSTART                 EQU HSTOP_320_pixel-(6*CMOVE_slot_period)
+cl2_vp3_VSTART                 EQU vp2_VSTOP-1
+; **** Copper-Interrupt ****
 cl2_HSTART                     EQU $00
 cl2_VSTART                     EQU beam_position&$ff
 
@@ -519,6 +569,35 @@ cl2_extension3_SIZE RS.B 0
 
   RSRESET
 
+cl2_extension4      RS.B 0
+
+cl2_ext4_WAIT       RS.L 1
+cl2_ext4_DDFSTRT    RS.L 1
+cl2_ext4_DDFSTOP    RS.L 1
+cl2_ext4_BPLCON0    RS.L 1
+cl2_ext4_BPLCON1    RS.L 1
+cl2_ext4_BPLCON2    RS.L 1
+cl2_ext4_BPLCON3_1  RS.L 1
+cl2_ext4_BPL1MOD    RS.L 1
+cl2_ext4_BPL2MOD    RS.L 1
+cl2_ext4_BPLCON4    RS.L 1
+cl2_ext4_FMODE      RS.L 1
+cl2_ext4_BPL1PTH    RS.L 1
+cl2_ext4_BPL1PTL    RS.L 1
+cl2_ext4_BPL2PTH    RS.L 1
+cl2_ext4_BPL2PTL    RS.L 1
+cl2_ext4_BPL3PTH    RS.L 1
+cl2_ext4_BPL3PTL    RS.L 1
+cl2_ext4_BPL4PTH    RS.L 1
+cl2_ext4_BPL4PTL    RS.L 1
+cl2_ext4_BPL5PTH    RS.L 1
+cl2_ext4_BPL5PTL    RS.L 1
+
+cl2_extension4_SIZE RS.B 0
+
+
+  RSRESET
+
 cl2_begin            RS.B 0
 
 ; **** Viewport 1 ****
@@ -528,7 +607,9 @@ cl2_BPLCON0_1        RS.L 1
 cl2_extension2_entry RS.B cl2_extension2_SIZE*vp1_visible_lines_number
 ; **** Viewport 2 ****
 cl2_extension3_entry RS.B cl2_extension3_SIZE
-
+; **** Viewport 3 ****
+cl2_extension4_entry RS.B cl2_extension4_SIZE
+; **** Copper-Interrupt ****
 cl1_WAIT1            RS.L 1
 cl1_WAIT2            RS.L 1
 cl1_INTREQ           RS.L 1
@@ -1087,7 +1168,8 @@ init_first_copperlist
 
   CNOP 0,4
 cl1_init_color_registers
-  COP_INIT_COLORHI COLOR00,32,pf1_color_table
+  COP_INIT_COLORHI COLOR00,16,vp2_pf1_color_table
+  COP_INIT_COLORHI COLOR16,16,vp2_pf2_color_table
   COP_SELECT_COLORHI_BANK 1
   COP_INIT_COLORHI COLOR00,16,spr_color_table
   COP_INIT_COLORHI COLOR16,16,bvm_color_table
@@ -1103,9 +1185,13 @@ cl1_init_color_registers
   COP_INIT_COLORHI COLOR00,32
   COP_SELECT_COLORHI_BANK 7
   COP_INIT_COLORHI COLOR00,16
+  COP_INIT_COLORHI COLOR16,4,vp1_pf1_color_table
+  COP_INIT_COLORHI COLOR20,8,vp3_pf1_color_table
+  COP_INIT_COLORHI COLOR28,4,vp3_pf2_color_table
 
   COP_SELECT_COLORLO_BANK 0
-  COP_INIT_COLORLO COLOR00,32,pf1_color_table
+  COP_INIT_COLORLO COLOR00,16,vp2_pf1_color_table
+  COP_INIT_COLORLO COLOR16,16,vp2_pf2_color_table
   COP_SELECT_COLORLO_BANK 1
   COP_INIT_COLORLO COLOR00,16,spr_color_table
   COP_INIT_COLORLO COLOR16,16,bvm_color_table
@@ -1121,6 +1207,9 @@ cl1_init_color_registers
   COP_INIT_COLORLO COLOR00,32
   COP_SELECT_COLORLO_BANK 7
   COP_INIT_COLORLO COLOR00,16
+  COP_INIT_COLORLO COLOR16,4,vp1_pf1_color_table
+  COP_INIT_COLORLO COLOR20,8,vp3_pf1_color_table
+  COP_INIT_COLORLO COLOR28,4,vp3_pf2_color_table
   rts
 
   CNOP 0,4
@@ -1165,6 +1254,10 @@ init_second_copperlist
   COPWAIT cl2_vp2_HSTART,cl2_vp2_VSTART
   bsr     cl2_vp2_init_playfield_registers
   bsr     cl2_vp2_init_bitplane_pointers
+; **** Viewport 3 ****
+  COPWAIT cl2_vp3_HSTART,cl2_vp3_VSTART
+  bsr     cl2_vp3_init_playfield_registers
+  bsr     cl2_vp3_init_bitplane_pointers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copint
   COPLISTEND
@@ -1172,6 +1265,8 @@ init_second_copperlist
   bsr     cl2_vp1_set_fill_color_gradient
   bsr     cl2_vp1_set_outline_color_gradient
   bsr     cl2_vp2_pf1_set_bitplane_pointers
+  bsr     cl2_vp3_pf1_set_bitplane_pointers
+  bsr     cl2_vp3_pf2_set_bitplane_pointers
   bsr     copy_second_copperlist
   bsr     swap_second_copperlist
   bsr     swap_vp1_playfield1
@@ -1232,8 +1327,26 @@ cl2_vp2_init_bitplane_pointers
   COPMOVEQ TRUE,BPL6PTL
   rts
 
+; **** Viewport 3 ****
+  COP_INIT_PLAYFIELD_REGISTERS cl2,,vp3,TRIGGERBITPLANES
+
+  CNOP 0,4
+cl2_vp3_init_bitplane_pointers
+  COPMOVEQ TRUE,BPL1PTH
+  COPMOVEQ TRUE,BPL1PTL
+  COPMOVEQ TRUE,BPL2PTH
+  COPMOVEQ TRUE,BPL2PTL
+  COPMOVEQ TRUE,BPL3PTH
+  COPMOVEQ TRUE,BPL3PTL
+  COPMOVEQ TRUE,BPL4PTH
+  COPMOVEQ TRUE,BPL4PTL
+  COPMOVEQ TRUE,BPL5PTH
+  COPMOVEQ TRUE,BPL5PTL
+  rts
+
   COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART,YWRAP
 
+; **** Viewport 1 ****
   CNOP 0,4
 cl2_vp1_pf1_set_bitplane_pointers
   move.l  cl2_display(a3),a0 ;CL
@@ -1286,6 +1399,7 @@ cl2_vp1_set_outline_color_gradient_loop
   dbf     d7,cl2_vp1_set_outline_color_gradient_loop
   rts
 
+; **** Viewport 2 ****
   CNOP 0,4
 cl2_vp2_pf1_set_bitplane_pointers
   move.l  cl2_construction2(a3),a0
@@ -1296,7 +1410,38 @@ cl2_vp2_pf1_set_bitplane_pointers_loop
   move.w  (a1)+,(a0)         ;High-Wert
   addq.w  #8,a0              ;nächter Playfieldzeiger
   move.w  (a1)+,4-8(a0)      ;Low-Wert
-  dbf     d7,cl1_vp2_pf1_set_bitplane_pointers_loop
+  dbf     d7,cl2_vp2_pf1_set_bitplane_pointers_loop
+  rts
+
+; **** Viewport 3 ****
+  CNOP 0,4
+cl2_vp3_pf1_set_bitplane_pointers
+  MOVEF.L extra_pf4_plane_width*extra_pf4_y_size,d1
+  move.l  cl2_construction2(a3),a0
+  ADDF.L  cl2_extension4_entry+cl2_ext4_BPL1PTH+2,a0
+  move.l  extra_pf4(a3),a1   ;Zeiger auf erste Plane
+  moveq   #vp3_pf1_depth-1,d7 ;Anzahl der Bitplanes
+cl2_vp3_pf1_set_bitplane_pointers_loop
+  move.l  (a1)+,d0
+  add.l   d1,d0              ;Ende der Bitplane
+  move.w  d0,4(a0)           ;Low-Wert
+  swap    d0                 ;High
+  move.w  d0,(a0)            ;High-Wert
+  ADDF.W  16,a0              ;nächter Playfieldzeiger
+  dbf     d7,cl2_vp3_pf1_set_bitplane_pointers_loop
+  rts
+
+  CNOP 0,4
+cl2_vp3_pf2_set_bitplane_pointers
+  move.l  cl2_construction2(a3),a0
+  ADDF.L  cl2_extension4_entry+cl2_ext4_BPL2PTH+2,a0
+  move.l  extra_pf7(a3),a1   ;Zeiger auf erste Plane
+  moveq   #vp3_pf2_depth-1,d7 ;Anzahl der Bitplanes
+cl2_vp3_pf2_set_bitplane_pointers_loop
+  move.w  (a1)+,(a0)         ;High-Wert
+  ADDF.W  16,a0              ;nächter Playfieldzeiger
+  move.w  (a1)+,4-16(a0)     ;Low-Wert
+  dbf     d7,cl2_vp3_pf2_set_bitplane_pointers_loop
   rts
 
   COPY_COPPERLIST cl2,2
@@ -1393,12 +1538,22 @@ swap_vp2_playfield2
   move.l  a1,vp2_pf2_construction2(a3)
   ADDF.W  cl2_extension3_entry+cl2_ext3_BPL2PTH+2,a0
   move.l  a2,vp2_pf2_display(a3)
+  move.l  a2,a1
   moveq   #vp2_pf2_depth-1,d7 ;Anzahl der Planes
 swap_vp2_playfield2_loop
   move.w  (a2)+,(a0)         ;BPLxPTH
   addq.w  #8,a0
   move.w  (a2)+,4-8(a0)      ;BPLxPTL
   dbf     d7,swap_vp2_playfield2_loop
+
+  move.l  cl2_display(a3),a0
+  ADDF.W  cl2_extension4_entry+cl2_ext4_BPL1PTH+2,a0
+  moveq   #vp3_pf1_depth-1,d7 ;Anzahl der Planes
+swap_vp3_playfield1_loop
+  move.w  (a1)+,(a0)         ;BPLxPTH
+  ADDF.W  16,a0
+  move.w  (a1)+,4-16(a0)     ;BPLxPTL
+  dbf     d7,swap_vp3_playfield1_loop
   rts
 
 
@@ -1619,10 +1774,6 @@ mvb_clear_playfield1_2_loop
   movem.l d0-d6/a0-a6,-(a7)  ;56 Bytes löschen
   ENDR
   dbf     d7,mvb_clear_playfield1_2_loop
-; Rest 120 Bytes
-  movem.l d0-d6/a0-a6,-(a7)
-  movem.l d0-d6/a0-a6,-(a7)
-  movem.l d0-d6/a0-a4,-(a7)
   move.l  variables+save_a7(pc),a7 ;Alter Stack
   movem.l (a7)+,a3-a6
   rts
@@ -2028,13 +2179,33 @@ NMI_int_server
 
   INCLUDE "sys-structures.i"
 
-; ** Farben des ersten Playfields **
-; ----------------------------------
+; ** Farben der Playfields **
+; ---------------------------
+; **** View ****
   CNOP 0,4
 pf1_color_table
+  DC.L COLOR00BITS
+; **** Viewport 1 ****
+vp1_pf1_color_table
+  REPT vp1_pf_colors_number
+    DC.L COLOR00BITS
+  ENDR
+; **** Viewport 2 ****
+vp2_pf1_color_table
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple.ct"
+vp2_pf2_color_table
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls.ct"
   REPT 8
+    DC.L COLOR00BITS
+  ENDR
+; **** Viewport 3 ****
+vp3_pf1_color_table
+  DC.L COLOR00BITS
+  REPT vp3_pf1_colors_number-1
+    DC.L $000000
+  ENDR
+vp3_pf2_color_table
+  REPT vp3_pf2_colors_number
     DC.L COLOR00BITS
   ENDR
 

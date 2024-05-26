@@ -27,7 +27,6 @@ Copper initialisiert BP1/2/4/6 für VP2
 
 H-Blank (20 CMOVEs), CWAIT schon zum Zeilenende der vorherigen Zeile):
 VP3
-Copper initialisiert BP1/3/5/2/4 für VP3
 Copper initialisiert DDFSTRT/DDFSTOP für VP3
 Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD, BPL2MOD und FMODE für VP3
-
+Copper initialisiert BP1/2/3/4/5 für VP3

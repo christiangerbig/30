@@ -298,7 +298,7 @@ vp2_pf1_plane_moduli           EQU (extra_pf3_plane_width*(extra_pf3_depth-1))+e
 vp2_pf2_plane_moduli           EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_plane_width-vp2_data_fetch_width
 ; **** Viewport 4 ****
 vp3_data_fetch_width           EQU vp3_pixel_per_line/8
-vp3_pf1_plane_moduli           EQU -(extra_pf4_plane_width-(extra_pf4_plane_width-vp3_data_fetch_width))
+vp3_pf1_plane_moduli           EQU (40*8)  ;-(extra_pf4_plane_width-(extra_pf4_plane_width-vp3_data_fetch_width))
 vp3_pf2_plane_moduli           EQU (extra_pf7_plane_width*(extra_pf7_depth-1))+extra_pf7_plane_width-vp3_data_fetch_width
 
 ; **** View ****
@@ -348,7 +348,7 @@ cl2_vp1_VSTART                 EQU MINROW
 cl2_vp2_HSTART                 EQU HSTOP_320_pixel-(3*CMOVE_slot_period)
 cl2_vp2_VSTART                 EQU vp1_VSTOP-1
 ; **** Viewport 3 ****
-cl2_vp3_HSTART                 EQU HSTOP_320_pixel-(6*CMOVE_slot_period)
+cl2_vp3_HSTART                 EQU HSTOP_320_pixel-(4*CMOVE_slot_period)
 cl2_vp3_VSTART                 EQU vp2_VSTOP-1
 ; **** Copper-Interrupt ****
 cl2_HSTART                     EQU $00
@@ -1416,18 +1416,14 @@ cl2_vp2_pf1_set_bitplane_pointers_loop
 ; **** Viewport 3 ****
   CNOP 0,4
 cl2_vp3_pf1_set_bitplane_pointers
-  MOVEF.L extra_pf4_plane_width*extra_pf4_y_size,d1
   move.l  cl2_construction2(a3),a0
   ADDF.L  cl2_extension4_entry+cl2_ext4_BPL1PTH+2,a0
   move.l  extra_pf4(a3),a1   ;Zeiger auf erste Plane
   moveq   #vp3_pf1_depth-1,d7 ;Anzahl der Bitplanes
 cl2_vp3_pf1_set_bitplane_pointers_loop
-  move.l  (a1)+,d0
-  add.l   d1,d0              ;Ende der Bitplane
-  move.w  d0,4(a0)           ;Low-Wert
-  swap    d0                 ;High
-  move.w  d0,(a0)            ;High-Wert
+  move.w  (a1)+,(a0)         ;High-Wert
   ADDF.W  16,a0              ;nächter Playfieldzeiger
+  move.w  (a1)+,4-16(a0)     ;Low-Wert
   dbf     d7,cl2_vp3_pf1_set_bitplane_pointers_loop
   rts
 
@@ -1550,9 +1546,9 @@ swap_vp2_playfield2_loop
   ADDF.W  cl2_extension4_entry+cl2_ext4_BPL1PTH+2,a0
   moveq   #vp3_pf1_depth-1,d7 ;Anzahl der Planes
 swap_vp3_playfield1_loop
-  move.w  (a1)+,(a0)         ;BPLxPTH
-  ADDF.W  16,a0
-  move.w  (a1)+,4-16(a0)     ;BPLxPTL
+  move.w  (a1)+,(a0)         ;High-Wert
+  ADDF.W  16,a0              ;nächter Playfieldzeiger
+  move.w  (a1)+,4-16(a0)     ;Low-Wert
   dbf     d7,swap_vp3_playfield1_loop
   rts
 
@@ -2188,7 +2184,7 @@ pf1_color_table
 ; **** Viewport 1 ****
 vp1_pf1_color_table
   REPT vp1_pf_colors_number
-    DC.L COLOR00BITS
+    DC.L $ffff00 ;COLOR00BITS
   ENDR
 ; **** Viewport 2 ****
 vp2_pf1_color_table
@@ -2202,7 +2198,7 @@ vp2_pf2_color_table
 vp3_pf1_color_table
   DC.L COLOR00BITS
   REPT vp3_pf1_colors_number-1
-    DC.L $000000
+    DC.L $00ff00
   ENDR
 vp3_pf2_color_table
   REPT vp3_pf2_colors_number

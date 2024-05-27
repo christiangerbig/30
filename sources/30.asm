@@ -1,7 +1,7 @@
 ; ##############################
 ; # Programm: 30.asm           #
 ; # Autor:    Christian Gerbig #
-; # Datum:    17.04.2024       #
+; # Datum:    27.05.2024       #
 ; # Version:  1.0 beta         #
 ; # CPU:      68020+           #
 ; # FASTMEM:  -                #
@@ -11,6 +11,8 @@
 
 ; V1.0 beta
 ; First release
+
+; 68020: 187 Rasterzeilen
 
   SECTION code_and_variables,CODE
 
@@ -352,10 +354,10 @@ cl2_vp1_VSTART1                       EQU MINROW
 cl2_vp1_HSTART2                       EQU $00
 cl2_vp1_VSTART2                       EQU MINROW
 ; **** Viewport 2 ****
-cl2_vp2_HSTART                        EQU HSTOP_320_pixel-(3*CMOVE_slot_period)
+cl2_vp2_HSTART                        EQU HSTOP_320_pixel-(4*CMOVE_slot_period)
 cl2_vp2_VSTART                        EQU vp1_VSTOP-1
 ; **** Viewport 3 ****
-cl2_vp3_HSTART1                       EQU HSTOP_320_pixel-(4*CMOVE_slot_period)
+cl2_vp3_HSTART1                       EQU HSTOP_320_pixel-(5*CMOVE_slot_period)
 cl2_vp3_VSTART1                       EQU vp2_VSTOP-1
 cl2_vp3_HSTART2                       EQU $00
 cl2_vp3_VSTART2                       EQU vp2_VSTOP
@@ -486,7 +488,7 @@ vp1_pf1_bitplanes_y_offset            EQU 0
 
 em_bitmap_table   RS.B cb_source_image_x_size*cb_destination_image_y_size
   RS_ALIGN_LONGWORD
-em_color_table    RS.B vp3_visible_lines_number*LONGWORDSIZE
+em_color_table    RS.B vp3_visible_lines_number*LONGWORDSIZE*2
 extra_memory_size RS.B 0
 
 
@@ -1232,13 +1234,13 @@ cb_init_chessboard_image_loop
   CNOP 0,4
 cb_init_bitmap_table
   move.l  extra_memory(a3),a0
-  add.l   #em_bitmap_table,a0 ;Zeiger auf Bitmap-Tabelle
+  ADDF.L  em_bitmap_table,a0 ;Zeiger auf Bitmap-Tabelle
   move.w  #cb_source_image_x_size,a1 ;Breite des QuellPlayfieldes in Pixeln
   move.l  a1,d3
   moveq   #(cb_destination_image_x_size)/16,d4 ;Breite des Zielbildes in Pixeln
   swap    d3                 ;*2^16
   lsl.w   #4,d4
-  move.w  #cb_destination_image_y_size-1,d7 ;Anzahl der Zeilen in Bitmap-Tabelle
+  MOVEF.W cb_destination_image_y_size-1,d7 ;Anzahl der Zeilen in Bitmap-Tabelle
 cb_init_bitmap_table_loop1
   move.l  d3,d2              ;Breite des Quellbildes untere 32 Bit
   moveq   #TRUE,d6           ;Breite des Quellbildes obere 32 Bit
@@ -1367,7 +1369,6 @@ cl1_vp2_pf1_set_bitplane_pointers_loop
   CNOP 0,4
 init_second_copperlist
   move.l  cl2_construction2(a3),a0
-  move.l  a0,$140000
 ; **** Viewport 1 ****
   bsr     cl2_vp1_init_playfield_registers
   bsr     cl2_vp1_init_bitplane_pointers
@@ -1687,6 +1688,7 @@ beam_routines
   bsr     swap_vp2_playfield2
   bsr     horiz_scrolltext
   bsr     hst_horiz_scroll
+  bsr     mvb_clear_playfield1_2
   bsr     bvm_get_channels_amplitudes
   bsr     bvm_clear_second_copperlist
   bsr     bvm_set_bars
@@ -1697,7 +1699,6 @@ beam_routines
   movem.l a4-a6,-(a7)
   bsr     mvb_quicksort_coordinates
   movem.l (a7)+,a4-a6
-  bsr     mvb_clear_playfield1_2
   bsr     cb_get_stripes_y_coordinates
   bsr     cb_make_color_offsets_table
   bsr     cb_move_chessboard
@@ -1809,12 +1810,12 @@ hst_set_character_x_position
   rts
   CNOP 0,4
 hst_init_character_blit
-  move.w  #DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
+  move.w  #DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
   WAITBLITTER
-  move.l  #(BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ;Minterm D=A
+  move.l  #(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ;Minterm D=A
   moveq   #FALSE,d0
   move.l  d0,BLTAFWM-DMACONR(a6) ;keine Ausmaskierung
-  move.l  #((hst_image_plane_width-hst_text_character_width)<<16)+(extra_pf1_plane_width-hst_text_character_width),BLTAMOD-DMACONR(a6) ;A-Mod + D-Mod
+  move.l  #((hst_image_plane_width-hst_text_character_width)<<16)|(extra_pf1_plane_width-hst_text_character_width),BLTAMOD-DMACONR(a6) ;A-Mod + D-Mod
   rts
 
 ; ** Softscrollwert berechen **
@@ -2479,7 +2480,7 @@ vp1_pf1_color_table
 vp2_pf1_color_table
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple2.ct"
 vp2_pf2_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls2.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls3.ct"
   REPT 8
     DC.L COLOR00BITS
   ENDR
@@ -2765,7 +2766,7 @@ cb_color_offsets_table
 
 ; ** Programmversion für Version-Befehl **
 ; ----------------------------------------
-prg_version DC.B "$VER: RSE-30 1.0 beta (17.5.24)",TRUE
+prg_version DC.B "$VER: RSE-30 1.0 beta (27.5.24)",TRUE
   EVEN
 
 ; **** Horiz-Scrolltext ****
@@ -2775,7 +2776,7 @@ hst_text
   REPT hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size)
     DC.B " "
   ENDR
-  DC.B "RESISTANCE CELEBRATES THE 35TH ANNIVERSARY!"
+  DC.B "RESISTANCE CELEBRATES THE 35TH ANNIVERSARY!     "
   DC.B FALSE
   EVEN
 

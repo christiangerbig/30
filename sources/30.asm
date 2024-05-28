@@ -357,7 +357,7 @@ cl2_vp1_VSTART2                       EQU MINROW
 cl2_vp2_HSTART                        EQU HSTOP_320_pixel-(4*CMOVE_slot_period)
 cl2_vp2_VSTART                        EQU vp1_VSTOP-1
 ; **** Viewport 3 ****
-cl2_vp3_HSTART1                       EQU HSTOP_320_pixel-(5*CMOVE_slot_period)
+cl2_vp3_HSTART1                       EQU HSTOP_320_pixel-(9*CMOVE_slot_period)
 cl2_vp3_VSTART1                       EQU vp2_VSTOP-1
 cl2_vp3_HSTART2                       EQU $00
 cl2_vp3_VSTART2                       EQU vp2_VSTOP
@@ -488,7 +488,7 @@ vp1_pf1_bitplanes_y_offset            EQU 0
 
 em_bitmap_table   RS.B cb_source_image_x_size*cb_destination_image_y_size
   RS_ALIGN_LONGWORD
-em_color_table    RS.B vp3_visible_lines_number*LONGWORDSIZE*2
+em_color_table    RS.L vp3_visible_lines_number*2
 extra_memory_size RS.B 0
 
 
@@ -2776,7 +2776,7 @@ hst_text
   REPT hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size)
     DC.B " "
   ENDR
-  DC.B "RESISTANCE CELEBRATES THE 35TH ANNIVERSARY!     "
+  DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     "
   DC.B FALSE
   EVEN
 

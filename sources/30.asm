@@ -12,6 +12,17 @@
 ; V1.0 beta
 ; First release
 
+; V1.1 beta
+; - CWAIT für VP2 korrigiert, damit der Farbverlauf des Schachbretts für die
+;   erste Zeile noch innerhalb der horizontalen Austastlücke erfolgt.
+; - VP1 nutzt jetzt COLOR28-31
+;   VP3 nutzt jetzt COLOR16-23 für P1 und COLOR24-28 für PF2
+; - Die Farben für VP1/PF1 und VP3/PF2 werden nicht mehr vom Copper separat
+;   initialisiert, da die Farbverläufe für VP1 und VP3 sowieso zeilenweise
+;   initialisiert werden. Insgesamt werden nur noch 248 Farben in der verti-
+;   kalen Austastlücke initialisiert.
+
+
 ; 68020: 187 Rasterzeilen
 
   SECTION code_and_variables,CODE
@@ -115,7 +126,7 @@ pf1_depth2                            EQU 0
 pf1_x_size3                           EQU 0
 pf1_y_size3                           EQU 0
 pf1_depth3                            EQU 0
-pf1_colors_number                     EQU 248
+pf1_colors_number                     EQU 240
 
 pf2_x_size1                           EQU 0
 pf2_y_size1                           EQU 0
@@ -1044,6 +1055,7 @@ init_all
   IFEQ pt_finetune
     bsr     pt_InitFtuPeriodTableStarts
   ENDC
+  bsr     init_color_registers
   bsr     init_sprites
   bsr     hst_init_characters_offsets
   bsr     hst_init_characters_x_positions
@@ -1093,6 +1105,15 @@ init_CIA_timers
 ; ----------------------------------------------
     PT_INIT_FINETUNING_PERIOD_TABLE_STARTS
   ENDC
+
+  CNOP 0,4
+init_color_registers
+  CPU_SELECT_COLORHI_BANK 7
+  CPU_INIT_COLORHI COLOR16,8,vp3_pf1_color_table
+
+  CPU_SELECT_COLORLO_BANK 7
+  CPU_INIT_COLORLO COLOR16,8,vp3_pf1_color_table
+  rts
 
 ; ** Sprites initialisieren **
 ; ----------------------------
@@ -1311,7 +1332,6 @@ cl1_init_color_registers
   COP_INIT_COLORHI COLOR00,32
   COP_SELECT_COLORHI_BANK 7
   COP_INIT_COLORHI COLOR00,16
-  COP_INIT_COLORHI COLOR16,8,vp3_pf1_color_table
 
   COP_SELECT_COLORLO_BANK 0
   COP_INIT_COLORLO COLOR00,16,vp2_pf1_color_table
@@ -1331,7 +1351,6 @@ cl1_init_color_registers
   COP_INIT_COLORLO COLOR00,32
   COP_SELECT_COLORLO_BANK 7
   COP_INIT_COLORLO COLOR00,16
-  COP_INIT_COLORLO COLOR16,8,vp3_pf1_color_table
   rts
 
   CNOP 0,4

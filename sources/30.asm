@@ -19,8 +19,9 @@
 ;   VP3 nutzt jetzt COLOR16-23 für P1 und COLOR24-28 für PF2
 ; - Die Farben für VP1/PF1 und VP3/PF2 werden nicht mehr vom Copper separat
 ;   initialisiert, da die Farbverläufe für VP1 und VP3 sowieso zeilenweise
-;   initialisiert werden. Insgesamt werden nur noch 248 Farben in der verti-
+;   initialisiert werden. Insgesamt werden nur noch 240 Farben in der verti-
 ;   kalen Austastlücke initialisiert.
+; - Vektor-Bälle: Überblenden zu anderen Farben mit Intervall
 
 
 ; 68020: 187 Rasterzeilen
@@ -481,6 +482,16 @@ cb_stripes_y_step                     EQU 1
 cb_stripes_y_angle_speed              EQU 3
 cb_stripes_number                     EQU 8
 cb_stripe_height                      EQU 16
+
+; **** Colors-Fader ****
+cf_colors_number                      EQU vp2_pf2_colors_number
+
+; **** Colors-Fader-Cross ****
+cfc_fader_speed_max                   EQU 8
+cfc_fader_radius                      EQU cfc_fader_speed_max
+cfc_fader_center                      EQU cfc_fader_speed_max+1
+cfc_fader_angle_speed                 EQU 4
+cfc_fader_delay                       EQU 4*PALFPS
 
 
 vp1_pf1_bitplanes_x_offset            EQU 1*vp1_pf_pixel_per_datafetch
@@ -958,6 +969,16 @@ mvb_morph_delay_counter      RS.W 1
 ; **** Chessboard ****
 cb_stripes_y_angle           RS.W 1
 
+; **** Colors-Fader ****
+cf_colors_counter            RS.W 1
+cf_copy_colors_state         RS.W 1
+
+; **** Colors-Fader-Cross ****
+cfc_state                    RS.W 1
+cfc_fader_angle              RS.W 1
+cfc_fader_delay_counter      RS.W 1
+cfc_color_table_start        RS.W 1
+
 variables_SIZE               RS.B 0
 
 
@@ -1041,6 +1062,16 @@ init_own_variables
 
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
+
+; **** Colors-Fader ****
+  move.w  d0,cf_colors_counter(a3)
+  move.w  d1,cf_copy_colors_state(a3)
+
+; **** Colors-Fader-Cross ****
+  move.w  d1,cfc_state(a3)
+  move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
+  move.w  d2,cfc_fader_delay_counter(a3) ;Delay-Counter aktivieren
+  move.w  d0,cfc_color_table_start(a3)
   rts
 
 ; ** Alle Initialisierungsroutinen ausführen **
@@ -1720,6 +1751,8 @@ beam_routines
   bsr     cb_make_color_offsets_table
   bsr     cb_move_chessboard
   bsr     control_counters
+  bsr     cf_copy_color_table
+  bsr     colors_fader_cross
   IFEQ pt_music_fader
     bsr     pt_mouse_handler
   ENDC
@@ -2374,19 +2407,155 @@ cb_move_chessboard_loop
   rts
 
 
+; ** Farbwerte in Copperliste kopieren **
+; ---------------------------------------
+  CNOP 0,4
+cf_copy_color_table
+  IFNE cl1_size2
+    move.l  a4,-(a7)
+  ENDC
+  tst.w   cf_copy_colors_state(a3)  ;Kopieren der Farbwerte beendet ?
+  bne.s   cf_no_copy_color_table ;Ja -> verzweige
+  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
+  IFGT cf_colors_number-32
+    moveq   #TRUE,d4         ;Color-Bank Farbregisterzähler
+  ENDC
+  lea     vp2_pf1_color_table(pc),a0 ;Puffer für Farbwerte
+  move.l  cl1_display(a3),a1 ;CL
+  ADDF.W  cl1_COLOR16_high1+2,a1
+  IFNE cl1_size1
+    move.l  cl1_construction1(a3),a2 ;CL
+    ADDF.W  cl1_COLOR16_high1+2,a2
+  ENDC
+  IFNE cl1_size2
+    move.l  cl1_construction2(a3),a4 ;CL
+    ADDF.W  cl1_COLOR16_high1+2,a4
+  ENDC
+  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
+cf_copy_color_table_loop
+  move.l  (a0)+,d0           ;RGB8-Farbwert
+  move.l  d0,d2              ;retten
+  RGB8_TO_RGB4HI d0,d1,d3
+  move.w  d0,(a1)            ;COLORxx High-Bits
+  IFNE cl1_size1
+    move.w  d0,(a2)          ;COLORxx High-Bits
+  ENDC
+  IFNE cl1_size2
+    move.w  d0,(a4)          ;COLORxx High-Bits
+  ENDC
+  RGB8_TO_RGB4LO d2,d1,d3
+  move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a1) ;Low-Bits COLORxx
+  addq.w  #4,a1              ;nächstes Farbregister
+  IFNE cl1_size1
+    move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a2) ;Low-Bits COLORxx
+    addq.w  #4,a2            ;nächstes Farbregister
+  ENDC
+  IFNE cl1_size2
+    move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a4) ;Low-Bits COLORxx
+    addq.w  #4,a4            ;nächstes Farbregister
+  ENDC
+  IFGT cf_colors_number-32
+    addq.b  #1*8,d4          ;Farbregister-Zähler erhöhen
+    bne.s   cf_no_restart_color_bank ;Nein -> verzweige
+    addq.w  #4,a1            ;CMOVE überspringen
+    IFNE cl1_size1
+      addq.w  #4,a2          ;CMOVE überspringen
+    ENDC
+    IFNE cl1_size2
+      addq.w  #4,a4          ;CMOVE überspringen
+    ENDC
+cf_no_restart_color_bank
+  ENDC
+  dbf     d7,cf_copy_color_table_loop
+  tst.w   cf_colors_counter(a3) ;Fading beendet ?
+  bne.s   cf_no_copy_color_table ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,cf_copy_colors_state(a3) ;Kopieren beendet
+  move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
+cf_no_copy_color_table
+  IFNE cl1_size2
+    move.l  (a7)+,a4
+  ENDC
+  rts
+
+; ** Farben überblenden **
+; ------------------------
+  CNOP 0,4
+colors_fader_cross
+  tst.w   cfc_state(a3)      ;Colors-Fader-Cross an ?
+  bne.s   no_colors_fader_cross ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  cfc_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  cfc_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   cfc_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+cfc_no_restart_fader_angle
+  move.w  d0,cfc_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W cf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0    ;sin(w)
+  MULUF.L cfc_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  cfc_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     vp2_pf1_color_table(pc),a0 ;Puffer für Farbwerte
+  lea     cfc_color_table(pc),a1 ;Sollwerte
+  move.w  cfc_color_table_start(a3),d1
+  MULUF.W LONGWORDSIZE,d1
+  lea     (a1,d1.w*8),a1
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     cf_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,cf_colors_counter(a3) ;Color-Fader-Cross fertig ?
+  bne.s   no_colors_fader_cross ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,cfc_state(a3)   ;Color-Fader-Cross aus
+
+  move.w  cfc_color_table_start(a3),d0
+  addq.w  #1,d0
+  and.w   #4-1,d0
+  move.w  d0,cfc_color_table_start(a3)
+
+no_colors_fader_cross
+  rts
+
+  COLOR_FADER cf
+
+
 ; ** Zähler kontrollieren **
 ; --------------------------
   CNOP 0,4
 control_counters
   move.w  mvb_morph_delay_counter(a3),d0
   bmi.s   mvb_morph_no_delay_counter ;Wenn Zähler negativ -> verzweige
-  subq.w  #1,d0              ;Zähler verringern
-  bpl.s   mvb_morph_save_delay_counter ;Wenn positiv -> verzweige
+  subq.w  #1,d0
+  bpl.s   mvb_morph_save_delay_counter ;Wenn Zähler positiv -> verzweige
 mvb_morph_enable
   clr.w   mvb_morph_state(a3) ;Morphing an
 mvb_morph_save_delay_counter
   move.w  d0,mvb_morph_delay_counter(a3) ;retten
 mvb_morph_no_delay_counter
+
+  move.w  cfc_fader_delay_counter(a3),d0
+  bmi.s   cfc_no_color_fader_cross ;Wenn Zähler negativ -> verzweige
+  subq.w  #1,d0
+  bpl.s   cfc_save_delay_counter ;Wenn Zähler positiv -> verzweige
+cfc_fader_enable
+  move.w  #cf_colors_number*3,cf_colors_counter(a3)
+  moveq   #TRUE,d1
+  move.w  d1,cf_copy_colors_state(a3)
+  move.w  d1,cfc_state(a3)
+  move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
+cfc_save_delay_counter
+  move.w  d0,cfc_fader_delay_counter(a3) ;retten
+cfc_no_color_fader_cross
   rts
 
   IFEQ pt_music_fader
@@ -2492,8 +2661,7 @@ pf1_color_table
 vp2_pf1_color_table
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple2.ct"
 vp2_pf2_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls3.ct"
-  REPT 8
+  REPT vp2_pf2_colors_number*2
     DC.L COLOR00BITS
   ENDR
 ; **** Viewport 3 ****
@@ -2754,6 +2922,16 @@ cb_stripes_y_coordinates
 ; -----------------
 cb_color_offsets_table
   DS.W cb_stripe_height*cb_stripes_number*2
+
+; **** Image-Fader ****
+; ** Zielfarbwerte für Image-Fader-Cross **
+; -----------------------------------------
+  CNOP 0,4
+cfc_color_table
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls4.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls6.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls5.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls7.ct"
 
 
 ; ## Speicherstellen allgemein ##

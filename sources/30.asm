@@ -101,6 +101,8 @@ pt_split_module                       EQU TRUE
 mvb_premorph_start_shape              EQU TRUE
 mvb_morph_loop                        EQU TRUE
 
+cfc_prefade                           EQU TRUE
+
 DMABITS                               EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
 
   IFEQ pt_ciatiming
@@ -483,10 +485,9 @@ cb_stripes_y_angle_speed              EQU 3
 cb_stripes_number                     EQU 8
 cb_stripe_height                      EQU 16
 
-; **** Colors-Fader ****
-cf_colors_number                      EQU vp2_pf2_colors_number
-
 ; **** Colors-Fader-Cross ****
+cfc_colors_number                     EQU vp2_pf2_colors_number
+cfc_color_tables_number               EQU 4
 cfc_fader_speed_max                   EQU 8
 cfc_fader_radius                      EQU cfc_fader_speed_max
 cfc_fader_center                      EQU cfc_fader_speed_max+1
@@ -969,15 +970,13 @@ mvb_morph_delay_counter      RS.W 1
 ; **** Chessboard ****
 cb_stripes_y_angle           RS.W 1
 
-; **** Colors-Fader ****
-cf_colors_counter            RS.W 1
-cf_copy_colors_state         RS.W 1
-
 ; **** Colors-Fader-Cross ****
 cfc_state                    RS.W 1
 cfc_fader_angle              RS.W 1
 cfc_fader_delay_counter      RS.W 1
 cfc_color_table_start        RS.W 1
+cfc_colors_counter           RS.W 1
+cfc_copy_colors_state        RS.W 1
 
 variables_SIZE               RS.B 0
 
@@ -1055,20 +1054,31 @@ init_own_variables
   move.w  d0,mvb_rotation_y_angle(a3)
   move.w  d0,mvb_rotation_z_angle(a3)
 
-  move.w  d0,mvb_morph_state(a3)
+  IFEQ mvb_premorph_start_shape
+    move.w  d0,mvb_morph_state(a3)
+  ELSE
+    move.w  d1,mvb_morph_state(a3)
+  ENDC
   move.w  d0,mvb_morph_shapes_table_start(a3)
-  moveq   #1,d2
-  move.w  d2,mvb_morph_delay_counter(a3) ;Delay-Counter aktivieren
-
+  IFEQ mvb_premorph_start_shape
+    move.w  d1,mvb_morph_delay_counter(a3) ;Delay-Counter deaktivieren
+  ELSE
+    moveq   #1,d2
+    move.w  d2,mvb_morph_delay_counter(a3) ;Delay-Counter aktivieren
+  ENDC
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
 
-; **** Colors-Fader ****
-  move.w  d0,cf_colors_counter(a3)
-  move.w  d1,cf_copy_colors_state(a3)
-
 ; **** Colors-Fader-Cross ****
-  move.w  d1,cfc_state(a3)
+  IFEQ cfc_prefade
+    move.w  d0,cfc_state(a3)
+    move.w  #cfc_colors_number*3,cfc_colors_counter(a3)
+    move.w  d0,cfc_copy_colors_state(a3)
+  ELSE
+    move.w  d1,cfc_state(a3)
+    move.w  d0,cfc_copy_colors_counter(a3)
+    move.w  d1,cfc_copy_colors_state(a3)
+  ENDC
   move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
   move.w  d2,cfc_fader_delay_counter(a3) ;Delay-Counter aktivieren
   move.w  d0,cfc_color_table_start(a3)
@@ -1666,13 +1676,16 @@ cl2_vp3_pf2_set_bitplane_pointers_loop
   CNOP 0,4
 main_routine
   bsr.s   no_sync_routines
-  bra.s   beam_routines
+  bra     beam_routines
 
 
 ; ## Routinen, die nicht mit der Bildwiederholfrequenz gekoppelt sind ##
 ; ----------------------------------------------------------------------
   CNOP 0,4
 no_sync_routines
+  IFEQ cfc_prefade
+    bsr     cfc_init_start_colors
+  ENDC
 
 ; ** Playfield skalieren **
 ; --------------------
@@ -1725,6 +1738,16 @@ cb_skip_column
   movem.l (a7)+,a4-a5
   rts
 
+  IFEQ cfc_prefade
+    CNOP 0,4
+cfc_init_start_colors
+    bsr     cfc_copy_color_table
+    bsr     colors_fader_cross
+    tst.w   cfc_copy_colors_state(a3) ;Kopieren der Farbwerte beendet?
+    beq.s   cfc_init_start_colors ;Nein -> verzweige
+    rts
+  ENDC
+
 
 ; ## Rasterstahl-Routinen ##
 ; --------------------------
@@ -1751,7 +1774,7 @@ beam_routines
   bsr     cb_make_color_offsets_table
   bsr     cb_move_chessboard
   bsr     control_counters
-  bsr     cf_copy_color_table
+  bsr     cfc_copy_color_table
   bsr     colors_fader_cross
   IFEQ pt_music_fader
     bsr     pt_mouse_handler
@@ -2410,14 +2433,14 @@ cb_move_chessboard_loop
 ; ** Farbwerte in Copperliste kopieren **
 ; ---------------------------------------
   CNOP 0,4
-cf_copy_color_table
+cfc_copy_color_table
   IFNE cl1_size2
     move.l  a4,-(a7)
   ENDC
-  tst.w   cf_copy_colors_state(a3)  ;Kopieren der Farbwerte beendet ?
-  bne.s   cf_no_copy_color_table ;Ja -> verzweige
+  tst.w   cfc_copy_colors_state(a3)  ;Kopieren der Farbwerte beendet ?
+  bne.s   cfc_no_copy_color_table ;Ja -> verzweige
   move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
-  IFGT cf_colors_number-32
+  IFGT cfc_colors_number-32
     moveq   #TRUE,d4         ;Color-Bank Farbregisterzähler
   ENDC
   lea     vp2_pf1_color_table(pc),a0 ;Puffer für Farbwerte
@@ -2431,8 +2454,8 @@ cf_copy_color_table
     move.l  cl1_construction2(a3),a4 ;CL
     ADDF.W  cl1_COLOR16_high1+2,a4
   ENDC
-  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
-cf_copy_color_table_loop
+  MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
+cfc_copy_color_table_loop
   move.l  (a0)+,d0           ;RGB8-Farbwert
   move.l  d0,d2              ;retten
   RGB8_TO_RGB4HI d0,d1,d3
@@ -2454,9 +2477,9 @@ cf_copy_color_table_loop
     move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a4) ;Low-Bits COLORxx
     addq.w  #4,a4            ;nächstes Farbregister
   ENDC
-  IFGT cf_colors_number-32
+  IFGT cfc_colors_number-32
     addq.b  #1*8,d4          ;Farbregister-Zähler erhöhen
-    bne.s   cf_no_restart_color_bank ;Nein -> verzweige
+    bne.s   cfc_no_restart_color_bank ;Nein -> verzweige
     addq.w  #4,a1            ;CMOVE überspringen
     IFNE cl1_size1
       addq.w  #4,a2          ;CMOVE überspringen
@@ -2464,15 +2487,20 @@ cf_copy_color_table_loop
     IFNE cl1_size2
       addq.w  #4,a4          ;CMOVE überspringen
     ENDC
-cf_no_restart_color_bank
+cfc_no_restart_color_bank
   ENDC
-  dbf     d7,cf_copy_color_table_loop
-  tst.w   cf_colors_counter(a3) ;Fading beendet ?
-  bne.s   cf_no_copy_color_table ;Nein -> verzweige
+  dbf     d7,cfc_copy_color_table_loop
+  tst.w   cfc_colors_counter(a3) ;Fading beendet ?
+  bne.s   cfc_no_copy_color_table ;Nein -> verzweige
+cfc_disable_copy_color_table
   moveq   #FALSE,d0
-  move.w  d0,cf_copy_colors_state(a3) ;Kopieren beendet
+  move.w  d0,cfc_copy_colors_state(a3) ;Kopieren beendet
   move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
-cf_no_copy_color_table
+  move.w  cfc_color_table_start(a3),d0
+  addq.w  #1,d0              ;nächste Farbtabelle
+  and.w   #cfc_color_tables_number-1,d0 ;Überlauf entfernen
+  move.w  d0,cfc_color_table_start(a3)
+cfc_no_copy_color_table
   IFNE cl1_size2
     move.l  (a7)+,a4
   ENDC
@@ -2493,7 +2521,7 @@ colors_fader_cross
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 cfc_no_restart_fader_angle
   move.w  d0,cfc_fader_angle(a3) ;Fader-Winkel retten
-  MOVEF.W cf_colors_number*3,d6 ;Zähler
+  MOVEF.W cfc_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
   move.l  (a0,d2.w*4),d0    ;sin(w)
   MULUF.L cfc_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
@@ -2510,19 +2538,13 @@ cfc_no_restart_fader_angle
   move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
   lsr.l   #8,d0              ;BYTESHIFT
   move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
-  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
+  MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
   bsr     cf_fader_loop
   movem.l (a7)+,a4-a6
-  move.w  d6,cf_colors_counter(a3) ;Color-Fader-Cross fertig ?
+  move.w  d6,cfc_colors_counter(a3) ;Color-Fader-Cross fertig ?
   bne.s   no_colors_fader_cross ;Nein -> verzweige
   moveq   #FALSE,d0
   move.w  d0,cfc_state(a3)   ;Color-Fader-Cross aus
-
-  move.w  cfc_color_table_start(a3),d0
-  addq.w  #1,d0
-  and.w   #4-1,d0
-  move.w  d0,cfc_color_table_start(a3)
-
 no_colors_fader_cross
   rts
 
@@ -2548,9 +2570,9 @@ mvb_morph_no_delay_counter
   subq.w  #1,d0
   bpl.s   cfc_save_delay_counter ;Wenn Zähler positiv -> verzweige
 cfc_fader_enable
-  move.w  #cf_colors_number*3,cf_colors_counter(a3)
+  move.w  #cfc_colors_number*3,cfc_colors_counter(a3)
   moveq   #TRUE,d1
-  move.w  d1,cf_copy_colors_state(a3)
+  move.w  d1,cfc_copy_colors_state(a3)
   move.w  d1,cfc_state(a3)
   move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
 cfc_save_delay_counter
@@ -2794,87 +2816,87 @@ mvb_object_coordinates
 ; ** Form 1 **
 mvb_object_shape1_coordinates
 ; * "R" *
-  DC.W -(69*8),-(32*8),0   ;P0
-  DC.W -(69*8),-(19*8),0   ;P1
-  DC.W -(69*8),-(6*8),0    ;P2
-  DC.W -(69*8),6*8,0       ;P3
-  DC.W -(69*8),19*8,0      ;P4
+  DC.W -(69*8),-(32*8),25*8   ;P0
+  DC.W -(69*8),-(19*8),25*8   ;P1
+  DC.W -(69*8),-(6*8),25*8    ;P2
+  DC.W -(69*8),6*8,25*8       ;P3
+  DC.W -(69*8),19*8,25*8      ;P4
 
-  DC.W -(57*8),-(32*8),0   ;P5
-  DC.W -(57*8),-(6*8),0    ;P6
+  DC.W -(57*8),-(32*8),25*8   ;P5
+  DC.W -(57*8),-(6*8),25*8    ;P6
 
-  DC.W -(44*8),-(25*8),0   ;P6
-  DC.W -(44*8),-(13*8),0   ;P8
-  DC.W -(44*8),6*8,0       ;P9
-  DC.W -(44*8),19*8,0      ;P10
+  DC.W -(44*8),-(25*8),25*8   ;P6
+  DC.W -(44*8),-(13*8),25*8   ;P8
+  DC.W -(44*8),6*8,25*8       ;P9
+  DC.W -(44*8),19*8,25*8      ;P10
 
 ; * "S" *
-  DC.W -(19*8),-(25*8),0   ;P11
-  DC.W -(19*8),-(13*8),0   ;P12
-  DC.W -(19*8),19*8,0      ;P13
+  DC.W -(19*8),-(25*8),25*8   ;P11
+  DC.W -(19*8),-(13*8),25*8   ;P12
+  DC.W -(19*8),19*8,25*8      ;P13
 
-  DC.W -(6*8),-(32*8),0    ;P13
-  DC.W -(6*8),-(6*8),0     ;P15
-  DC.W -(6*8),19*8,0       ;P16
+  DC.W -(6*8),-(32*8),25*8    ;P13
+  DC.W -(6*8),-(6*8),25*8     ;P15
+  DC.W -(6*8),19*8,25*8       ;P16
 
-  DC.W 6*8,-(32*8),0       ;P16
-  DC.W 6*8,0,0             ;P18
-  DC.W 6*8,13*8,0          ;P19
+  DC.W 6*8,-(32*8),25*8       ;P16
+  DC.W 6*8,0,25*8             ;P18
+  DC.W 6*8,13*8,25*8          ;P19
 
 ; * "E" *
-  DC.W 32*8,-(32*8),0      ;P20
-  DC.W 32*8,-(19*8),0      ;P19
-  DC.W 32*8,-(6*8),0       ;P22
-  DC.W 32*8,6*8,0          ;P23
-  DC.W 32*8,19*8,0         ;P24
+  DC.W 32*8,-(32*8),25*8      ;P20
+  DC.W 32*8,-(19*8),25*8      ;P19
+  DC.W 32*8,-(6*8),25*8       ;P22
+  DC.W 32*8,6*8,25*8          ;P23
+  DC.W 32*8,19*8,25*8         ;P24
 
-  DC.W 44*8,-(32*8),0      ;P25
-  DC.W 44*8,-(6*8),0       ;P26
-  DC.W 44*8,19*8,0         ;P26
+  DC.W 44*8,-(32*8),25*8      ;P25
+  DC.W 44*8,-(6*8),25*8       ;P26
+  DC.W 44*8,19*8,25*8         ;P26
 
-  DC.W 57*8,-(32*8),0      ;P25
-  DC.W 57*8,19*8,0         ;P29
+  DC.W 57*8,-(32*8),25*8      ;P25
+  DC.W 57*8,19*8,25*8         ;P29
 
 ; ** Form 2 **
 mvb_object_shape2_coordinates
 ; * "3" *
-  DC.W -(44*8),-(44*8),0   ;P0
-  DC.W -(38*8),-(6*8),0    ;P1
-  DC.W -(44*8),32*8,0      ;P2
+  DC.W -(44*8),-(44*8),25*8   ;P0
+  DC.W -(38*8),-(6*8),25*8    ;P1
+  DC.W -(44*8),32*8,25*8      ;P2
 
-  DC.W -(32*8),-(44*8),0   ;P3
-  DC.W -(25*8),-(6*8),0    ;P4
-  DC.W -(32*8),32*8,0      ;P5
+  DC.W -(32*8),-(44*8),25*8   ;P3
+  DC.W -(25*8),-(6*8),25*8    ;P4
+  DC.W -(32*8),32*8,25*8      ;P5
 
-  DC.W -(19*8),-(44*8),0   ;P6
-  DC.W -(13*8),-(32*8),0   ;P6
-  DC.W -(13*8),-(19*8),0   ;P8
-  DC.W -(13*8),-(6*8),0    ;P9
-  DC.W -(13*8),6*8,0       ;P10
-  DC.W -(13*8),19*8,0      ;P11
-  DC.W -(19*8),32*8,0      ;P12
+  DC.W -(19*8),-(44*8),25*8   ;P6
+  DC.W -(13*8),-(32*8),25*8   ;P6
+  DC.W -(13*8),-(19*8),25*8   ;P8
+  DC.W -(13*8),-(6*8),25*8    ;P9
+  DC.W -(13*8),6*8,25*8       ;P10
+  DC.W -(13*8),19*8,25*8      ;P11
+  DC.W -(19*8),32*8,25*8      ;P12
 
 ; * "0" *
-  DC.W 13*8,-(44*8),0      ;P13
-  DC.W 6*8,-(32*8),0       ;P13
-  DC.W 6*8,-(19*8),0       ;P15
-  DC.W 6*8,-(6*8),0        ;P16
-  DC.W 6*8,6*8,0           ;P16
-  DC.W 6*8,19*8,0          ;P18
-  DC.W 13*8,32*8,0         ;P19
+  DC.W 13*8,-(44*8),25*8      ;P13
+  DC.W 6*8,-(32*8),25*8       ;P13
+  DC.W 6*8,-(19*8),25*8       ;P15
+  DC.W 6*8,-(6*8),25*8        ;P16
+  DC.W 6*8,6*8,25*8           ;P16
+  DC.W 6*8,19*8,25*8          ;P18
+  DC.W 13*8,32*8,25*8         ;P19
 
-  DC.W 25*8,-(44*8),0      ;P20
-  DC.W 25*8,32*8,0         ;P19
+  DC.W 25*8,-(44*8),25*8      ;P20
+  DC.W 25*8,32*8,25*8         ;P19
 
-  DC.W 38*8,-(44*8),0      ;P22
-  DC.W 44*8,-(32*8),0      ;P23
-  DC.W 44*8,-(19*8),0      ;P24
-  DC.W 44*8,-(6*8),0       ;P25
-  DC.W 44*8,6*8,0          ;P26
-  DC.W 44*8,19*8,0         ;P26
-  DC.W 38*8,32*8,0         ;P25
+  DC.W 38*8,-(44*8),25*8      ;P22
+  DC.W 44*8,-(32*8),25*8      ;P23
+  DC.W 44*8,-(19*8),25*8      ;P24
+  DC.W 44*8,-(6*8),25*8       ;P25
+  DC.W 44*8,6*8,25*8          ;P26
+  DC.W 44*8,19*8,25*8         ;P26
+  DC.W 38*8,32*8,25*8         ;P25
 
-  DC.W 38*8,32*8,0         ;P29 überzählig
+  DC.W 38*8,32*8,25*8         ;P29 überzählig
 
   IFNE mvb_morph_loop
 ; ** Form 3 **

@@ -1066,6 +1066,7 @@ init_own_variables
     moveq   #1,d2
     move.w  d2,mvb_morph_delay_counter(a3) ;Delay-Counter aktivieren
   ENDC
+
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
 

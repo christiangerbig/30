@@ -30,3 +30,11 @@ VP3
 Copper initialisiert DDFSTRT/DDFSTOP für VP3
 Copper initialisiert BPLCON0/1/2/3/4, BPL1MOD, BPL2MOD und FMODE für VP3
 Copper initialisiert BP1/2/3/4/5 für VP3
+
+800er-Befehl
+810 Start-Fade-Bars-In
+820 Start-Fade-Sprites-In
+830 Start-Fade-Image-In
+840 Start-Fade-Chessboard-In
+850 Start-Fade-Balls-In
+850 Start-Scrolltext

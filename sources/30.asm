@@ -1,8 +1,8 @@
 ; ##############################
 ; # Programm: 30.asm           #
 ; # Autor:    Christian Gerbig #
-; # Datum:    27.05.2024       #
-; # Version:  1.0 beta         #
+; # Datum:    02.06.2024       #
+; # Version:  1.1 beta         #
 ; # CPU:      68020+           #
 ; # FASTMEM:  -                #
 ; # Chipset:  AGA              #
@@ -21,8 +21,20 @@
 ;   initialisiert, da die Farbverläufe für VP1 und VP3 sowieso zeilenweise
 ;   initialisiert werden. Insgesamt werden nur noch 240 Farben in der verti-
 ;   kalen Austastlücke initialisiert.
-; - Vektor-Bälle: Überblenden zu anderen Farben mit Intervall
+; - Vektor-Bälle: Einblenden und Überblenden zu anderen Farben mit Intervall
+;                 und Änderung der Z-Koorinaten
+; - Nutzung des PT 8xx-Befehls für die Fader-Routinen
 
+
+; PT 8xy-Befehl
+; 801 Disable-Trigger-FX
+; 810 Start-Fade-Bars-In
+; 820 Start-Fade-Image-In (Tempel)
+; 830 Start-Fade-Chessboard-In
+; 840 Start-Fade-Sprites-In
+; 850 Start-Fade-Balls-In
+; 860 Start-Fade-Cross
+; 870 Start-Scrolltext
 
 ; 68020: 187 Rasterzeilen
 
@@ -87,7 +99,7 @@ pt_v3.0b
   ENDC
 ;pt_mute_volume
 pt_ciatiming                          EQU TRUE
-pt_usedfx                             EQU %1101110000101101
+pt_usedfx                             EQU %1101110100101101
 pt_usedefx                            EQU %0000100000000000
 pt_finetune                           EQU FALSE
   IFD pt_v3.0b
@@ -421,7 +433,8 @@ hst_horiz_scroll_window_x_size        EQU vp1_visible_pixels_number+hst_text_cha
 hst_horiz_scroll_window_width         EQU hst_horiz_scroll_window_x_size/8
 hst_horiz_scroll_window_y_size        EQU hst_text_character_y_size
 hst_horiz_scroll_window_depth         EQU hst_image_depth
-hst_horiz_scroll_speed                EQU 2
+hst_horiz_scroll_speed1               EQU 2
+hst_horiz_scroll_speed2               EQU 8
 
 hst_text_character_x_restart          EQU hst_horiz_scroll_window_x_size
 hst_text_characters_number            EQU hst_horiz_scroll_window_x_size/hst_text_character_x_size
@@ -485,14 +498,89 @@ cb_stripes_y_angle_speed              EQU 3
 cb_stripes_number                     EQU 8
 cb_stripe_height                      EQU 16
 
+; **** Bar-Fader ****
+bf_start_color                        EQU 16
+bf_color_table_offset                 EQU 0
+bf_colors_number                      EQU spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+
+; **** Bar-Fader-In ****
+bfi_fader_speed_max                   EQU 6
+bfi_fader_radius                      EQU bfi_fader_speed_max
+bfi_fader_center                      EQU bfi_fader_speed_max+1
+bfi_fader_angle_speed                 EQU 3
+
+; **** Bar-Fader-Out ****
+bfo_fader_speed_max                   EQU 6
+bfo_fader_radius                      EQU bfo_fader_speed_max
+bfo_fader_center                      EQU bfo_fader_speed_max+1
+bfo_fader_angle_speed                 EQU 3
+
+; **** Image-Fader ****
+if_start_color                        EQU 1
+if_color_table_offset                 EQU 1
+if_colors_number                      EQU vp2_pf1_colors_number-1
+
+; **** Image-Fader-In ****
+ifi_fader_speed_max                   EQU 16
+ifi_fader_radius                      EQU ifi_fader_speed_max
+ifi_fader_center                      EQU ifi_fader_speed_max+1
+ifi_fader_angle_speed                 EQU 7
+
+; **** Image-Fader-Out ****
+ifo_fader_speed_max                   EQU 10
+ifo_fader_radius                      EQU ifo_fader_speed_max
+ifo_fader_center                      EQU ifo_fader_speed_max+1
+ifo_fader_angle_speed                 EQU 6
+
+; **** Chessboard-Fader ****
+cf_color_table_offset                 EQU 0
+cf_colors_number                      EQU vp3_visible_lines_number*2
+
+; **** Chessboard-Fader-In ****
+cfi_fader_speed_max                   EQU 10
+cfi_fader_radius                      EQU cfi_fader_speed_max
+cfi_fader_center                      EQU cfi_fader_speed_max+1
+cfi_fader_angle_speed                 EQU 6
+
+; **** Chessboard-Fader-Out ****
+cfo_fader_speed_max                   EQU 10
+cfo_fader_radius                      EQU cfo_fader_speed_max
+cfo_fader_center                      EQU cfo_fader_speed_max+1
+cfo_fader_angle_speed                 EQU 4
+
+; **** Sprite-Fader ****
+sprf_start_color                      EQU 1
+sprf_color_table_offset               EQU 1
+sprf_colors_number                    EQU spr_colors_number-1
+
+; **** Sprite-Fader-In ****
+sprfi_fader_speed_max                 EQU 6
+sprfi_fader_radius                    EQU sprfi_fader_speed_max
+sprfi_fader_center                    EQU sprfi_fader_speed_max+1
+sprfi_fader_angle_speed               EQU 2
+
+; **** Sprite-Fader-Out ****
+sprfo_fader_speed_max                 EQU 8
+sprfo_fader_radius                    EQU sprfo_fader_speed_max
+sprfo_fader_center                    EQU sprfo_fader_speed_max+1
+sprfo_fader_angle_speed               EQU 4
+
+; **** Fade-Balls-In ****
+fbi_delay                             EQU 10
+
+; **** Fade-Balls-Out ****
+fbo_delay                             EQU 5
+
 ; **** Colors-Fader-Cross ****
-cfc_colors_number                     EQU vp2_pf2_colors_number
+cfc_start_color                       EQU 17
+cfc_color_table_offset                EQU 1
+cfc_colors_number                     EQU vp2_pf2_colors_number-1
 cfc_color_tables_number               EQU 4
 cfc_fader_speed_max                   EQU 8
 cfc_fader_radius                      EQU cfc_fader_speed_max
 cfc_fader_center                      EQU cfc_fader_speed_max+1
 cfc_fader_angle_speed                 EQU 4
-cfc_fader_delay                       EQU 4*PALFPS
+cfc_fader_delay                       EQU 3*PALFPS
 
 
 vp1_pf1_bitplanes_x_offset            EQU 1*vp1_pf_pixel_per_datafetch
@@ -587,18 +675,18 @@ cl2_extension1_SIZE RS.B 0
 
   RSRESET
 
-cl2_extension2        RS.B 0
+cl2_extension2         RS.B 0
 
-cl2_ext2_WAIT         RS.L 1
-cl2_ext2_BPLCON3_1    RS.L 1
-cl2_ext2_COLOR29_high RS.L 1
-cl2_ext2_COLOR30_high RS.L 1
-cl2_ext2_BPLCON3_2    RS.L 1
-cl2_ext2_COLOR29_low  RS.L 1
-cl2_ext2_COLOR30_low  RS.L 1
-cl2_ext2_BPLCON4      RS.L 1
+cl2_ext2_WAIT          RS.L 1
+cl2_ext2_BPLCON3_1     RS.L 1
+cl2_ext2_COLOR29_high8 RS.L 1
+cl2_ext2_COLOR30_high8 RS.L 1
+cl2_ext2_BPLCON3_2     RS.L 1
+cl2_ext2_COLOR29_low8  RS.L 1
+cl2_ext2_COLOR30_low8  RS.L 1
+cl2_ext2_BPLCON4       RS.L 1
 
-cl2_extension2_SIZE   RS.B 0
+cl2_extension2_SIZE    RS.B 0
 
 
   RSRESET
@@ -659,18 +747,18 @@ cl2_extension4_SIZE RS.B 0
 
   RSRESET
 
-cl2_extension5        RS.B 0
+cl2_extension5         RS.B 0
 
-cl2_ext5_WAIT         RS.L 1
-cl2_ext5_BPLCON3_1    RS.L 1
-cl2_ext5_COLOR25_high RS.L 1
-cl2_ext5_COLOR26_high RS.L 1
-cl2_ext5_BPLCON3_2    RS.L 1
-cl2_ext5_COLOR25_low  RS.L 1
-cl2_ext5_COLOR26_low  RS.L 1
-cl2_ext5_NOOP         RS.L 1
+cl2_ext5_WAIT          RS.L 1
+cl2_ext5_BPLCON3_1     RS.L 1
+cl2_ext5_COLOR25_high8 RS.L 1
+cl2_ext5_COLOR26_high8 RS.L 1
+cl2_ext5_BPLCON3_2     RS.L 1
+cl2_ext5_COLOR25_low8  RS.L 1
+cl2_ext5_COLOR26_low8  RS.L 1
+cl2_ext5_NOOP          RS.L 1
 
-cl2_extension5_SIZE   RS.B 0
+cl2_extension5_SIZE    RS.B 0
 
 
   RSRESET
@@ -933,7 +1021,7 @@ spr7_y_size2               EQU sprite7_SIZE/(spr_x_size2/8)
 
   INCLUDE "variables-offsets.i"
 
-save_a7                      RS.L 1
+save_a7                         RS.L 1
 
 ; **** PT-Replay ****
   IFD pt_v2.3a
@@ -943,42 +1031,109 @@ save_a7                      RS.L 1
     INCLUDE "music-tracker/pt3-variables-offsets.i"
   ENDC
 
+pt_trigger_fx_state             RS.W 1
+
 ; **** Viewport 1 ****
-vp1_pf1_construction2        RS.L 1
-vp1_pf1_display              RS.L 1
+vp1_pf1_construction2           RS.L 1
+vp1_pf1_display                 RS.L 1
 
 ; **** Viewport 2 ****
-vp2_pf2_construction1        RS.L 1
-vp2_pf2_construction2        RS.L 1
-vp2_pf2_display              RS.L 1
+vp2_pf2_construction1           RS.L 1
+vp2_pf2_construction2           RS.L 1
+vp2_pf2_display                 RS.L 1
 
 ; **** Horiz-Scrolltext ****
-hst_image                    RS.L 1
-hst_text_table_start         RS.W 1
-hst_text_BLTCON0BITS         RS.W 1
-hst_character_toggle_image   RS.W 1
+hst_image                       RS.L 1
+hst_state                       RS.W 1
+hst_text_table_start            RS.W 1
+hst_text_BLTCON0BITS            RS.W 1
+hst_character_toggle_image      RS.W 1
+hst_variable_horiz_scroll_speed RS.W 1
 
 ; **** Morph-Vector-Balls ****
-mvb_rotation_x_angle         RS.W 1
-mvb_rotation_y_angle         RS.W 1
-mvb_rotation_z_angle         RS.W 1
+mvb_rotation_x_angle            RS.W 1
+mvb_rotation_y_angle            RS.W 1
+mvb_rotation_z_angle            RS.W 1
 
-mvb_morph_state              RS.W 1
-mvb_morph_shapes_table_start RS.W 1
-mvb_morph_delay_counter      RS.W 1
+mvb_morph_state                 RS.W 1
+mvb_morph_shapes_table_start    RS.W 1
+mvb_morph_delay_counter         RS.W 1
 
 ; **** Chessboard ****
-cb_stripes_y_angle           RS.W 1
+cb_stripes_y_angle              RS.W 1
+
+; **** Bar-Fader ****
+bf_colors_counter               RS.W 1
+bf_copy_colors_state            RS.W 1
+
+; **** Bar-Fader-In ****
+bfi_state                       RS.W 1
+bfi_fader_angle                 RS.W 1
+
+; **** Bar-Fader-Out ****
+bfo_state                       RS.W 1
+bfo_fader_angle                 RS.W 1
+
+; **** Image-Fader ****
+if_colors_counter               RS.W 1
+if_copy_colors_state            RS.W 1
+
+; **** Image-Fader-In ****
+ifi_state                       RS.W 1
+ifi_fader_angle                 RS.W 1
+
+; **** Image-Fader-Out ****
+ifo_state                       RS.W 1
+ifo_fader_angle                 RS.W 1
+
+; **** Chessboard-Fader ****
+cf_colors_counter               RS.W 1
+
+; **** Chessboard-Fader-In ****
+cfi_state                       RS.W 1
+cfi_fader_angle                 RS.W 1
+
+; **** Chessboard-Fader-Out ****
+cfo_state                       RS.W 1
+cfo_fader_angle                 RS.W 1
+
+; **** Sprite-Fader ****
+sprf_colors_counter             RS.W 1
+sprf_copy_colors_state          RS.W 1
+
+; **** Sprite-Fader-In ****
+sprfi_state                     RS.W 1
+sprfi_fader_angle               RS.W 1
+
+; **** Sprite-Fader-Out ****
+sprfo_state                     RS.W 1
+sprfo_fader_angle               RS.W 1
+
+; **** Fade-Balls ****
+fb_mask                         RS.W 1
+vb_copy_blit_mask               RS.W 1
+
+; **** Fade-Balls-In ****
+fbi_state                       RS.W 1
+fbi_delay_counter               RS.W 1
+
+; **** Fade-Balls-Out ****
+fbo_state                       RS.W 1
+fbo_delay_counter               RS.W 1
 
 ; **** Colors-Fader-Cross ****
-cfc_state                    RS.W 1
-cfc_fader_angle              RS.W 1
-cfc_fader_delay_counter      RS.W 1
-cfc_color_table_start        RS.W 1
-cfc_colors_counter           RS.W 1
-cfc_copy_colors_state        RS.W 1
+cfc_state                       RS.W 1
+cfc_fader_angle                 RS.W 1
+cfc_fader_delay_counter         RS.W 1
+cfc_color_table_start           RS.W 1
+cfc_colors_counter              RS.W 1
+cfc_copy_colors_state           RS.W 1
 
-variables_SIZE               RS.B 0
+; **** Main ****
+fx_state                        RS.W 1
+quit_state                      RS.W 1
+
+variables_SIZE                  RS.B 0
 
 
 ; **** PT-Replay ****
@@ -1032,6 +1187,9 @@ init_own_variables
     PT3_INIT_VARIABLES
   ENDC
 
+  moveq   #TRUE,d0
+  move.w  d0,pt_trigger_fx_state(a3)
+
 ; **** Viewport 1 ****
   move.l  extra_pf1(a3),vp1_pf1_construction2(a3)
   move.l  extra_pf2(a3),vp1_pf1_display(a3)
@@ -1044,10 +1202,13 @@ init_own_variables
 ; **** Horiz-Scrolltext ****
   lea     hst_image_data,a0
   move.l  a0,hst_image(a3)
-  moveq   #TRUE,d0
+  moveq   #FALSE,d1
+  move.w  d1,hst_state(a3)
   move.w  d0,hst_text_table_start(a3)
   move.w  d0,hst_text_BLTCON0BITS(a3)
   move.w  d0,hst_character_toggle_image(a3)
+  moveq   #hst_horiz_scroll_speed1,d2
+  move.w  d2,hst_variable_horiz_scroll_speed(a3)
 
 ; **** Morph-Vector-Balls *****
   move.w  d0,mvb_rotation_x_angle(a3)
@@ -1070,6 +1231,67 @@ init_own_variables
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
 
+; **** Bar-Fader ****
+  move.w  d0,bf_colors_counter(a3)
+  move.w  d1,bf_copy_colors_state(a3)
+
+; **** Bar-Fader-In ****
+  move.w  d1,bfi_state(a3)
+  MOVEF.W sine_table_length/4,d2
+  move.w  d2,bfi_fader_angle(a3) ;90 Grad
+
+; **** Bar-Fader-Out ****
+  move.w  d1,bfo_state(a3)
+  move.w  d2,bfo_fader_angle(a3) ;90 Grad
+
+; **** Image-Fader ****
+  move.w  d0,if_colors_counter(a3)
+  move.w  d1,if_copy_colors_state(a3)
+
+; **** Image-Fader-In ****
+  move.w  d1,ifi_state(a3)
+  move.w  d2,ifi_fader_angle(a3) ;90 Grad
+
+; **** Image-Fader-Out ****
+  move.w  d1,ifo_state(a3)
+  move.w  d2,ifo_fader_angle(a3) ;90 Grad
+
+; **** Chessboard-Fader ****
+  move.w  d0,cf_colors_counter(a3)
+
+; **** Chessboard-Fader-In ****
+  move.w  d1,cfi_state(a3)
+  move.w  d2,cfi_fader_angle(a3) ;90 Grad
+
+; **** Chessboard-Fader-Out ****
+  move.w  d1,cfo_state(a3)
+  move.w  d2,cfo_fader_angle(a3) ;90 Grad
+
+; **** Sprite-Fader ****
+  move.w  d0,sprf_colors_counter(a3)
+  move.w  d1,sprf_copy_colors_state(a3)
+
+; **** Sprite-Fader-In ****
+  move.w  d1,sprfi_state(a3)
+  MOVEF.W sine_table_length/4,d2
+  move.w  d2,sprfi_fader_angle(a3) ;90 Grad
+
+; **** Sprite-Fader-Out ****
+  move.w  d1,sprfo_state(a3)
+  move.w  d2,sprfo_fader_angle(a3) ;90 Grad
+
+; **** Fade-Balls ****
+  move.w  #$8888,fb_mask(a3)
+  move.w  #TRUE,vb_copy_blit_mask(a3)
+
+; **** Fade-Balls-In ****
+  move.w  d1,fbi_state(a3)
+  move.w  d1,fbi_delay_counter(a3)
+
+; **** Fade-Balls-Out ****
+  move.w  d1,fbo_state(a3)
+  move.w  d1,fbo_delay_counter(a3)
+
 ; **** Colors-Fader-Cross ****
   IFEQ cfc_prefade
     move.w  d0,cfc_state(a3)
@@ -1083,6 +1305,10 @@ init_own_variables
   move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
   move.w  d2,cfc_fader_delay_counter(a3) ;Delay-Counter aktivieren
   move.w  d0,cfc_color_table_start(a3)
+
+; **** Main ****
+  move.w  d1,fx_state(a3)
+  move.w  d1,quit_state(a3)
   rts
 
 ; ** Alle Initialisierungsroutinen ausführen **
@@ -1113,7 +1339,7 @@ init_all
   bsr     mvb_rotation
   bsr     cb_init_chessboard_image
   bsr     cb_init_bitmap_table
-  bsr     cb_init_color_table
+  bsr     cb_init_color_tables
   bsr     init_first_copperlist
   bra     init_second_copperlist
 
@@ -1211,7 +1437,7 @@ bvm_init_audio_channel_info_tables
 bvm_init_color_table
   move.l  #COLOR00BITS,d1
   lea     bvm_color_gradients(pc),a0 ;Quelle Farbverlauf
-  lea     bvm_color_table(pc),a1 ;Ziel
+  lea     bfi_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Ziel
   moveq   #bvm_bars_number-1,d7 ;Anzahl der Abschnitte
 bvm_init_color_table_loop1
   moveq   #(bvm_bar_height/2)-1,d6 ;Anzahl der Zeilen
@@ -1322,19 +1548,26 @@ cb_init_bitmap_table_loop2
   dbf     d7,cb_init_bitmap_table_loop1
   rts
 
-; ** Farbtabelle initialisieren **
-; --------------------------------
+; ** Farbtabellen initialisieren **
+; ---------------------------------
   CNOP 0,4
-cb_init_color_table
+cb_init_color_tables
   lea     cb_color_gradient1(pc),a0 ;Quelle1
   lea     cb_color_gradient2(pc),a1 ;Quelle2
-  move.l  extra_memory(a3),a2
-  ADDF.L  em_color_table,a2  ;Ziel
+  lea     cfi_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a2 ;Ziel
   moveq   #vp3_visible_lines_number-1,d7
-cb_init_color_table_loop
+cb_init_color_tables_loop1
   move.l  (a0)+,(a2)+        ;Farbwerte verschachteln
   move.l  (a1)+,(a2)+
-  dbf     d7,cb_init_color_table_loop
+  dbf     d7,cb_init_color_tables_loop1
+
+  move.l  #COLOR00BITS,d0
+  move.l  extra_memory(a3),a0
+  ADDF.L  em_color_table,a0
+  moveq   #(vp3_visible_lines_number*2)-1,d7
+cb_init_color_tables_loop2
+  move.l  d0,(a0)+
+  dbf     d7,cb_init_color_tables_loop2
   rts
 
 
@@ -1584,7 +1817,7 @@ cl2_vp1_set_fill_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_fill_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
-  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR29_high+2,a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR29_high8+2,a1
   move.w  #cl2_extension2_SIZE,a2
   lea     (a1,a2.l*2),a1     ;Zwei Rasterzeilen überspringen
   MOVEF.W (vp1_visible_lines_number-4)-1,d7
@@ -1594,7 +1827,7 @@ cl2_vp1_set_fill_color_gradient_loop
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl2_ext2_COLOR29_low-cl2_ext2_COLOR29_high(a1) ;Low-Werte
+  move.w  d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_fill_color_gradient_loop
   rts
@@ -1604,7 +1837,7 @@ cl2_vp1_set_outline_color_gradient
   move.w  #$0f0f,d3          ;RGB-Maske
   lea     hst_outline_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
-  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR30_high+2,a1
+  ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR30_high8+2,a1
   move.w  #cl2_extension2_SIZE,a2
   MOVEF.W vp1_visible_lines_number-1,d7
 cl2_vp1_set_outline_color_gradient_loop
@@ -1613,7 +1846,7 @@ cl2_vp1_set_outline_color_gradient_loop
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl2_ext2_COLOR30_low-cl2_ext2_COLOR30_high(a1) ;Low-Werte
+  move.w  d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_outline_color_gradient_loop
   rts
@@ -1746,6 +1979,8 @@ cfc_init_start_colors
     bsr     colors_fader_cross
     tst.w   cfc_copy_colors_state(a3) ;Kopieren der Farbwerte beendet?
     beq.s   cfc_init_start_colors ;Nein -> verzweige
+    moveq   #FALSE,d0
+    move.w  d0,cfc_copy_colors_state(a3) ;Verzögerungszähler desktivieren
     rts
   ENDC
 
@@ -1764,6 +1999,8 @@ beam_routines
   bsr     bvm_get_channels_amplitudes
   bsr     bvm_clear_second_copperlist
   bsr     bvm_set_bars
+  bsr     fade_balls_in
+  bsr     fade_balls_out
   bsr     set_vector_balls
   bsr     mvb_clear_playfield1_1
   bsr     mvb_rotation
@@ -1775,13 +2012,22 @@ beam_routines
   bsr     cb_make_color_offsets_table
   bsr     cb_move_chessboard
   bsr     control_counters
-  bsr     cfc_copy_color_table
+  bsr     bar_fader_in
+  bsr     bar_fader_out
+  bsr     bf_copy_color_table
+  bsr     image_fader_in
+  bsr     image_fader_out
+  bsr     if_copy_color_table
+  bsr     chessboard_fader_in
+  bsr     chessboard_fader_out
+  bsr     sprite_fader_in
+  bsr     sprite_fader_out
+  bsr     sprf_copy_color_table
   bsr     colors_fader_cross
-  IFEQ pt_music_fader
-    bsr     pt_mouse_handler
-  ENDC
-  btst    #CIAB_GAMEPORT0,CIAPRA(a4) ;Auf linke Maustaste warten
-  bne.s   beam_routines
+  bsr     cfc_copy_color_table
+  bsr     mouse_handler
+  tst.w   fx_state(a3)       ;Effekte beendet ?
+  bne     beam_routines      ;Nein -> verzweige
   rts
 
 
@@ -1844,6 +2090,8 @@ swap_vp3_playfield1_loop
 ; -----------------
   CNOP 0,4
 horiz_scrolltext
+  tst.w   hst_state(a3)      ;Laufschrift an ?
+  bne.s   no_horiz_scrolltext ;Nein -> verweige
   movem.l a4-a5,-(a7)
   bsr.s   hst_init_character_blit
   move.l  vp1_pf1_construction2(a3),a0
@@ -1868,7 +2116,7 @@ horiz_scrolltext_loop
   move.l  (a1)+,(a2)         ;Char-Image
   move.l  d0,(a4)            ;Playfield
   move.w  d4,(a5)            ;Blitter starten
-  subq.w  #hst_horiz_scroll_speed,d2 ;X-Position verringern
+  sub.w   hst_variable_horiz_scroll_speed(a3),d2 ;X-Position verringern
   bpl.s   hst_set_character_x_position ;Wenn positiv -> verzweige
 hst_new_character_image
   move.l  a0,-(a7)
@@ -1881,6 +2129,7 @@ hst_set_character_x_position
   dbf     d7,horiz_scrolltext_loop
   movem.l (a7)+,a4-a5
   move.w  #DMAF_BLITHOG,DMACON-DMACONR(a6) ;BLTPRI aus
+no_horiz_scrolltext
   rts
   CNOP 0,4
 hst_init_character_blit
@@ -1905,12 +2154,57 @@ hst_get_text_softscroll
 
 ; ** Neues Image für Character ermitteln **
 ; -----------------------------------------
-  GET_NEW_CHARACTER_IMAGE hst
+  GET_NEW_CHARACTER_IMAGE.W hst,hst_check_control_codes,NORESTART
+
+  CNOP 0,4
+hst_check_control_codes
+  cmp.b   #"",d0
+  beq.s   hst_restart_scrolltext
+  cmp.b   #"",d0
+  beq.s   hst_stop_scrolltext
+  rts
+  CNOP 0,4
+hst_restart_scrolltext
+  moveq   #TRUE,d0           ;Rückgabewert = Steuerungscode gefunden
+  move.w   d0,hst_text_table_start(a3) ;Startwert zurücksetzen
+  rts
+  CNOP 0,4
+hst_stop_scrolltext
+  moveq   #FALSE,d0
+  move.w  d0,hst_state(a3)   ;Text stoppen
+  moveq   #TRUE,d0           ;Rückgabewert TRUE = Steuerungscode gefunden
+  tst.w   quit_state(a3)     ;Soll Intro beendet werden?
+  bne.s   hst_normal_stop_scrolltext ;Nein -> verzweige
+hst_quit_and_stop_scrolltext
+  move.w  d0,pt_fade_out_music_state(a3) ;Musik ausfaden
+
+  move.w  d0,fbo_state(a3)   ;Fade-Balls-Out an
+  move.w  #fbo_delay,fbo_delay_counter(a3)
+  move.w  #$8888,fb_mask(a3)
+
+  move.w  #sprf_colors_number*3,sprf_colors_counter(a3)
+  move.w  d0,sprfo_state(a3) ;Sprite-Fader-Out an
+  move.w  d0,sprf_copy_colors_state(a3) ;Kopieren der Farben an
+
+  move.w  #if_colors_number*3,if_colors_counter(a3)
+  move.w  d0,ifo_state(a3)   ;Image-Fader-Out an
+  move.w  d0,if_copy_colors_state(a3) ;Kopieren der Farben an
+
+  move.w  d0,cfo_state(a3)   ;Chessboard-Fader-Out an
+
+  move.w  #bf_colors_number*3,bf_colors_counter(a3)
+  move.w  d0,bfo_state(a3)   ;Bar-Fader-Out an
+  move.w  d0,bf_copy_colors_state(a3) ;Kopieren der Farben an
+
+hst_normal_stop_scrolltext
+  rts
 
 ; ** Laufschrift bewegen **
 ; -------------------------
   CNOP 0,4
 hst_horiz_scroll
+  tst.w   hst_state(a3)      ;Laufschrift an ?
+  bne.s   hst_no_horiz_scroll ;Nein -> verweige
   move.l  vp1_pf1_construction2(a3),a0
   move.l  (a0),a0
   ADDF.W  (hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),a0
@@ -1921,6 +2215,7 @@ hst_horiz_scroll
   move.l  a0,BLTDPT-DMACONR(a6) ;Ziel
   move.l  #((extra_pf1_plane_width-hst_horiz_scroll_window_width)<<16)+(extra_pf1_plane_width-hst_horiz_scroll_window_width),BLTAMOD-DMACONR(a6) ;A-Mod + D-Mod
   move.w  #(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth*64)+(hst_horiz_scroll_window_x_size/16),BLTSIZE-DMACONR(a6) ;Blitter starten
+hst_no_horiz_scroll
   rts
 
 ; ** Amplituden der einzelnen Kanäle in Erfahrung bringen **
@@ -2348,7 +2643,9 @@ mvb_z_plane1_found
 mvb_init_balls_blit
   move.w  #DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
   WAITBLITTER
-  move.l  #$ffff0000,BLTAFWM-DMACONR(a6) ;Ausmaskierung
+  move.w  vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6) ;Ausmaskierung
+  moveq   #TRUE,d0
+  move.w  d0,BLTALWM-DMACONR(a6)
   move.l  #((extra_pf4_plane_width-(mvb_image_width+2))<<16)+((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2)),BLTCMOD-DMACONR(a6) ;C+B-Moduli
   move.l  #(((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2))<<16)+(extra_pf4_plane_width-(mvb_image_width+2)),BLTAMOD-DMACONR(a6) ;A+D-Moduli
   rts
@@ -2406,7 +2703,7 @@ cb_move_chessboard
   move.l  extra_memory(a3),a1
   ADDF.L  em_color_table,a1  ;Zeiger auf Farbtabelle
   move.l  cl2_construction2(a3),a2
-  ADDF.W  cl2_extension5_entry+cl2_ext5_COLOR25_high+2,a2 ;CL
+  ADDF.W  cl2_extension5_entry+cl2_ext5_COLOR25_high8+2,a2 ;CL
   move.w  #cl2_extension5_SIZE,a4
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cb_move_chessboard_loop
@@ -2416,95 +2713,396 @@ cb_move_chessboard_loop
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a2)            ;COLOR29 High-Bits
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl2_ext5_COLOR25_low-cl2_ext5_COLOR25_high(a2) ;COLOR01 Low-Bits
+  move.w  d2,cl2_ext5_COLOR25_low8-cl2_ext5_COLOR25_high8(a2) ;COLOR01 Low-Bits
   add.l   a4,a2              ;nächste Zeile
   move.w  (a0)+,d0           ;Farboffset holen
   move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert holen
   move.l  d0,d2              ;retten
   RGB8_TO_RGB4HI d0,d1,d3
-  move.w  d0,(cl2_ext5_COLOR26_high-cl2_ext5_COLOR25_high)-cl2_extension5_SIZE(a2) ;COLOR02 High-Bits
+  move.w  d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 High-Bits
   RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,(cl2_ext5_COLOR26_low-cl2_ext5_COLOR25_high)-cl2_extension5_SIZE(a2) ;COLOR02 Low-Bits
+  move.w  d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 Low-Bits
   addq.w  #8,a1              ;Nächster Farbwert in Farbtabelle
   dbf     d7,cb_move_chessboard_loop
   move.l  (a7)+,a4
   rts
 
 
+; ** Bars einblenden **
+; ---------------------
+  CNOP 0,4
+bar_fader_in
+  tst.w   bfi_state(a3)      ;Bar-Fader-In an ?
+  bne.s   no_bar_fader_in    ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  bfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  bfi_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   bfi_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+bfi_no_restart_fader_angle
+  move.w  d0,bfi_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W bf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L bfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  bfi_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     bvm_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     bfi_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W bf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,bf_colors_counter(a3) ;Image-Fader-In fertig ?
+  bne.s   no_bar_fader_in    ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,bfi_state(a3)   ;Image-Fader-In aus
+no_bar_fader_in
+  rts
+
+; ** Bars ausblenden **
+; ---------------------
+  CNOP 0,4
+bar_fader_out
+  tst.w   bfo_state(a3)      ;Bar-Fader-Out an ?
+  bne.s   no_bar_fader_out   ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  bfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  bfo_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   bfo_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+bfo_no_restart_fader_angle
+  move.w  d0,bfo_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W bf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L bfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  bfo_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     bvm_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     bfo_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W bf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,bf_colors_counter(a3) ;Image-Fader-Out fertig ?
+  bne.s   no_bar_fader_out ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,bfo_state(a3)   ;Image-Fader-Out aus
+no_bar_fader_out
+  rts
+
 ; ** Farbwerte in Copperliste kopieren **
 ; ---------------------------------------
+  COPY_COLOR_TABLE_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
+
+; ** Tempel einblenden **
+; -----------------------
   CNOP 0,4
-cfc_copy_color_table
-  IFNE cl1_size2
-    move.l  a4,-(a7)
-  ENDC
-  tst.w   cfc_copy_colors_state(a3)  ;Kopieren der Farbwerte beendet ?
-  bne.s   cfc_no_copy_color_table ;Ja -> verzweige
-  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
-  IFGT cfc_colors_number-32
-    moveq   #TRUE,d4         ;Color-Bank Farbregisterzähler
-  ENDC
-  lea     vp2_pf1_color_table(pc),a0 ;Puffer für Farbwerte
-  move.l  cl1_display(a3),a1 ;CL
-  ADDF.W  cl1_COLOR16_high1+2,a1
-  IFNE cl1_size1
-    move.l  cl1_construction1(a3),a2 ;CL
-    ADDF.W  cl1_COLOR16_high1+2,a2
-  ENDC
-  IFNE cl1_size2
-    move.l  cl1_construction2(a3),a4 ;CL
-    ADDF.W  cl1_COLOR16_high1+2,a4
-  ENDC
-  MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
-cfc_copy_color_table_loop
-  move.l  (a0)+,d0           ;RGB8-Farbwert
-  move.l  d0,d2              ;retten
-  RGB8_TO_RGB4HI d0,d1,d3
-  move.w  d0,(a1)            ;COLORxx High-Bits
-  IFNE cl1_size1
-    move.w  d0,(a2)          ;COLORxx High-Bits
-  ENDC
-  IFNE cl1_size2
-    move.w  d0,(a4)          ;COLORxx High-Bits
-  ENDC
-  RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a1) ;Low-Bits COLORxx
-  addq.w  #4,a1              ;nächstes Farbregister
-  IFNE cl1_size1
-    move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a2) ;Low-Bits COLORxx
-    addq.w  #4,a2            ;nächstes Farbregister
-  ENDC
-  IFNE cl1_size2
-    move.w  d2,cl1_COLOR16_low1-cl1_COLOR16_high1(a4) ;Low-Bits COLORxx
-    addq.w  #4,a4            ;nächstes Farbregister
-  ENDC
-  IFGT cfc_colors_number-32
-    addq.b  #1*8,d4          ;Farbregister-Zähler erhöhen
-    bne.s   cfc_no_restart_color_bank ;Nein -> verzweige
-    addq.w  #4,a1            ;CMOVE überspringen
-    IFNE cl1_size1
-      addq.w  #4,a2          ;CMOVE überspringen
-    ENDC
-    IFNE cl1_size2
-      addq.w  #4,a4          ;CMOVE überspringen
-    ENDC
-cfc_no_restart_color_bank
-  ENDC
-  dbf     d7,cfc_copy_color_table_loop
-  tst.w   cfc_colors_counter(a3) ;Fading beendet ?
-  bne.s   cfc_no_copy_color_table ;Nein -> verzweige
-cfc_disable_copy_color_table
+image_fader_in
+  tst.w   ifi_state(a3)      ;Image-Fader-In an ?
+  bne.s   no_image_fader_in  ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  ifi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  ifi_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   ifi_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+ifi_no_restart_fader_angle
+  move.w  d0,ifi_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W if_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L ifi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  ifi_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     ifi_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W if_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,if_colors_counter(a3) ;Image-Fader-In fertig ?
+  bne.s   no_image_fader_in  ;Nein -> verzweige
   moveq   #FALSE,d0
-  move.w  d0,cfc_copy_colors_state(a3) ;Kopieren beendet
-  move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
-  move.w  cfc_color_table_start(a3),d0
-  addq.w  #1,d0              ;nächste Farbtabelle
-  and.w   #cfc_color_tables_number-1,d0 ;Überlauf entfernen
-  move.w  d0,cfc_color_table_start(a3)
-cfc_no_copy_color_table
-  IFNE cl1_size2
-    move.l  (a7)+,a4
-  ENDC
+  move.w  d0,ifi_state(a3)   ;Image-Fader-In aus
+no_image_fader_in
+  rts
+
+; ** Tempel ausblenden **
+; -----------------------
+  CNOP 0,4
+image_fader_out
+  tst.w   ifo_state(a3)      ;Image-Fader-Out an ?
+  bne.s   no_image_fader_out ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  ifo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  ifo_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   ifo_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+ifo_no_restart_fader_angle
+  move.w  d0,ifo_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W if_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L ifo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  ifo_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     ifo_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W if_colors_number-1,d7 ;Anzahl der Farben
+  bsr.s   if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,if_colors_counter(a3) ;Image-Fader-Out fertig ?
+  bne.s   no_image_fader_out ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,ifo_state(a3)   ;Image-Fader-Out aus
+no_image_fader_out
+  rts
+
+  COLOR_FADER if
+
+; ** Farbwerte in Copperliste kopieren **
+; ---------------------------------------
+  COPY_COLOR_TABLE_TO_COPPERLIST if,vp2_pf1,cl1,cl1_COLOR01_high1,cl1_COLOR01_low1
+
+; ** Chessboard einblenden **
+; ---------------------------
+  CNOP 0,4
+chessboard_fader_in
+  tst.w   cfi_state(a3)      ;Chessboard-Fader-In an ?
+  bne.s   no_chessboard_fader_in ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  cfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  cfi_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   cfi_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+cfi_no_restart_fader_angle
+  move.w  d0,cfi_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W cf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L cfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  cfi_fader_center,d0 ;+ Fader-Mittelpunkt
+  move.l  extra_memory(a3),a0
+  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORDSIZE),a0  ;Puffer für Farbwerte
+  lea     cfi_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,cf_colors_counter(a3) ;Chessboard-Fader-In fertig ?
+  bne.s   no_chessboard_fader_in  ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,cfi_state(a3)   ;Chessboard-Fader-In aus
+no_chessboard_fader_in
+  rts
+
+; ** Chessboard ausblenden **
+; ---------------------------
+  CNOP 0,4
+chessboard_fader_out
+  tst.w   cfo_state(a3)      ;Chessboard-Fader-Out an ?
+  bne.s   no_chessboard_fader_out ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  cfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  cfo_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   cfo_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+cfo_no_restart_fader_angle
+  move.w  d0,cfo_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W cf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L cfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  cfo_fader_center,d0 ;+ Fader-Mittelpunkt
+  move.l  extra_memory(a3),a0
+  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORDSIZE),a0  ;Puffer für Farbwerte
+  lea     cfo_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W cf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,cf_colors_counter(a3) ;Image-Fader-Out fertig ?
+  bne.s   no_chessboard_fader_out ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,cfo_state(a3)   ;Chessboard-Fader-Out aus
+no_chessboard_fader_out
+  rts
+
+; ** Sprites einblenden **
+; ------------------------
+  CNOP 0,4
+sprite_fader_in
+  tst.w   sprfi_state(a3)    ;Sprite-Fader-In an ?
+  bne.s   no_sprite_fader_in ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  sprfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  sprfi_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   sprfi_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+sprfi_no_restart_fader_angle
+  move.w  d0,sprfi_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W sprf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L sprfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  sprfi_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     spr_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     sprfi_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W sprf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,sprf_colors_counter(a3) ;Image-Fader-In fertig ?
+  bne.s   no_sprite_fader_in  ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,sprfi_state(a3) ;Sprite-Fader-In aus
+no_sprite_fader_in
+  rts
+
+; ** Sprites ausblenden **
+; ------------------------
+  CNOP 0,4
+sprite_fader_out
+  tst.w   sprfo_state(a3)    ;Sprite-Fader-Out an ?
+  bne.s   no_sprite_fader_out ;Nein -> verzweige
+  movem.l a4-a6,-(a7)
+  move.w  sprfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  d2,d0
+  ADDF.W  sprfo_fader_angle_speed,d0 ;nächster Fader-Winkel
+  cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
+  ble.s   sprfo_no_restart_fader_angle ;Ja -> verzweige
+  MOVEF.W sine_table_length/2,d0 ;180 Grad
+sprfo_no_restart_fader_angle
+  move.w  d0,sprfo_fader_angle(a3) ;Fader-Winkel retten
+  MOVEF.W sprf_colors_number*3,d6 ;Zähler
+  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  move.l  (a0,d2.w*4),d0     ;sin(w)
+  MULUF.L sprfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
+  swap    d0
+  ADDF.W  sprfo_fader_center,d0 ;+ Fader-Mittelpunkt
+  lea     spr_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     sprfo_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
+  swap    d0                 ;WORDSHIFT
+  clr.w   d0                 ;Bits 0-15 löschen
+  move.l  d0,a2              ;Additions-/Subtraktionswert für Rot
+  lsr.l   #8,d0              ;BYTESHIFT
+  move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
+  MOVEF.W sprf_colors_number-1,d7 ;Anzahl der Farben
+  bsr     if_fader_loop
+  movem.l (a7)+,a4-a6
+  move.w  d6,sprf_colors_counter(a3) ;Image-Fader-Out fertig ?
+  bne.s   no_sprite_fader_out ;Nein -> verzweige
+  moveq   #FALSE,d0
+  move.w  d0,sprfo_state(a3) ;Sprite-Fader-Out aus
+no_sprite_fader_out
+  rts
+
+; ** Farbwerte in Copperliste kopieren **
+; ---------------------------------------
+  COPY_COLOR_TABLE_TO_COPPERLIST sprf,spr,cl1,cl1_COLOR01_high2,cl1_COLOR01_low2
+
+; ** Bälle einblenden **
+; ----------------------
+  CNOP 0,4
+fade_balls_in
+  tst.w   fbi_state(a3)      ;Fade-Balls-In an?
+  bne.s   no_fade_balls_in   ;Nein -> verzweige
+  subq.w  #1,fbi_delay_counter(a3) ;Verzögerungszähler verringrern
+  bne.s   no_fade_balls_in   ;Nein -> verzweige
+  move.w  #fbi_delay,fbi_delay_counter(a3) ;Zähler zurücksetzen
+  move.w  vb_copy_blit_mask(a3),d0 ;Aktuelle Maske
+  move.w  fb_mask(a3),d1     ;2. Maske
+  eor.w   d1,d0              ;Masken miteinander verknüpfen
+  move.w  d0,vb_copy_blit_mask(a3)
+  cmp.w   #FALSEW,d0         ;Maske fertig?
+  beq.s   fbi_finished       ;Ja -> verzweige
+  lsr.w   #1,d1              ;2. Maske verschieben
+  move.w  d1,fb_mask(a3)     ;retten
+no_fade_balls_in
+  rts
+  CNOP 0,4
+fbi_finished
+  moveq   #FALSE,d0
+  move.w  d0,fbi_state(a3)   ;Fade-Balls-In aus
+  rts
+
+; ** Bälle ausblenden **
+; ----------------------
+  CNOP 0,4
+fade_balls_out
+  tst.w   fbo_state(a3)      ;Fade-Balls-Out an?
+  bne.s   no_fade_balls_out  ;Nein -> verzweige
+  subq.w  #1,fbo_delay_counter(a3) ;Verzögerungszähler verringern
+  bne.s   no_fade_balls_out  ;Nein -> verzweige
+  move.w  #fbo_delay,fbo_delay_counter(a3) ;Zähler zurücksetzen
+  move.w  vb_copy_blit_mask(a3),d0 ;Aktuelle Maske
+  move.w  fb_mask(a3),d1     ;2. Maske
+  eor.w   d1,d0              ;Masken verknüpfen
+  move.w  d0,vb_copy_blit_mask(a3)
+  beq.s   fbo_finished       ;Wenn Maske fertig -> verzweige
+  lsr.w   #1,d1              ;2. Maske verschieben
+  move.w  d1,fb_mask(a3)     ;retten
+no_fade_balls_out
+  rts
+  CNOP 0,4
+fbo_finished
+  moveq   #FALSE,d0
+  move.w  d0,fbo_state(a3)   ;Fade-Balls-Out aus
   rts
 
 ; ** Farben überblenden **
@@ -2528,8 +3126,8 @@ cfc_no_restart_fader_angle
   MULUF.L cfc_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  cfc_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     vp2_pf1_color_table(pc),a0 ;Puffer für Farbwerte
-  lea     cfc_color_table(pc),a1 ;Sollwerte
+  lea     vp2_pf1_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     cfc_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
   move.w  cfc_color_table_start(a3),d1
   MULUF.W LONGWORDSIZE,d1
   lea     (a1,d1.w*8),a1
@@ -2540,7 +3138,7 @@ cfc_no_restart_fader_angle
   lsr.l   #8,d0              ;BYTESHIFT
   move.l  d0,a4              ;Additions-/Subtraktionswert für Grün
   MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
-  bsr     cf_fader_loop
+  bsr     if_fader_loop
   movem.l (a7)+,a4-a6
   move.w  d6,cfc_colors_counter(a3) ;Color-Fader-Cross fertig ?
   bne.s   no_colors_fader_cross ;Nein -> verzweige
@@ -2549,8 +3147,82 @@ cfc_no_restart_fader_angle
 no_colors_fader_cross
   rts
 
-  COLOR_FADER cf
-
+; ** Farbwerte in Copperliste kopieren **
+; ---------------------------------------
+  CNOP 0,4
+cfc_copy_color_table
+  IFNE cl1_size2
+    move.l  a4,-(a7)
+  ENDC
+  tst.w   cfc_copy_colors_state(a3)  ;Kopieren der Farbwerte beendet ?
+  bne.s   cfc_no_copy_color_table ;Ja -> verzweige
+  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
+  IFGT cfc_colors_number-32
+    moveq   #cfc_start_xolor*8,d4 ;Color-Bank Farbregisterzähler
+  ENDC
+  lea     vp2_pf1_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  move.l  cl1_display(a3),a1 ;CL
+  ADDF.W  cl1_COLOR17_high1+2,a1
+  IFNE cl1_size1
+    move.l  cl1_construction1(a3),a2 ;CL
+    ADDF.W  cl1_COLOR17_high1+2,a2
+  ENDC
+  IFNE cl1_size2
+    move.l  cl1_construction2(a3),a4 ;CL
+    ADDF.W  cl1_COLOR17_high1+2,a4
+  ENDC
+  MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
+cfc_copy_color_table_loop
+  move.l  (a0)+,d0           ;RGB8-Farbwert
+  move.l  d0,d2              ;retten
+  RGB8_TO_RGB4HI d0,d1,d3
+  move.w  d0,(a1)            ;COLORxx High-Bits
+  IFNE cl1_size1
+    move.w  d0,(a2)          ;COLORxx High-Bits
+  ENDC
+  IFNE cl1_size2
+    move.w  d0,(a4)          ;COLORxx High-Bits
+  ENDC
+  RGB8_TO_RGB4LO d2,d1,d3
+  move.w  d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a1) ;Low-Bits COLORxx
+  addq.w  #4,a1              ;nächstes Farbregister
+  IFNE cl1_size1
+    move.w  d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a2) ;Low-Bits COLORxx
+    addq.w  #4,a2            ;nächstes Farbregister
+  ENDC
+  IFNE cl1_size2
+    move.w  d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a4) ;Low-Bits COLORxx
+    addq.w  #4,a4            ;nächstes Farbregister
+  ENDC
+  IFGT cfc_colors_number-32
+    addq.b  #1*8,d4          ;Farbregister-Zähler erhöhen
+    bne.s   cfc_no_restart_color_bank ;Nein -> verzweige
+    addq.w  #4,a1            ;CMOVE überspringen
+    IFNE cl1_size1
+      addq.w  #4,a2          ;CMOVE überspringen
+    ENDC
+    IFNE cl1_size2
+      addq.w  #4,a4          ;CMOVE überspringen
+    ENDC
+cfc_no_restart_color_bank
+  ENDC
+  dbf     d7,cfc_copy_color_table_loop
+  tst.w   cfc_colors_counter(a3) ;Fading beendet ?
+  bne.s   cfc_no_copy_color_table ;Nein -> verzweige
+cfc_disable_copy_color_table
+  moveq   #FALSE,d0
+  move.w  d0,cfc_copy_colors_state(a3) ;Kopieren beendet
+cfc_next_entry
+  move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
+  move.w  cfc_color_table_start(a3),d0
+  addq.w  #1,d0              ;nächste Farbtabelle
+  and.w   #cfc_color_tables_number-1,d0 ;Überlauf entfernen
+  move.w  d0,cfc_color_table_start(a3)
+cfc_no_copy_color_table
+  IFNE cl1_size2
+    move.l  (a7)+,a4
+  ENDC
+  rts
 
 ; ** Zähler kontrollieren **
 ; --------------------------
@@ -2567,31 +3239,87 @@ mvb_morph_save_delay_counter
 mvb_morph_no_delay_counter
 
   move.w  cfc_fader_delay_counter(a3),d0
-  bmi.s   cfc_no_color_fader_cross ;Wenn Zähler negativ -> verzweige
+  bmi.s   cfc_no_fader_delay_counter ;Wenn Zähler negativ -> verzweige
   subq.w  #1,d0
-  bpl.s   cfc_save_delay_counter ;Wenn Zähler positiv -> verzweige
+  bpl.s   cfc_save_fader_delay_counter ;Wenn Zähler positiv -> verzweige
 cfc_fader_enable
   move.w  #cfc_colors_number*3,cfc_colors_counter(a3)
   moveq   #TRUE,d1
   move.w  d1,cfc_copy_colors_state(a3)
   move.w  d1,cfc_state(a3)
   move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
-cfc_save_delay_counter
+cfc_save_fader_delay_counter
   move.w  d0,cfc_fader_delay_counter(a3) ;retten
-cfc_no_color_fader_cross
+cfc_no_fader_delay_counter
   rts
 
-  IFEQ pt_music_fader
+
 ; ** Mouse-Handler **
 ; -------------------
-    CNOP 0,4
-pt_mouse_handler
-    btst    #POTINPB_DATLY,POTINP-DMACONR(a6) ;Rechte Mustaste gedrückt?
-    bne.s   pt_no_mouse_handler ;Nein -> verzweige
-    clr.w   pt_fade_out_music_state(a3) ;Fader an
-pt_no_mouse_handler
-    rts
-  ENDC
+  CNOP 0,4
+mouse_handler
+  btst    #CIAB_GAMEPORT0,CIAPRA(a4) ;Linke Maustaste gedrückt ?
+  beq.s   mh_quit            ;Ja -> verzweige
+  rts
+  CNOP 0,4
+mh_quit
+  moveq   #FALSE,d1
+  move.w  d1,pt_trigger_fx_state(a3) ;FX-Abfrage aus
+  moveq   #TRUE,d0
+  tst.w   hst_state(a3)      ;Scrolltext aktiv ?
+  beq.s   mh_quit_with_scrolltext ;Ja -> verzweige
+mh_quit_without_scrolltext
+  move.w  d0,pt_fade_out_music_state(a3) ;Musik ausfaden
+
+  tst.w   fbi_state(a3)      ;Fade-Balls-In aktiv ?
+  bne.s   mh_skip1           ;Nein -> verzweige
+  move.w  d1,fbi_state(a3)   ;Fade-Balls-In aus
+mh_skip1
+  tst.w   vb_copy_blit_mask(a3)
+  beq.s   skip2
+  move.w  d0,fbo_state(a3)   ;Fade-Balls-Out an
+  move.w  #fbo_delay,fbo_delay_counter(a3)
+  move.w  #$8888,fb_mask(a3)
+skip2
+
+  move.w  #sprf_colors_number*3,sprf_colors_counter(a3)
+  tst.w   sprfi_state(a3)    ;Sprite-Fader-In aktiv ?
+  bne.s   mh_skip3           ;Nein -> verzweige
+  move.w  d1,sprfi_state(a3) ;Sprite-Fader-In aus
+mh_skip3
+  move.w  d0,sprfo_state(a3) ;Sprite-Fader-Out an
+  move.w  d0,sprf_copy_colors_state(a3) ;Kopieren der Farben an
+
+  move.w  #if_colors_number*3,if_colors_counter(a3)
+  tst.w   ifi_state(a3)      ;Image-Fader-In aktiv ?
+  bne.s   mh_skip4           ;Nein -> verzweige
+  move.w  d1,ifi_state(a3)   ;Image-Fader-In aus
+mh_skip4
+  move.w  d0,ifo_state(a3)   ;Image-Fader-Out an
+  move.w  d0,if_copy_colors_state(a3) ;Kopieren der Farben an
+
+  tst.w   cfi_state(a3)      ;Chessboard-Fader-In aktiv ?
+  bne.s   mh_skip5           ;Nein -> verzweige
+  move.w  d1,cfi_state(a3)   ;Chessboard-Fader-In aus
+mh_skip5
+  move.w  d0,cfo_state(a3)   ;Chessboard-Fader-Out an
+
+  move.w  #bf_colors_number*3,bf_colors_counter(a3)
+  tst.w   bfi_state(a3)      ;Bar-Fader-In aktiv ?
+  bne.s   mh_skip6           ;Nein -> verzweige
+  move.w  d1,bfi_state(a3)   ;Bar-Fader-In aus
+mh_skip6
+  move.w  d0,bfo_state(a3)   ;Bar-Fader-Out an
+  move.w  d0,bf_copy_colors_state(a3) ;Kopieren der Farben an
+
+  rts
+  CNOP 0,4
+mh_quit_with_scrolltext
+  moveq   #hst_horiz_scroll_speed2,d2
+  move.w  d2,hst_variable_horiz_scroll_speed(a3) ;Doppelte Geschwindigkeit für Laufschrift
+  move.w  #hst_stop_text-hst_text,hst_text_table_start(a3) ;Scrolltext beenden
+  move.w  d0,quit_state(a3)  ;Intro soll nach Text-Stopp beendet werden
+  rts
 
 
 ; ## Interrupt-Routinen ##
@@ -2619,7 +3347,7 @@ VERTB_int_server
 
 ; ** Musik ausblenden **
 ; ----------------------
-    PT_FADE_OUT
+    PT_FADE_OUT fx_state
 
     CNOP 0,4
   ENDC
@@ -2627,11 +3355,79 @@ VERTB_int_server
 ; ** PT-replay routine **
 ; -----------------------
   IFD pt_v2.3a
-    PT2_REPLAY
+    PT2_REPLAY pt_trigger_fx
   ENDC
   IFD pt_v3.0b
-    PT3_REPLAY
+    PT3_REPLAY pt_trigger_fx
   ENDC
+
+;--> 8xy "Not used/custom" <--
+  CNOP 0,4
+pt_trigger_fx
+  tst.w   pt_trigger_fx_state(a3) ;Check enabled?
+  bne.s   pt_no_trigger_fx   ;No -> skip
+  move.b  n_cmdlo(a2),d0     ;Get command data x = Effekt y = TRUE/FALSE
+  cmp.b   #$01,d0
+  beq.s   pt_disable_trigger_fx
+  cmp.b   #$10,d0
+  beq.s   pt_start_fade_bars_in
+  cmp.b   #$20,d0
+  beq.s   pt_start_image_fader_in
+  cmp.b   #$30,d0
+  beq.s   pt_start_fade_chessboard_in
+  cmp.b   #$40,d0
+  beq.s   pt_start_fade_sprites_in
+  cmp.b   #$50,d0
+  beq.s   pt_start_fade_balls_in
+  cmp.b   #$60,d0
+  beq.s   pt_start_colors_fader_scross
+  cmp.b   #$70,d0
+  beq.s   pt_start_scrolltext
+pt_no_trigger_fx
+  rts
+  CNOP 0,4
+pt_disable_trigger_fx
+  moveq   #FALSE,d0
+  move.w  d0,pt_trigger_fx_state(a3) ;8xy-Abfrage aus
+  rts
+  CNOP 0,4
+pt_start_fade_bars_in
+  move.w  #bf_colors_number*3,bf_colors_counter(a3)
+  moveq   #TRUE,d0
+  move.w  d0,bfi_state(a3)   ;Bar-Fader-In an
+  move.w  d0,bf_copy_colors_state(a3) ;Kopieren der Farben an
+  rts
+  CNOP 0,4
+pt_start_image_fader_in
+  move.w  #if_colors_number*3,if_colors_counter(a3)
+  moveq   #TRUE,d0
+  move.w  d0,ifi_state(a3)   ;Image-Fader-In an
+  move.w  d0,if_copy_colors_state(a3) ;Kopieren der Farben an
+  rts
+  CNOP 0,4
+pt_start_fade_chessboard_in
+  clr.w   cfi_state(a3)      ;Chessboard-Fader-In an
+  rts
+  CNOP 0,4
+pt_start_fade_sprites_in
+  move.w  #sprf_colors_number*3,sprf_colors_counter(a3)
+  moveq   #TRUE,d0
+  move.w  d0,sprfi_state(a3) ;Sprite-Fader-In an
+  move.w  d0,sprf_copy_colors_state(a3) ;Kopieren der Farben an
+  rts
+  CNOP 0,4
+pt_start_fade_balls_in
+  clr.w   fbi_state(a3)
+  move.w  #fbi_delay,fbi_delay_counter(a3)
+  rts
+  CNOP 0,4
+pt_start_colors_fader_scross
+  move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
+  rts
+  CNOP 0,4
+pt_start_scrolltext
+  clr.w   hst_state(a3)      ;Laufschrift an
+  rts
 
 ; ** CIA-B Timer B interrupt server **
   CNOP 0,4
@@ -2682,7 +3478,9 @@ pf1_color_table
   DC.L COLOR00BITS
 ; **** Viewport 2 ****
 vp2_pf1_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple2.ct"
+  REPT vp2_visible_lines_number
+    DC.L COLOR00BITS
+  ENDR
 vp2_pf2_color_table
   REPT vp2_pf2_colors_number*2
     DC.L COLOR00BITS
@@ -2697,7 +3495,9 @@ vp3_pf1_color_table
 ; ** Farben der Sprites **
 ; ------------------------
 spr_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/256x208x16-Desert-Sunset2.ct"
+  REPT spr_colors_number
+    DC.L COLOR00BITS
+  ENDR
 
 ; ** Adressen der Sprites **
 ; --------------------------
@@ -2779,7 +3579,9 @@ bvm_color_gradients
 ; ** Farbtabelle **
 ; -----------------
 bvm_color_table
-  DS.L spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+  REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+    DC.L COLOR00BITS
+  ENDR
 
 ; ** Tabelle mit Switchwerten **
 ; ------------------------------
@@ -2927,6 +3729,7 @@ mvb_morph_shapes_table
 ; ------------------
 cb_color_gradient1
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/48-Colorgradient1.ct"
+
 cb_color_gradient2
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/48-Colorgradient2.ct"
 
@@ -2946,8 +3749,73 @@ cb_stripes_y_coordinates
 cb_color_offsets_table
   DS.W cb_stripe_height*cb_stripes_number*2
 
+; **** Bar-Fader ****
+; ** Zielfarbwerte für Bar-Fader-In **
+; ------------------------------------
+  CNOP 0,4
+bfi_color_table
+  DS.L spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+
+; ** Zielfarbwerte für Bar-Fader-Out **
+; -------------------------------------                                           p
+bfo_color_table
+  REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+    DC.L COLOR00BITS
+  ENDR
+
+; ** Puffer für Farbwerte **
+; --------------------------
+bf_color_cache
+  REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
+    DC.L COLOR00BITS
+  ENDR
+
 ; **** Image-Fader ****
-; ** Zielfarbwerte für Image-Fader-Cross **
+; ** Zielfarbwerte für Image-Fader-In **
+; --------------------------------------
+  CNOP 0,4
+ifi_color_table
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple2.ct"
+
+; ** Zielfarbwerte für Image-Fader-Out **
+; ---------------------------------------
+ifo_color_table
+  REPT vp2_pf1_colors_number
+    DC.L COLOR00BITS
+  ENDR
+
+; **** Chessboard-Fader ****
+; ** Zielfarbwerte für Chessboard-Fader-In **
+; -------------------------------------------
+  CNOP 0,4
+cfi_color_table
+  REPT vp3_visible_lines_number*2
+    DC.L COLOR00BITS
+  ENDR
+
+; ** Zielfarbwerte für Chessboard-Fader-Out **
+; --------------------------------------------                                           p
+cfo_color_table
+  REPT vp3_visible_lines_number*2
+    DC.L COLOR00BITS
+  ENDR
+
+; **** Sprite-Fader ****
+; ** Zielfarbwerte für Sprite-Fader-In **
+; ---------------------------------------
+  CNOP 0,4
+sprfi_color_table
+  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/256x208x16-Desert-Sunset2.ct"
+
+; ** Zielfarbwerte für Sprite-Fader-Out **
+; ----------------------------------------
+sprfo_color_table
+  REPT spr_colors_number
+    DC.L COLOR00BITS
+  ENDR
+
+; **** Color-Fader-Cross ****
+; ** Zielfarbwerte für Color-Fader-Cross **
 ; -----------------------------------------
   CNOP 0,4
 cfc_color_table
@@ -2955,6 +3823,7 @@ cfc_color_table
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls6.ct"
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls5.ct"
   INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls7.ct"
+
 
 
 ; ## Speicherstellen allgemein ##
@@ -2976,7 +3845,7 @@ cfc_color_table
 
 ; ** Programmversion für Version-Befehl **
 ; ----------------------------------------
-prg_version DC.B "$VER: RSE-30 1.0 beta (27.5.24)",TRUE
+prg_version DC.B "$VER: RSE-30 1.1 beta (2.6.24)",TRUE
   EVEN
 
 ; **** Horiz-Scrolltext ****
@@ -2986,8 +3855,15 @@ hst_text
   REPT hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size)
     DC.B " "
   ENDR
-  DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     "
-  DC.B FALSE
+
+  DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!   "
+  DC.B " "
+
+hst_stop_text
+  REPT ((hst_text_characters_number)/(hst_origin_character_x_size/hst_text_character_x_size))+1
+    DC.B " "
+  ENDR
+  DC.B " "
   EVEN
 
 

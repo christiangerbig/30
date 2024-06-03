@@ -3852,7 +3852,7 @@ prg_version DC.B "$VER: RSE-30 1.1 beta (2.6.24)",TRUE
 ; ** Text für Laufschrift **
 ; --------------------------
 hst_text
-  REPT hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size)
+  REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
     DC.B " "
   ENDR
 
@@ -3860,7 +3860,7 @@ hst_text
   DC.B " "
 
 hst_stop_text
-  REPT ((hst_text_characters_number)/(hst_origin_character_x_size/hst_text_character_x_size))+1
+  REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
     DC.B " "
   ENDR
   DC.B " "

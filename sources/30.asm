@@ -23,7 +23,7 @@
 ;   kalen Austastlücke initialisiert.
 ; - Vektor-Bälle: Einblenden und Überblenden zu anderen Farben mit Intervall
 ;                 und Änderung der Z-Koorinaten
-; - Nutzung des PT 8xx-Befehls für die Fader-Routinen
+; - Nutzung des PT 8xy-Befehls für die Fader-Routinen
 
 
 ; PT 8xy-Befehl
@@ -1801,7 +1801,7 @@ cl2_vp3_init_color_gradient_registers_skip
 ; **** Viewport 1 ****
   CNOP 0,4
 cl2_vp1_pf1_set_bitplane_pointers
-  move.l  cl2_display(a3),a0 ;CL
+  move.l  cl2_display(a3),a0 
   ADDF.W  cl2_extension1_entry+cl2_ext1_BPL1PTH+2,a0
   move.l  vp1_pf1_display(a3),a1 ;Zeiger auf erste Plane
   moveq   #vp1_pf1_depth-1,d7 ;Anzahl der Bitplanes
@@ -2149,7 +2149,7 @@ hst_get_text_softscroll
   and.w   (a0),d0            ;X-Pos.&$f
   ror.w   #4,d0              ;Bits in richtige Position bringen
   or.w    #BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC,d0 ;Minterm  D=A
-  move.w  d0,hst_text_BLTCON0BITS(a3) ;retten
+  move.w  d0,hst_text_BLTCON0BITS(a3) 
   rts
 
 ; ** Neues Image für Character ermitteln **
@@ -2280,7 +2280,7 @@ bvm_set_bars
   lea     sine_table(pc),a0  
   lea     bvm_audio_channel1_info(pc),a1 ;Zeiger auf Amplitude und Y-Winkeldes Kanals
   lea     bvm_switch_table(pc),a4 ;Zeiger auf Switchtabelle
-  move.l  cl2_construction2(a3),a5 ;CL
+  move.l  cl2_construction2(a3),a5 
   ADDF.W  cl2_extension2_entry+cl2_ext2_BPLCON4+3,a5
   move.w  #bvm_y_centre,a3
   move.w  #cl2_extension2_SIZE,a6
@@ -2393,7 +2393,7 @@ mvb_rotation_no_x_angle_restart2
   ENDC
   move.w  d1,mvb_rotation_x_angle(a3) ;X-Winkel retten
   move.w  mvb_rotation_y_angle(a3),d1 ;Y-Winkel
-  move.w  d1,d0              ;retten
+  move.w  d1,d0              
   move.w  2(a2,d0.w*4),d5    ;sin(b)
   add.w   a4,d0              ;+ 90 Grad
   swap    d5                 ;Bits 16-31 = sin(b)
@@ -2417,7 +2417,7 @@ mvb_rotation_no_y_angle_restart2
   ENDC
   move.w  d1,mvb_rotation_y_angle(a3) ;Y-Winkel retten
   move.w  mvb_rotation_z_angle(a3),d1 ;Z-Winkel
-  move.w  d1,d0              ;retten
+  move.w  d1,d0              
   move.w  2(a2,d0.w*4),d6    ;sin(c)
   add.w   a4,d0              ;+ 90 Grad
   swap    d6                 ;Bits 16-31 = sin(c)
@@ -2485,7 +2485,7 @@ mvb_morph_object
   lea     mvb_object_coordinates(pc),a0 ;Aktuelle Objektdaten
   lea     mvb_morph_shapes_table(pc),a1 ;Tabelle mit Adressen der Formen-Tabellen
   move.l  (a1,d1.w*4),a1     ;Zeiger auf Tabelle holen
-  moveq   #mvb_object_points_number*3-1,d7 ;Anzahl der Koordinaten
+  MOVEF.W mvb_object_points_number*3-1,d7 ;Anzahl der Koordinaten
 mvb_morph_object_loop
   move.w  (a0),d0            ;aktuelle Koordinate lesen
   cmp.w   (a1)+,d0           ;mit Ziel-Koordinate vergleichen
@@ -2515,7 +2515,7 @@ mvb_save_morph_shapes_table_start
   ELSE
     beq.s   mvb_morph_object_disable ;Ja -> verzweige
   ENDC
-  move.w  d1,mvb_morph_shapes_table_start(a3) ;retten
+  move.w  d1,mvb_morph_shapes_table_start(a3) 
   move.w  #mvb_morph_delay,mvb_morph_delay_counter(a3) ;Zähler zurücksetzen
 mvb_morph_object_disable
   moveq   #FALSE,d0
@@ -2596,7 +2596,7 @@ set_vector_balls
   move.w  #mvb_z_plane2,a3
   lea     mvb_image_data,a5  ;Ball-Grafik
   lea     mvb_image_mask,a7  ;Ball-Maske
-  moveq   #mvb_balls_number-1,d7 ;Anzahl der Bälle
+  MOVEF.W mvb_balls_number-1,d7 ;Anzahl der Bälle
 set_vector_balls_loop
   move.w  (a0)+,d0           ;Startwert für XY-Koordinate
   moveq   #TRUE,d5
@@ -2659,7 +2659,7 @@ cb_get_stripes_y_coordinates
   MOVEF.W (sine_table_length/4)-1,d4 ;Überlauf
   subq.w  #cb_stripes_y_angle_speed,d0 ;nächster Y-Winkel
   and.w   d4,d0              ;Überlauf entfernen
-  move.w  d0,cb_stripes_y_angle(a3) ;retten
+  move.w  d0,cb_stripes_y_angle(a3) 
   moveq   #cb_stripes_y_center,d3
   lea     sine_table(pc),a0  
   lea     cb_stripes_y_coordinates(pc),a1 ;Zeiger auf Y-Koordinatentabelle
@@ -2669,7 +2669,7 @@ cb_get_stripes_y_coordinates_loop
   MULUF.L cb_stripes_y_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   add.w   d3,d0              ;y' + Y-Mittelpunkt
-  move.w  d0,(a1)+           ;retten
+  move.w  d0,(a1)+           
   addq.w  #cb_stripes_y_step,d2 ;nächster Y-Winkel
   and.w   d4,d2              ;Überlauf entfernen
   dbf     d7,cb_get_stripes_y_coordinates_loop
@@ -2703,13 +2703,13 @@ cb_move_chessboard
   move.l  extra_memory(a3),a1
   ADDF.L  em_color_table,a1  ;Zeiger auf Farbtabelle
   move.l  cl2_construction2(a3),a2
-  ADDF.W  cl2_extension5_entry+cl2_ext5_COLOR25_high8+2,a2 ;CL
+  ADDF.W  cl2_extension5_entry+cl2_ext5_COLOR25_high8+2,a2 
   move.w  #cl2_extension5_SIZE,a4
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cb_move_chessboard_loop
   move.w  (a0)+,d0           ;Farboffset holen
   move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert holen
-  move.l  d0,d2              ;retten
+  move.l  d0,d2              
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a2)            ;COLOR29 High-Bits
   RGB8_TO_RGB4LO d2,d1,d3
@@ -2717,7 +2717,7 @@ cb_move_chessboard_loop
   add.l   a4,a2              ;nächste Zeile
   move.w  (a0)+,d0           ;Farboffset holen
   move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert holen
-  move.l  d0,d2              ;retten
+  move.l  d0,d2              
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 High-Bits
   RGB8_TO_RGB4LO d2,d1,d3
@@ -3072,7 +3072,7 @@ fade_balls_in
   cmp.w   #FALSEW,d0         ;Maske fertig?
   beq.s   fbi_finished       ;Ja -> verzweige
   lsr.w   #1,d1              ;2. Maske verschieben
-  move.w  d1,fb_mask(a3)     ;retten
+  move.w  d1,fb_mask(a3)     
 no_fade_balls_in
   rts
   CNOP 0,4
@@ -3096,7 +3096,7 @@ fade_balls_out
   move.w  d0,vb_copy_blit_mask(a3)
   beq.s   fbo_finished       ;Wenn Maske fertig -> verzweige
   lsr.w   #1,d1              ;2. Maske verschieben
-  move.w  d1,fb_mask(a3)     ;retten
+  move.w  d1,fb_mask(a3)     
 no_fade_balls_out
   rts
   CNOP 0,4
@@ -3161,20 +3161,20 @@ cfc_copy_color_table
     moveq   #cfc_start_xolor*8,d4 ;Color-Bank Farbregisterzähler
   ENDC
   lea     vp2_pf1_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  move.l  cl1_display(a3),a1 ;CL
+  move.l  cl1_display(a3),a1 
   ADDF.W  cl1_COLOR17_high1+2,a1
   IFNE cl1_size1
-    move.l  cl1_construction1(a3),a2 ;CL
+    move.l  cl1_construction1(a3),a2 
     ADDF.W  cl1_COLOR17_high1+2,a2
   ENDC
   IFNE cl1_size2
-    move.l  cl1_construction2(a3),a4 ;CL
+    move.l  cl1_construction2(a3),a4 
     ADDF.W  cl1_COLOR17_high1+2,a4
   ENDC
   MOVEF.W cfc_colors_number-1,d7 ;Anzahl der Farben
 cfc_copy_color_table_loop
   move.l  (a0)+,d0           ;RGB8-Farbwert
-  move.l  d0,d2              ;retten
+  move.l  d0,d2              
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a1)            ;COLORxx High-Bits
   IFNE cl1_size1
@@ -3235,7 +3235,7 @@ control_counters
 mvb_morph_enable
   clr.w   mvb_morph_state(a3) ;Morphing an
 mvb_morph_save_delay_counter
-  move.w  d0,mvb_morph_delay_counter(a3) ;retten
+  move.w  d0,mvb_morph_delay_counter(a3) 
 mvb_morph_no_delay_counter
 
   move.w  cfc_fader_delay_counter(a3),d0
@@ -3249,7 +3249,7 @@ cfc_fader_enable
   move.w  d1,cfc_state(a3)
   move.w  #sine_table_length/4,cfc_fader_angle(a3) ;90 Grad
 cfc_save_fader_delay_counter
-  move.w  d0,cfc_fader_delay_counter(a3) ;retten
+  move.w  d0,cfc_fader_delay_counter(a3) 
 cfc_no_fader_delay_counter
   rts
 

@@ -1814,7 +1814,7 @@ cl2_vp1_pf1_set_bitplane_pointers_loop
 
   CNOP 0,4
 cl2_vp1_set_fill_color_gradient
-  move.w  #$0f0f,d3          ;RGB-Maske
+  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
   lea     hst_fill_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR29_high8+2,a1
@@ -1834,7 +1834,7 @@ cl2_vp1_set_fill_color_gradient_loop
 
   CNOP 0,4
 cl2_vp1_set_outline_color_gradient
-  move.w  #$0f0f,d3          ;RGB-Maske
+  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
   lea     hst_outline_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR30_high8+2,a1
@@ -1922,7 +1922,7 @@ no_sync_routines
   ENDC
 
 ; ** Playfield skalieren **
-; --------------------
+; -------------------------
 cb_scale_image
   movem.l a4-a5,-(a7)
   moveq   #TRUE,d4           ;1. X-Koord in Zielbild
@@ -2011,7 +2011,6 @@ beam_routines
   bsr     cb_get_stripes_y_coordinates
   bsr     cb_make_color_offsets_table
   bsr     cb_move_chessboard
-  bsr     control_counters
   bsr     bar_fader_in
   bsr     bar_fader_out
   bsr     bf_copy_color_table
@@ -2025,6 +2024,7 @@ beam_routines
   bsr     sprf_copy_color_table
   bsr     colors_fader_cross
   bsr     cfc_copy_color_table
+  bsr     control_counters
   bsr     mouse_handler
   tst.w   fx_state(a3)       ;Effekte beendet ?
   bne     beam_routines      ;Nein -> verzweige
@@ -2377,9 +2377,9 @@ mvb_rotation
     and.w   d3,d0            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d0            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_x_angle_restart1
+    blt.s   mvb_rotation_save_x_angle1
     sub.w   d3,d0            ;Neustart
-mvb_rotation_no_x_angle_restart1
+mvb_rotation_save_x_angle1
   ENDC
   move.w  2(a2,d0.w*4),d4    ;Bits  0-15 = cos(a)
   addq.w  #mvb_rotation_x_angle_speed,d1 ;nächster X-Winkel
@@ -2387,9 +2387,9 @@ mvb_rotation_no_x_angle_restart1
     and.w   d3,d1            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d1            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_x_angle_restart2
+    blt.s   mvb_rotation_save_x_angle2
     sub.w   d3,d1            ;Neustart
-mvb_rotation_no_x_angle_restart2
+mvb_rotation_save_x_angle2
   ENDC
   move.w  d1,mvb_rotation_x_angle(a3) ;X-Winkel retten
   move.w  mvb_rotation_y_angle(a3),d1 ;Y-Winkel
@@ -2401,9 +2401,9 @@ mvb_rotation_no_x_angle_restart2
     and.w   d3,d0            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d0            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_y_angle_restart1
+    blt.s   mvb_rotation_save_y_angle1
     sub.w   d3,d0            ;Neustart
-mvb_rotation_no_y_angle_restart1
+mvb_rotation_save_y_angle1
   ENDC
   move.w  2(a2,d0.w*4),d5    ;Bits  0-15 = cos(b)
   addq.w  #mvb_rotation_y_angle_speed,d1 ;nächster Y-Winkel
@@ -2411,9 +2411,9 @@ mvb_rotation_no_y_angle_restart1
     and.w   d3,d1            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d1            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_y_angle_restart2
+    blt.s   mvb_rotation_save_y_angle2
     sub.w   d3,d1            ;Neustart
-mvb_rotation_no_y_angle_restart2
+mvb_rotation_save_y_angle2
   ENDC
   move.w  d1,mvb_rotation_y_angle(a3) ;Y-Winkel retten
   move.w  mvb_rotation_z_angle(a3),d1 ;Z-Winkel
@@ -2425,9 +2425,9 @@ mvb_rotation_no_y_angle_restart2
     and.w   d3,d0            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d0            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_z_angle_restart1
+    blt.s   mvb_rotation_save_z_angle1
     sub.w   d3,d0            ;Neustart
-mvb_rotation_no_z_angle_restart1
+mvb_rotation_save_z_angle1
   ENDC
   move.w  2(a2,d0.w*4),d6    ;Bits  0-15 = cos(c)
   addq.w  #mvb_rotation_z_angle_speed,d1 ;nächster Z-Winkel
@@ -2435,9 +2435,9 @@ mvb_rotation_no_z_angle_restart1
     and.w   d3,d1            ;Übertrag entfernen
   ELSE
     cmp.w   d3,d1            ;360 Grad erreicht ?
-    blt.s   mvb_rotation_no_z_angle_restart2
+    blt.s   mvb_rotation_save_z_angle2
     sub.w   d3,d1            ;Neustart
-mvb_rotation_no_z_angle_restart2
+mvb_rotation_save_z_angle2
   ENDC
   move.w  d1,mvb_rotation_z_angle(a3) ;Z-Winkel retten
   lea     mvb_object_coordinates(pc),a0 ;Koordinaten der Linien
@@ -2739,9 +2739,9 @@ bar_fader_in
   move.w  d2,d0
   ADDF.W  bfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   bfi_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   bfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-bfi_no_restart_fader_angle
+bfi_save_fader_angle
   move.w  d0,bfi_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W bf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2778,9 +2778,9 @@ bar_fader_out
   move.w  d2,d0
   ADDF.W  bfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   bfo_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   bfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-bfo_no_restart_fader_angle
+bfo_save_fader_angle
   move.w  d0,bfo_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W bf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2821,9 +2821,9 @@ image_fader_in
   move.w  d2,d0
   ADDF.W  ifi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   ifi_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   ifi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-ifi_no_restart_fader_angle
+ifi_save_fader_angle
   move.w  d0,ifi_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W if_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2860,9 +2860,9 @@ image_fader_out
   move.w  d2,d0
   ADDF.W  ifo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   ifo_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   ifo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-ifo_no_restart_fader_angle
+ifo_save_fader_angle
   move.w  d0,ifo_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W if_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2905,9 +2905,9 @@ chessboard_fader_in
   move.w  d2,d0
   ADDF.W  cfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   cfi_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   cfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-cfi_no_restart_fader_angle
+cfi_save_fader_angle
   move.w  d0,cfi_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W cf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2945,9 +2945,9 @@ chessboard_fader_out
   move.w  d2,d0
   ADDF.W  cfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   cfo_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   cfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-cfo_no_restart_fader_angle
+cfo_save_fader_angle
   move.w  d0,cfo_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W cf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -2985,9 +2985,9 @@ sprite_fader_in
   move.w  d2,d0
   ADDF.W  sprfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   sprfi_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   sprfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-sprfi_no_restart_fader_angle
+sprfi_save_fader_angle
   move.w  d0,sprfi_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W sprf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -3024,9 +3024,9 @@ sprite_fader_out
   move.w  d2,d0
   ADDF.W  sprfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   sprfo_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   sprfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-sprfo_no_restart_fader_angle
+sprfo_save_fader_angle
   move.w  d0,sprfo_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W sprf_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -3116,9 +3116,9 @@ colors_fader_cross
   move.w  d2,d0
   ADDF.W  cfc_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
-  ble.s   cfc_no_restart_fader_angle ;Ja -> verzweige
+  ble.s   cfc_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
-cfc_no_restart_fader_angle
+cfc_save_fader_angle
   move.w  d0,cfc_fader_angle(a3) ;Fader-Winkel retten
   MOVEF.W cfc_colors_number*3,d6 ;Zähler
   lea     sine_table(pc),a0  ;Sinus-Tabelle
@@ -3224,6 +3224,7 @@ cfc_no_copy_color_table
   ENDC
   rts
 
+
 ; ** Zähler kontrollieren **
 ; --------------------------
   CNOP 0,4
@@ -3252,7 +3253,6 @@ cfc_save_fader_delay_counter
   move.w  d0,cfc_fader_delay_counter(a3) 
 cfc_no_fader_delay_counter
   rts
-
 
 ; ** Mouse-Handler **
 ; -------------------

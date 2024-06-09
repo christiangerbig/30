@@ -1535,10 +1535,10 @@ cb_init_bitmap_table_loop1
   moveq   #TRUE,d6           ;Breite des Quellbildes obere 32 Bit
   divu.l  d4,d6:d2           ;F=Breite des Quellbildes/Breite der Zielbildes
   moveq   #TRUE,d1
-  move.w  d4,d6              ;Breite des Zielbilds holen
+  move.w  d4,d6              ;Breite des Zielbilds 
   subq.w  #1,d6              ;wegen dbf
 cb_init_bitmap_table_loop2
-  move.l  d1,d0              ;F holen
+  move.l  d1,d0              ;F 
   swap    d0                 ;/2^16 = Bitmapposition
   add.l   d2,d1              ;F erhöhen (p*F)
   addq.b  #1,(a0,d0.w)       ;Pixel in Tabelle setzen
@@ -1937,16 +1937,16 @@ cb_scale_image
   moveq   #cb_destination_image_y_size-1,d7 ;Höhe des Zielbildes
 cb_scale_image_loop1
   moveq   #TRUE,d2           ;1. X-Koord in Quellbild
-  move.w  d4,d3              ;X-Koord in Zielbild holen
+  move.w  d4,d3              ;X-Koord in Zielbild 
   MOVEF.W cb_source_image_x_size-1,d6 ;Breite des Quellbildes
 cb_scale_image_loop2
   tst.b   (a0)+              ;Spalte setzen ?
   beq.s   cb_skip_column     ;Nein -> verzweige
-  move.w  d3,d1              ;X-Koord in Zielbild holen
+  move.w  d3,d1              ;X-Koord in Zielbild 
   bmi.s   cb_column_outside  ;Wenn < X-Min -> verzweige
   cmp.w   a4,d1
   bge.s   cb_column_outside  ;Wenn >= X-Max -> verzweige
-  move.w  d2,d0              ;X-Koord in Quellbild holen
+  move.w  d2,d0              ;X-Koord in Quellbild 
   lsr.w   #3,d0              ;/8 X-Offset in Quellbild
   not.b   d2                 ;Shiftwert für Quellbyte ermitteln
   lsr.w   #3,d1              ;/8 X-Offset in Zielbild
@@ -2109,7 +2109,7 @@ horiz_scrolltext
 horiz_scrolltext_loop
   moveq   #TRUE,d0           ;Langwort-Zugriff
   move.w  (a0),d0            ;X-Position
-  move.w  d0,d2              ;X retten
+  move.w  d0,d2              
   lsr.w   #3,d0              ;X/8
   add.l   d3,d0              ;X-Offset
   WAITBLITTER
@@ -2125,7 +2125,7 @@ hst_new_character_image
   move.l  d0,-4(a1)          ;Neues Bild für Character
   add.w   d5,d2              ;X-Pos Neustart
 hst_set_character_x_position
-  move.w  d2,(a0)+           ;X-Pos retten
+  move.w  d2,(a0)+           
   dbf     d7,horiz_scrolltext_loop
   movem.l (a7)+,a4-a5
   move.w  #DMAF_BLITHOG,DMACON-DMACONR(a6) ;BLTPRI aus
@@ -2251,8 +2251,8 @@ bvm_get_channel_amplitude
   ble.s   bvm_set_amplitude  ;Ja -> verzweige
   move.w  d2,d0              ;Maximale Amplitude setzen
 bvm_set_amplitude
-  move.w  d3,(a1)+           ;Y-Winkel retten
-  move.w  d0,(a1)+           ;Amplitudenwert retten
+  move.w  d3,(a1)+           
+  move.w  d0,(a1)+           ;Amplitudenwert
 bvm_no_get_channel_amplitude
   rts
 
@@ -2297,7 +2297,7 @@ bvm_set_bars_loop1
   lsr.w   -2(a1)             ;Amplitude/2
 bvm_y_angle_ok
   and.w   d5,d3              ;Überlauf bei 180 Grad
-  move.w  d3,-4(a1)          ;Y-Winkel retten
+  move.w  d3,-4(a1)          
   add.w   a3,d0              ;y' + Y-Mittelpunkt
   MULUF.W cl2_extension2_SIZE/4,d0,d1 ;Y-Offset in CL
   lea     (a5,d0.w*4),a2     ;Y-Offset
@@ -2328,7 +2328,7 @@ mvb_clear_playfield1_1
   CNOP 0,4
 mvb_clear_playfield1_2
   movem.l a3-a6,-(a7)
-  move.l  a7,save_a7(a3)     ;Stackpointer retten
+  move.l  a7,save_a7(a3)     
   moveq   #TRUE,d0
   moveq   #TRUE,d1
   moveq   #TRUE,d2
@@ -2362,8 +2362,8 @@ mvb_clear_playfield1_2_loop
 mvb_rotation
   movem.l a4-a6,-(a7)
   move.w  mvb_rotation_x_angle(a3),d1 ;X-Winkel
-  move.w  d1,d0              ;X-Winkel -> d7
-  lea     sine_table(pc),a2  ;Sinus-Tabelle
+  move.w  d1,d0              
+  lea     sine_table(pc),a2  
   move.w  2(a2,d0.w*4),d4    ;sin(a)
   move.w  #sine_table_length/4,a4
   IFEQ sine_table_length-512
@@ -2391,7 +2391,7 @@ mvb_rotation_save_x_angle1
     sub.w   d3,d1            ;Neustart
 mvb_rotation_save_x_angle2
   ENDC
-  move.w  d1,mvb_rotation_x_angle(a3) ;X-Winkel retten
+  move.w  d1,mvb_rotation_x_angle(a3) 
   move.w  mvb_rotation_y_angle(a3),d1 ;Y-Winkel
   move.w  d1,d0              
   move.w  2(a2,d0.w*4),d5    ;sin(b)
@@ -2415,7 +2415,7 @@ mvb_rotation_save_y_angle1
     sub.w   d3,d1            ;Neustart
 mvb_rotation_save_y_angle2
   ENDC
-  move.w  d1,mvb_rotation_y_angle(a3) ;Y-Winkel retten
+  move.w  d1,mvb_rotation_y_angle(a3) 
   move.w  mvb_rotation_z_angle(a3),d1 ;Z-Winkel
   move.w  d1,d0              
   move.w  2(a2,d0.w*4),d6    ;sin(c)
@@ -2439,7 +2439,7 @@ mvb_rotation_save_z_angle1
     sub.w   d3,d1            ;Neustart
 mvb_rotation_save_z_angle2
   ENDC
-  move.w  d1,mvb_rotation_z_angle(a3) ;Z-Winkel retten
+  move.w  d1,mvb_rotation_z_angle(a3) 
   lea     mvb_object_coordinates(pc),a0 ;Koordinaten der Linien
   lea     mvb_rotation_xyz_coordinates(pc),a1 ;Koord.-Tab.
   move.w  #mvb_rotation_d*8,a4 ;d
@@ -2448,7 +2448,7 @@ mvb_rotation_save_z_angle2
   moveq   #mvb_object_points_number-1,d7 ;Anzahl der Punkte
 mvb_rotation_loop
   move.w  (a0)+,d0           ;X-Koord.
-  move.l  d7,a2              ;Schleifenzähler retten
+  move.l  d7,a2              
   move.w  (a0)+,d1           ;Y-Koord.
   move.w  (a0)+,d2           ;Z-Koord.
   ROTATE_X_AXIS
@@ -2468,7 +2468,7 @@ mvb_rotation_loop
   add.w   a6,d1              ;y' + Y-Mittelpunkt
   move.w  d1,(a1)+           ;Y-Pos.
   asr.w   #3,d2              ;Z/8
-  move.l  a2,d7              ;Schleifenzähler holen
+  move.l  a2,d7              ;Schleifenzähler 
   move.w  d2,(a1)+           ;Z-Pos.
   dbf     d7,mvb_rotation_loop
   movem.l (a7)+,a4-a6
@@ -2484,7 +2484,7 @@ mvb_morph_object
   moveq   #TRUE,d2           ;Koordinatenzähler
   lea     mvb_object_coordinates(pc),a0 ;Aktuelle Objektdaten
   lea     mvb_morph_shapes_table(pc),a1 ;Tabelle mit Adressen der Formen-Tabellen
-  move.l  (a1,d1.w*4),a1     ;Zeiger auf Tabelle holen
+  move.l  (a1,d1.w*4),a1     ;Zeiger auf Tabelle 
   MOVEF.W mvb_object_points_number*3-1,d7 ;Anzahl der Koordinaten
 mvb_morph_object_loop
   move.w  (a0),d0            ;aktuelle Koordinate lesen
@@ -2498,7 +2498,7 @@ mvb_morph_object_reduce_size
 mvb_morph_object_zoom_size
   subq.w  #mvb_morph_speed,d0 ;aktuelle Koordinate verringern
 mvb_morph_object_save_coordinate
-  move.w  d0,(a0)            ;und retten
+  move.w  d0,(a0)            
   addq.w  #1,d2              ;Koordinatenzähler erhöhen
 mvb_morph_object_next_coordinate
   addq.w  #2,a0              ;Nächste Koordinate
@@ -2554,7 +2554,7 @@ mvb_quick2
 mvb_quick3
   cmp.l   a2,a1              ;Zeiger auf Ende der Tab > Zeiger auf Anfang der Tab. ?
   bgt.s   mvb_quick4         ;Ja -> verzweige
-  move.w  (a2),d1            ;letztes Offset holen
+  move.w  (a2),d1            ;letztes Offset 
   move.w  (a1),(a2)          ;erstes Offset -> letztes Offset
   subq.w  #2,a2              ;vorletztes Offset
   move.w  d1,(a1)+           ;letztes Offset -> erstes Offset
@@ -2584,7 +2584,7 @@ mvb_quick6
   CNOP 0,4
 set_vector_balls
   movem.l a3-a5,-(a7)
-  move.l  a7,save_a7(a3)     ;Stackpointer retten
+  move.l  a7,save_a7(a3)     
   bsr     mvb_init_balls_blit
   move.w  #BC0F_SRCA+BC0F_SRCB+BC0F_SRCC+BC0F_DEST+NANBC+NABC+ABNC+ABC,d3 ;Minterm D=A+B
   move.w  #(mvb_copy_blit_y_size*64)+(mvb_copy_blit_x_size/16),a4
@@ -2622,7 +2622,7 @@ mvb_z_plane1_found
   add.w   d0,d1              ;+ Y-Offset
   add.l   a5,d5              ;+ Adresse Ball-Grafiken
   MULUF.L 2,d1               ;*2 = XY-Offset
-  swap    d0                 ;Shift-Bits holen
+  swap    d0                 ;Shift-Bits 
   add.l   d4,d1              ;+ Playfield-Adresse
   add.l   a7,d6              ;+ Adresse Ball-Masken
   WAITBLITTER
@@ -2686,7 +2686,7 @@ cb_make_color_offsets_table
 cb_make_color_offsets_table_loop1
   moveq   #cb_stripe_height-1,d6 ;Höhe eines Streifens
 cb_make_color_offsets_table_loop2
-  move.w  (a0)+,d0           ;Y-Offset holen
+  move.w  (a0)+,d0           ;Y-Offset 
   move.l  d1,(a1,d0.w*4)     ;Farboffset eintragen
   dbf     d6,cb_make_color_offsets_table_loop2
   swap    d1                 ;Farboffsets vertauschen
@@ -2707,16 +2707,16 @@ cb_move_chessboard
   move.w  #cl2_extension5_SIZE,a4
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cb_move_chessboard_loop
-  move.w  (a0)+,d0           ;Farboffset holen
-  move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert holen
+  move.w  (a0)+,d0           ;Farboffset 
+  move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert 
   move.l  d0,d2              
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(a2)            ;COLOR29 High-Bits
   RGB8_TO_RGB4LO d2,d1,d3
   move.w  d2,cl2_ext5_COLOR25_low8-cl2_ext5_COLOR25_high8(a2) ;COLOR01 Low-Bits
   add.l   a4,a2              ;nächste Zeile
-  move.w  (a0)+,d0           ;Farboffset holen
-  move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert holen
+  move.w  (a0)+,d0           ;Farboffset 
+  move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert 
   move.l  d0,d2              
   RGB8_TO_RGB4HI d0,d1,d3
   move.w  d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 High-Bits
@@ -2735,16 +2735,16 @@ bar_fader_in
   tst.w   bfi_state(a3)      ;Bar-Fader-In an ?
   bne.s   no_bar_fader_in    ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  bfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  bfi_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  bfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   bfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 bfi_save_fader_angle
-  move.w  d0,bfi_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,bfi_fader_angle(a3) 
   MOVEF.W bf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L bfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2774,16 +2774,16 @@ bar_fader_out
   tst.w   bfo_state(a3)      ;Bar-Fader-Out an ?
   bne.s   no_bar_fader_out   ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  bfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  bfo_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  bfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   bfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 bfo_save_fader_angle
-  move.w  d0,bfo_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,bfo_fader_angle(a3) 
   MOVEF.W bf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L bfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2817,16 +2817,16 @@ image_fader_in
   tst.w   ifi_state(a3)      ;Image-Fader-In an ?
   bne.s   no_image_fader_in  ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  ifi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  ifi_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  ifi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   ifi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 ifi_save_fader_angle
-  move.w  d0,ifi_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,ifi_fader_angle(a3) 
   MOVEF.W if_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L ifi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2856,16 +2856,16 @@ image_fader_out
   tst.w   ifo_state(a3)      ;Image-Fader-Out an ?
   bne.s   no_image_fader_out ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  ifo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  ifo_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  ifo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   ifo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 ifo_save_fader_angle
-  move.w  d0,ifo_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,ifo_fader_angle(a3) 
   MOVEF.W if_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L ifo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2901,16 +2901,16 @@ chessboard_fader_in
   tst.w   cfi_state(a3)      ;Chessboard-Fader-In an ?
   bne.s   no_chessboard_fader_in ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  cfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  cfi_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  cfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   cfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 cfi_save_fader_angle
-  move.w  d0,cfi_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,cfi_fader_angle(a3) 
   MOVEF.W cf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L cfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2941,16 +2941,16 @@ chessboard_fader_out
   tst.w   cfo_state(a3)      ;Chessboard-Fader-Out an ?
   bne.s   no_chessboard_fader_out ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  cfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  cfo_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  cfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   cfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 cfo_save_fader_angle
-  move.w  d0,cfo_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,cfo_fader_angle(a3) 
   MOVEF.W cf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L cfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -2981,16 +2981,16 @@ sprite_fader_in
   tst.w   sprfi_state(a3)    ;Sprite-Fader-In an ?
   bne.s   no_sprite_fader_in ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  sprfi_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  sprfi_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  sprfi_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   sprfi_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 sprfi_save_fader_angle
-  move.w  d0,sprfi_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,sprfi_fader_angle(a3) 
   MOVEF.W sprf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L sprfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -3020,16 +3020,16 @@ sprite_fader_out
   tst.w   sprfo_state(a3)    ;Sprite-Fader-Out an ?
   bne.s   no_sprite_fader_out ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  sprfo_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  sprfo_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  sprfo_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   sprfo_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 sprfo_save_fader_angle
-  move.w  d0,sprfo_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,sprfo_fader_angle(a3) 
   MOVEF.W sprf_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0     ;sin(w)
   MULUF.L sprfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
@@ -3112,16 +3112,16 @@ colors_fader_cross
   tst.w   cfc_state(a3)      ;Colors-Fader-Cross an ?
   bne.s   no_colors_fader_cross ;Nein -> verzweige
   movem.l a4-a6,-(a7)
-  move.w  cfc_fader_angle(a3),d2 ;Fader-Winkel holen
+  move.w  cfc_fader_angle(a3),d2 ;Fader-Winkel 
   move.w  d2,d0
   ADDF.W  cfc_fader_angle_speed,d0 ;nächster Fader-Winkel
   cmp.w   #sine_table_length/2,d0 ;Y-Winkel <= 180 Grad ?
   ble.s   cfc_save_fader_angle ;Ja -> verzweige
   MOVEF.W sine_table_length/2,d0 ;180 Grad
 cfc_save_fader_angle
-  move.w  d0,cfc_fader_angle(a3) ;Fader-Winkel retten
+  move.w  d0,cfc_fader_angle(a3) 
   MOVEF.W cfc_colors_number*3,d6 ;Zähler
-  lea     sine_table(pc),a0  ;Sinus-Tabelle
+  lea     sine_table(pc),a0  
   move.l  (a0,d2.w*4),d0    ;sin(w)
   MULUF.L cfc_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0

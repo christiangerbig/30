@@ -3541,10 +3541,10 @@ sine_table
 
 ; **** Horiz-Scrolltext ****
 hst_fill_color_gradient
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/24-Colorgradient.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient.ct"
 
 hst_outline_color_gradient
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/26-Colorgradient2.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient2.ct"
 
 ; ** ASCII-Buchstaben **
 ; ----------------------
@@ -3574,7 +3574,7 @@ hst_characters_image_pointers
 ; ** Farbverlauf **
 ; -----------------
 bvm_color_gradients
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x3-Colorgradient3.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient3.ct"
 
 ; ** Farbtabelle **
 ; -----------------
@@ -3728,10 +3728,10 @@ mvb_morph_shapes_table
 ; ** Farbverläufe **
 ; ------------------
 cb_color_gradient1
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/48-Colorgradient1.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient1.ct"
 
 cb_color_gradient2
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/48-Colorgradient2.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient2.ct"
 
 ; ** Füllmuster **
 ; ----------------
@@ -3775,7 +3775,7 @@ bf_color_cache
 ; --------------------------------------
   CNOP 0,4
 ifi_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/320x182x16-Temple2.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple2.ct"
 
 ; ** Zielfarbwerte für Image-Fader-Out **
 ; ---------------------------------------
@@ -3805,7 +3805,7 @@ cfo_color_table
 ; ---------------------------------------
   CNOP 0,4
 sprfi_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/256x208x16-Desert-Sunset2.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/256x208x16-Desert-Sunset2.ct"
 
 ; ** Zielfarbwerte für Sprite-Fader-Out **
 ; ----------------------------------------
@@ -3819,10 +3819,10 @@ sprfo_color_table
 ; -----------------------------------------
   CNOP 0,4
 cfc_color_table
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls4.ct"
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls6.ct"
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls5.ct"
-  INCLUDE "Daten:Asm-Sources.AGA/30/colortables/4x16x11x8-Balls7.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls4.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls6.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls5.ct"
+  INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls7.ct"
 
 
 
@@ -3873,12 +3873,12 @@ hst_stop_text
 ; **** PT-Replay ****
   IFEQ pt_split_module
 pt_auddata SECTION pt_audio,DATA
-    INCBIN "Daten:Asm-Sources.AGA/30/modules/MOD.lhs_brd.song"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd.song"
 pt_audsmps SECTION pt_audio2,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/30/modules/MOD.lhs_brd.smps"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd.smps"
   ELSE
 pt_auddata SECTION pt_audio,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/30/modules/MOD.lhs_brd"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd"
   ENDC
 
 
@@ -3887,21 +3887,21 @@ pt_auddata SECTION pt_audio,DATA_C
 
 ; **** Background-Image-1 ****
 bg1_image_data SECTION bg1_gfx,DATA
-  INCBIN "Daten:Asm-Sources.AGA/30/graphics/256x208x16-Desert-Sunset2.rawblit"
+  INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/256x208x16-Desert-Sunset2.rawblit"
 
 ; **** Background-Image-2 ****
 bg2_image_data SECTION bg2_gfx,DATA
-  INCBIN "Daten:Asm-Sources.AGA/30/graphics/320x182x16-Temple2.rawblit"
+  INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/320x182x16-Temple2.rawblit"
 
 ; **** Horiz-Scrolltext ****
 hst_image_data SECTION hst_gfx,DATA_C
-  INCBIN "Daten:Asm-Sources.AGA/30/fonts/32x26x4-Font.rawblit"
+  INCBIN "Daten:Asm-Sources.AGA/projects/30/fonts/32x26x4-Font.rawblit"
 
 ; **** Morph-Vector-Balls ****
 mvb_image_data SECTION mvb_gfx1,DATA_C
-  INCBIN "Daten:Asm-Sources.AGA/30/graphics/4x16x11x8-Balls.rawblit"
+  INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/4x16x11x8-Balls.rawblit"
 
 mvb_image_mask SECTION mvb_gfx2,DATA_C
-  INCBIN "Daten:Asm-Sources.AGA/30/graphics/4x16x11x8-Balls.mask"
+  INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/4x16x11x8-Balls.mask"
 
   END

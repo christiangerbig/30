@@ -1,3 +1,3 @@
-CD Daten:Asm-Sources.AGA/30/sources
+CD Daten:Asm-Sources.AGA/projects/30/sources
 Programme:Programmieren/OMA_2.05/OMA 30.asm -o Programme:RSE-30 -c c -m >RAM:make-output.txt
 CD /

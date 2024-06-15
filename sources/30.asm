@@ -26,12 +26,15 @@
 ; - Nutzung des PT 8xy-Befehls für die Fader-Routinen
 
 ; V.1.2 beta
+; - Maze's Modul integriert
 ; - Fader-Cross: Bugfix, es wurde die falsche Puffer-Farbtabelle angesprochen.
 ;                vp2_pf1 anstatt vp2_pf2
+; - Neue Fx-Befehle: 880/890
+; - Morphing wird jetzt über den Befehl 890 vom Modul ausgelöst. Delay-Counter
+;   ist überflüssig.
 
 
 ; PT 8xy-Befehl
-; 801 Disable-Trigger-FX
 ; 810 Start-Fade-Bars-In
 ; 820 Start-Fade-Image-In (Tempel)
 ; 830 Start-Fade-Chessboard-In
@@ -39,6 +42,8 @@
 ; 850 Start-Fade-Balls-In
 ; 860 Start-Fade-Cross
 ; 870 Start-Scrolltext
+; 880 Enable Skip-Commands
+; 890 Trigger-Morphing
 
 ; 68020: 187 Rasterzeilen
 
@@ -94,7 +99,6 @@ workbench_fade_enabled                EQU FALSE
 text_output_enabled                   EQU FALSE
 
 pt_v3.0b
-
   IFD pt_v2.3a
     INCLUDE "music-tracker/pt2-equals.i"
   ENDC
@@ -103,8 +107,6 @@ pt_v3.0b
   ENDC
 ;pt_mute_enabled
 pt_ciatiming_enabled                  EQU TRUE
-pt_usedfx                             EQU %1101110100101101
-pt_usedefx                            EQU %0000100000000000
 pt_finetune_enabled                   EQU FALSE
   IFD pt_v3.0b
 pt_metronome_enabled                  EQU FALSE
@@ -113,6 +115,8 @@ pt_track_volumes_enabled              EQU TRUE
 pt_track_periods_enabled              EQU FALSE
 pt_music_fader_enabled                EQU TRUE
 pt_split_module_enabled               EQU TRUE
+pt_usedfx                             EQU %1101010101011110
+pt_usedefx                            EQU %0000001001000000
 
 mvb_premorph_enabled                  EQU TRUE
 mvb_morph_loop_enabled                EQU TRUE
@@ -193,7 +197,6 @@ extra_pf8_x_size                      EQU 320
 extra_pf8_y_size                      EQU 48
 extra_pf8_depth                       EQU 2
 
-
 spr_number                            EQU 8
 spr_x_size1                           EQU 0
 spr_x_size2                           EQU 64
@@ -213,9 +216,6 @@ audio_memory_size                     EQU 2
 disk_memory_size                      EQU 0
 
 chip_memory_size                      EQU 0
-
-AGA_OS_Version                        EQU 39
-
   IFEQ pt_ciatiming_enabled
 CIABCRABITS                           EQU CIACRBF_LOAD
   ENDC
@@ -459,9 +459,9 @@ mvb_balls_number                      EQU 30
 mvb_rotation_d                        EQU 256
 mvb_rotation_x_center                 EQU (extra_pf4_x_size-mvb_image_x_size)/2
 mvb_rotation_y_center                 EQU (extra_pf4_y_size-mvb_image_y_size)/2
-mvb_rotation_x_angle_speed            EQU 4
-mvb_rotation_y_angle_speed            EQU 1
-mvb_rotation_z_angle_speed            EQU 1
+mvb_rotation_x_angle_speed            EQU 5
+mvb_rotation_y_angle_speed            EQU 2
+mvb_rotation_z_angle_speed            EQU 2
 
 mvb_object_points_number              EQU mvb_balls_number
 
@@ -471,7 +471,6 @@ mvb_morph_shapes_number               EQU 2
 mvb_morph_shapes_number               EQU 3
   ENDC
 mvb_morph_speed                       EQU 8
-mvb_morph_delay                       EQU 6*PALFPS
 
 mvb_observer_z                        EQU 35
 mvb_z_plane1                          EQU -32+mvb_observer_z
@@ -558,10 +557,10 @@ sprf_color_table_offset               EQU 1
 sprf_colors_number                    EQU spr_colors_number-1
 
 ; **** Sprite-Fader-In ****
-sprfi_fader_speed_max                 EQU 6
+sprfi_fader_speed_max                 EQU 8
 sprfi_fader_radius                    EQU sprfi_fader_speed_max
 sprfi_fader_center                    EQU sprfi_fader_speed_max+1
-sprfi_fader_angle_speed               EQU 2
+sprfi_fader_angle_speed               EQU 1
 
 ; **** Sprite-Fader-Out ****
 sprfo_fader_speed_max                 EQU 8
@@ -1035,7 +1034,8 @@ save_a7                         RS.L 1
     INCLUDE "music-tracker/pt3-variables-offsets.i"
   ENDC
 
-pt_trigger_fx_enabled           RS.W 1
+pt_fx_handler_active            RS.W 1
+pt_skip_commands_enabled        RS.W 1
 
 ; **** Viewport 1 ****
 vp1_pf1_construction2           RS.L 1
@@ -1061,7 +1061,6 @@ mvb_rotation_z_angle            RS.W 1
 
 mvb_morph_active                RS.W 1
 mvb_morph_shapes_table_start    RS.W 1
-mvb_morph_delay_counter         RS.W 1
 
 ; **** Chessboard ****
 cb_stripes_y_angle              RS.W 1
@@ -1183,17 +1182,6 @@ mvb_morph_shape_SIZE         RS.B 0
   CNOP 0,4
 init_own_variables
 
-; **** PT-Replay ****
-  IFD pt_v2.3a
-    PT2_INIT_VARIABLES
-  ENDC
-  IFD pt_v3.0b
-    PT3_INIT_VARIABLES
-  ENDC
-
-  moveq   #0,d0
-  move.w  d0,pt_trigger_fx_enabled(a3)
-
 ; **** Viewport 1 ****
   move.l  extra_pf1(a3),vp1_pf1_construction2(a3)
   move.l  extra_pf2(a3),vp1_pf1_display(a3)
@@ -1203,10 +1191,22 @@ init_own_variables
   move.l  extra_pf5(a3),vp2_pf2_construction2(a3)
   move.l  extra_pf6(a3),vp2_pf2_display(a3)
 
+; **** PT-Replay ****
+  IFD pt_v2.3a
+    PT2_INIT_VARIABLES
+  ENDC
+  IFD pt_v3.0b
+    PT3_INIT_VARIABLES
+  ENDC
+
+  moveq   #TRUE,d0
+  move.w  d0,pt_fx_handler_active(a3)
+  moveq   #FALSE,d1
+  move.w  d1,pt_skip_commands_enabled(a3)
+
 ; **** Horiz-Scrolltext ****
   lea     hst_image_data,a0
   move.l  a0,hst_image(a3)
-  moveq   #FALSE,d1
   move.w  d1,hst_enabled(a3)
   move.w  d0,hst_text_table_start(a3)
   move.w  d0,hst_text_BLTCON0BITS(a3)
@@ -1225,12 +1225,6 @@ init_own_variables
     move.w  d1,mvb_morph_active(a3)
   ENDC
   move.w  d0,mvb_morph_shapes_table_start(a3)
-  IFEQ mvb_premorph_enabled
-    move.w  d1,mvb_morph_delay_counter(a3) ;Delay-Counter deaktivieren
-  ELSE
-    moveq   #1,d2
-    move.w  d2,mvb_morph_delay_counter(a3) ;Delay-Counter aktivieren
-  ENDC
 
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
@@ -2523,7 +2517,6 @@ mvb_save_morph_shapes_table_start
     beq.s   mvb_morph_object_disable ;Ja -> verzweige
   ENDC
   move.w  d1,mvb_morph_shapes_table_start(a3) 
-  move.w  #mvb_morph_delay,mvb_morph_delay_counter(a3) ;Zähler zurücksetzen
 mvb_morph_object_disable
   moveq   #FALSE,d0
   move.w  d0,mvb_morph_active(a3) ;Morhing aus
@@ -3236,16 +3229,6 @@ cfc_no_copy_color_table
 ; --------------------------
   CNOP 0,4
 control_counters
-  move.w  mvb_morph_delay_counter(a3),d0
-  bmi.s   mvb_morph_no_delay_counter ;Wenn Zähler negativ -> verzweige
-  subq.w  #1,d0
-  bpl.s   mvb_morph_save_delay_counter ;Wenn Zähler positiv -> verzweige
-mvb_morph_enable
-  clr.w   mvb_morph_active(a3) ;Morphing an
-mvb_morph_save_delay_counter
-  move.w  d0,mvb_morph_delay_counter(a3) 
-mvb_morph_no_delay_counter
-
   move.w  cfc_fader_delay_counter(a3),d0
   bmi.s   cfc_no_fader_delay_counter ;Wenn Zähler negativ -> verzweige
   subq.w  #1,d0
@@ -3271,7 +3254,7 @@ mouse_handler
   CNOP 0,4
 mh_quit
   moveq   #FALSE,d1
-  move.w  d1,pt_trigger_fx_enabled(a3) ;FX-Abfrage aus
+  move.w  d1,pt_fx_handler_active(a3) ;FX-Abfrage aus
   moveq   #0,d0
   tst.w   hst_enabled(a3)     ;Scrolltext aktiv ?
   beq.s   mh_quit_with_scrolltext ;Ja -> verzweige
@@ -3362,20 +3345,20 @@ VERTB_int_server
 ; ** PT-replay routine **
 ; -----------------------
   IFD pt_v2.3a
-    PT2_REPLAY pt_trigger_fx
+    PT2_REPLAY pt_fx_handler
   ENDC
   IFD pt_v3.0b
-    PT3_REPLAY pt_trigger_fx
+    PT3_REPLAY pt_fx_handler
   ENDC
 
 ;--> 8xy "Not used/custom" <--
   CNOP 0,4
-pt_trigger_fx
-  tst.w   pt_trigger_fx_enabled(a3) ;Check enabled?
-  bne.s   pt_no_trigger_fx   ;No -> skip
-  move.b  n_cmdlo(a2),d0     ;Get command data x = Effekt y = TRUE/FALSE
-  cmp.b   #$01,d0
-  beq.s   pt_disable_trigger_fx
+pt_fx_handler
+  tst.w   pt_fx_handler_active(a3) ;FX-Handler an?
+  bne.s   pt_no_fx_handler   ;Nein ->Verzweige
+  move.b  n_cmdlo(a2),d0     ;Command data x = Effekt y = TRUE/FALSE
+  tst.w   pt_skip_commands_enabled(a3)
+  beq.s   pt_skip_commands
   cmp.b   #$10,d0
   beq.s   pt_start_fade_bars_in
   cmp.b   #$20,d0
@@ -3390,24 +3373,24 @@ pt_trigger_fx
   beq.s   pt_start_colors_fader_scross
   cmp.b   #$70,d0
   beq.s   pt_start_scrolltext
-pt_no_trigger_fx
-  rts
-  CNOP 0,4
-pt_disable_trigger_fx
-  moveq   #FALSE,d0
-  move.w  d0,pt_trigger_fx_enabled(a3) ;8xy-Abfrage aus
+  cmp.b   #$80,d0
+  beq.s   pt_enable_skip_commands
+pt_skip_commands
+  cmp.b   #$90,d0
+  beq.s   pt_trigger_morphing
+pt_no_fx_handler
   rts
   CNOP 0,4
 pt_start_fade_bars_in
   move.w  #bf_colors_number*3,bf_colors_counter(a3)
-  moveq   #0,d0
+  moveq   #TRUE,d0
   move.w  d0,bfi_active(a3)  ;Bar-Fader-In an
   move.w  d0,bf_copy_colors_active(a3) ;Kopieren der Farben an
   rts
   CNOP 0,4
 pt_start_image_fader_in
   move.w  #if_colors_number*3,if_colors_counter(a3)
-  moveq   #0,d0
+  moveq   #TRUE,d0
   move.w  d0,ifi_active(a3)  ;Image-Fader-In an
   move.w  d0,if_copy_colors_active(a3) ;Kopieren der Farben an
   rts
@@ -3418,14 +3401,14 @@ pt_start_fade_chessboard_in
   CNOP 0,4
 pt_start_fade_sprites_in
   move.w  #sprf_colors_number*3,sprf_colors_counter(a3)
-  moveq   #0,d0
+  moveq   #TRUE,d0
   move.w  d0,sprfi_active(a3) ;Sprite-Fader-In an
   move.w  d0,sprf_copy_colors_active(a3) ;Kopieren der Farben an
   rts
   CNOP 0,4
 pt_start_fade_balls_in
-  clr.w   fbi_active(a3)
-  move.w  #fbi_delay,fbi_delay_counter(a3)
+  clr.w   fbi_active(a3)     ;Fade-Balls-In an
+  move.w  #fbi_delay,fbi_delay_counter(a3) ;Zähler zurücksetzen
   rts
   CNOP 0,4
 pt_start_colors_fader_scross
@@ -3434,6 +3417,14 @@ pt_start_colors_fader_scross
   CNOP 0,4
 pt_start_scrolltext
   clr.w   hst_enabled(a3)    ;Laufschrift an
+  rts
+  CNOP 0,4
+pt_enable_skip_commands
+  clr.w   pt_skip_commands_enabled(a3) ;Skip-Commands an
+  rts
+  CNOP 0,4
+pt_trigger_morphing
+  clr.w   mvb_morph_active(a3) ;Morphing an
   rts
 
 ; ** CIA-B Timer B interrupt server **
@@ -3880,12 +3871,12 @@ hst_stop_text
 ; **** PT-Replay ****
   IFEQ pt_split_module_enabled
 pt_auddata SECTION pt_audio,DATA
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd.song"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running.song"
 pt_audsmps SECTION pt_audio2,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd.smps"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running.smps"
   ELSE
 pt_auddata SECTION pt_audio,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.lhs_brd"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running"
   ENDC
 
 

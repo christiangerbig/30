@@ -1,8 +1,8 @@
 ; ##############################
 ; # Programm: 30.asm           #
 ; # Autor:    Christian Gerbig #
-; # Datum:    02.06.2024       #
-; # Version:  1.1 beta         #
+; # Datum:    16.06.2024       #
+; # Version:  1.2 beta         #
 ; # CPU:      68020+           #
 ; # FASTMEM:  -                #
 ; # Chipset:  AGA              #
@@ -32,6 +32,7 @@
 ; - Neue Fx-Befehle: 880/890
 ; - Morphing wird jetzt über den Befehl 890 vom Modul ausgelöst. Delay-Counter
 ;   ist überflüssig.
+; - Sprite-Fader-In: Timing geändert
 
 
 ; PT 8xy-Befehl
@@ -557,7 +558,7 @@ sprf_color_table_offset               EQU 1
 sprf_colors_number                    EQU spr_colors_number-1
 
 ; **** Sprite-Fader-In ****
-sprfi_fader_speed_max                 EQU 8
+sprfi_fader_speed_max                 EQU 1
 sprfi_fader_radius                    EQU sprfi_fader_speed_max
 sprfi_fader_center                    EQU sprfi_fader_speed_max+1
 sprfi_fader_angle_speed               EQU 1
@@ -3843,7 +3844,7 @@ cfc_color_table
 
 ; ** Programmversion für Version-Befehl **
 ; ----------------------------------------
-prg_version DC.B "$VER: RSE-30 1.1 beta (2.6.24)",TRUE
+prg_version DC.B "$VER: RSE-30 1.2 beta (16.6.24)",TRUE
   EVEN
 
 ; **** Horiz-Scrolltext ****

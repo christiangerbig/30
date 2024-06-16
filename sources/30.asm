@@ -89,7 +89,7 @@
 
   INCLUDE "equals.i"
 
-requires_68030                        EQU FALSE  
+requires_68030                        EQU FALSE
 requires_68040                        EQU FALSE
 requires_68060                        EQU FALSE
 requires_fast_memory                  EQU FALSE
@@ -119,10 +119,10 @@ pt_split_module_enabled               EQU TRUE
 pt_usedfx                             EQU %1101010101011110
 pt_usedefx                            EQU %0000001001000000
 
-mvb_premorph_enabled                  EQU TRUE
-mvb_morph_loop_enabled                EQU TRUE
+mvb_premorph_enabled  EQU TRUE
+mvb_morph_loop_enabled        EQU TRUE
 
-cfc_prefade_enabled                   EQU TRUE
+cfc_prefade_enabled   EQU TRUE
 
 DMABITS                               EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
 
@@ -1035,7 +1035,7 @@ save_a7                         RS.L 1
     INCLUDE "music-tracker/pt3-variables-offsets.i"
   ENDC
 
-pt_fx_handler_active            RS.W 1
+pt_effects_handler_active            RS.W 1
 pt_skip_commands_enabled        RS.W 1
 
 ; **** Viewport 1 ****
@@ -1049,7 +1049,7 @@ vp2_pf2_display                 RS.L 1
 
 ; **** Horiz-Scrolltext ****
 hst_image                       RS.L 1
-hst_enabled                     RS.W 1
+hst_enabled     RS.W 1
 hst_text_table_start            RS.W 1
 hst_text_BLTCON0BITS            RS.W 1
 hst_character_toggle_image      RS.W 1
@@ -1201,7 +1201,7 @@ init_own_variables
   ENDC
 
   moveq   #TRUE,d0
-  move.w  d0,pt_fx_handler_active(a3)
+  move.w  d0,pt_effects_handler_active(a3)
   moveq   #FALSE,d1
   move.w  d1,pt_skip_commands_enabled(a3)
 
@@ -3255,7 +3255,7 @@ mouse_handler
   CNOP 0,4
 mh_quit
   moveq   #FALSE,d1
-  move.w  d1,pt_fx_handler_active(a3) ;FX-Abfrage aus
+  move.w  d1,pt_effects_handler_active(a3) ;FX-Abfrage aus
   moveq   #0,d0
   tst.w   hst_enabled(a3)     ;Scrolltext aktiv ?
   beq.s   mh_quit_with_scrolltext ;Ja -> verzweige
@@ -3346,16 +3346,16 @@ VERTB_int_server
 ; ** PT-replay routine **
 ; -----------------------
   IFD pt_v2.3a
-    PT2_REPLAY pt_fx_handler
+    PT2_REPLAY pt_effects_handler
   ENDC
   IFD pt_v3.0b
-    PT3_REPLAY pt_fx_handler
+    PT3_REPLAY pt_effects_handler
   ENDC
 
 ;--> 8xy "Not used/custom" <--
   CNOP 0,4
-pt_fx_handler
-  tst.w   pt_fx_handler_active(a3) ;FX-Handler an?
+pt_effects_handler
+  tst.w   pt_effects_handler_active(a3) ;FX-Handler an?
   bne.s   pt_no_fx_handler   ;Nein ->Verzweige
   move.b  n_cmdlo(a2),d0     ;Command data x = Effekt y = TRUE/FALSE
   tst.w   pt_skip_commands_enabled(a3)

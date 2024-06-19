@@ -106,12 +106,12 @@ pt_v3.0b
   IFD pt_v3.0b
     INCLUDE "music-tracker/pt3-equals.i"
   ENDC
-;pt_mute_enabled
 pt_ciatiming_enabled                  EQU TRUE
 pt_finetune_enabled                   EQU FALSE
   IFD pt_v3.0b
 pt_metronome_enabled                  EQU FALSE
   ENDC
+pt_mute_enabled                       EQU FALSE
 pt_track_volumes_enabled              EQU TRUE
 pt_track_periods_enabled              EQU FALSE
 pt_music_fader_enabled                EQU TRUE

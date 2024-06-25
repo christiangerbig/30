@@ -55,22 +55,23 @@
 
 ; ** Library-Includes V.3.x nachladen **
 ; --------------------------------------
-  ;INCDIR  "OMA:include/"
   INCDIR "Daten:include3.5/"
-
-  INCLUDE "dos/dos.i"
-  INCLUDE "dos/dosextens.i"
-  INCLUDE "libraries/dos_lib.i"
 
   INCLUDE "exec/exec.i"
   INCLUDE "exec/exec_lib.i"
 
-  INCLUDE "graphics/GFXBase.i"
-  INCLUDE "graphics/videocontrol.i"
+  INCLUDE "dos/dos.i"
+  INCLUDE "dos/dos_lib.i"
+  INCLUDE "dos/dosextens.i"
+
+  INCLUDE "graphics/gfxbase.i"
   INCLUDE "graphics/graphics_lib.i"
+  INCLUDE "graphics/videocontrol.i"
 
   INCLUDE "intuition/intuition.i"
   INCLUDE "intuition/intuition_lib.i"
+
+  INCLUDE "libraries/any_lib.i"
 
   INCLUDE "resources/cia_lib.i"
 
@@ -119,10 +120,10 @@ pt_split_module_enabled               EQU TRUE
 pt_usedfx                             EQU %1101010101011110
 pt_usedefx                            EQU %0000001001000000
 
-mvb_premorph_enabled  EQU TRUE
-mvb_morph_loop_enabled        EQU TRUE
+mvb_premorph_enabled                  EQU TRUE
+mvb_morph_loop_enabled                EQU TRUE
 
-cfc_prefade_enabled   EQU TRUE
+cfc_prefade_enabled                   EQU TRUE
 
 DMABITS                               EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
 
@@ -3823,7 +3824,7 @@ cfc_color_table
 
 ; ** Programmversion für Version-Befehl **
 ; ----------------------------------------
-prg_version DC.B "$VER: RSE-30 1.2 beta (16.6.24)",TRUE
+program_version DC.B "$VER: RSE-30 1.2 beta (16.6.24)",TRUE
   EVEN
 
 ; **** Horiz-Scrolltext ****
@@ -3851,12 +3852,12 @@ hst_stop_text
 ; **** PT-Replay ****
   IFEQ pt_split_module_enabled
 pt_auddata SECTION pt_audio,DATA
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running.song"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.run in neon lights.song"
 pt_audsmps SECTION pt_audio2,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running.smps"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.run in neon lights.smps"
   ELSE
 pt_auddata SECTION pt_audio,DATA_C
-    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.chip_wip_running"
+    INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.run in neon lights"
   ENDC
 
 

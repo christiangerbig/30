@@ -1,3 +1,3 @@
 
-		dc.l	COLOR00BITS,$00465fff,$003b56e9,$00314bd4
+		dc.l	color00_bits,$00465fff,$003b56e9,$00314bd4
 		dc.l	$002843be,$00203da9,$00193394,$00132a80

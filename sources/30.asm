@@ -125,22 +125,22 @@ mvb_morph_loop_enabled                EQU TRUE
 
 cfc_prefade_enabled                   EQU TRUE
 
-DMABITS                               EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
+dma_bits                              EQU DMAF_SPRITE+DMAF_COPPER+DMAF_BLITTER+DMAF_RASTER+DMAF_MASTER+DMAF_SETCLR
 
   IFEQ pt_ciatiming_enabled
-INTENABITS                            EQU INTF_EXTER+INTF_INTEN+INTF_SETCLR
+intena_bits                           EQU INTF_EXTER+INTF_INTEN+INTF_SETCLR
   ELSE
-INTENABITS                            EQU INTF_VERTB+INTF_EXTER+INTF_INTEN+INTF_SETCLR
+intena_bits                           EQU INTF_VERTB+INTF_EXTER+INTF_INTEN+INTF_SETCLR
   ENDC
 
-CIAAICRBITS                           EQU CIAICRF_SETCLR
+ciaa_icr_bits                         EQU CIAICRF_SETCLR
   IFEQ pt_ciatiming_enabled
-CIABICRBITS                           EQU CIAICRF_TA+CIAICRF_TB+CIAICRF_SETCLR
+ciab_icr_bits                         EQU CIAICRF_TA+CIAICRF_TB+CIAICRF_SETCLR
   ELSE
-CIABICRBITS                           EQU CIAICRF_TB+CIAICRF_SETCLR
+ciab_icr_bits                         EQU CIAICRF_TB+CIAICRF_SETCLR
   ENDC
 
-COPCONBITS                            EQU 0
+copcon_bits                           EQU 0
 
 pf1_x_size1                           EQU 0
 pf1_y_size1                           EQU 0
@@ -219,38 +219,38 @@ disk_memory_size                      EQU 0
 
 chip_memory_size                      EQU 0
   IFEQ pt_ciatiming_enabled
-CIABCRABITS                           EQU CIACRBF_LOAD
+ciab_cra_bits                         EQU CIACRBF_LOAD
   ENDC
-CIABCRBBITS                           EQU CIACRBF_LOAD+CIACRBF_RUNMODE ;Oneshot mode
-CIAA_TA_time                          EQU 0
-CIAA_TB_time                          EQU 0
+ciab_crb_bits                         EQU CIACRBF_LOAD+CIACRBF_RUNMODE ;Oneshot mode
+ciaa_ta_time                          EQU 0
+ciaa_tb_time                          EQU 0
   IFEQ pt_ciatiming_enabled
-CIAB_TA_time                          EQU 14187 ;= 0.709379 MHz * [20000 µs = 50 Hz duration for one frame on a PAL machine]
-;CIAB_TA_time                          EQU 14318 ;= 0.715909 MHz * [20000 µs = 50 Hz duration for one frame on a NTSC machine]
+ciab_ta_time                          EQU 14187 ;= 0.709379 MHz * [20000 µs = 50 Hz duration for one frame on a PAL machine]
+;ciab_ta_time                          EQU 14318 ;= 0.715909 MHz * [20000 µs = 50 Hz duration for one frame on a NTSC machine]
   ELSE
-CIAB_TA_time                          EQU 0
+ciab_ta_time                          EQU 0
   ENDC
-CIAB_TB_time                          EQU 362 ;= 0.709379 MHz * [511.43 µs = Lowest note period C1 with Tuning=-8 * 2 / PAL clock constant = 907*2/3546895 ticks per second]
+ciab_tb_time                          EQU 362 ;= 0.709379 MHz * [511.43 µs = Lowest note period C1 with Tuning=-8 * 2 / PAL clock constant = 907*2/3546895 ticks per second]
                                               ;= 0.715909 MHz * [506.76 µs = Lowest note period C1 with Tuning=-8 * 2 / NTSC clock constant = 907*2/3579545 ticks per second]
-CIAA_TA_continuous_enabled            EQU FALSE
-CIAA_TB_continuous_enabled            EQU FALSE
+ciaa_ta_continuous_enabled            EQU FALSE
+ciaa_tb_continuous_enabled            EQU FALSE
   IFEQ pt_ciatiming_enabled
-CIAB_TA_continuous_enabled            EQU TRUE
+ciab_ta_continuous_enabled            EQU TRUE
   ELSE
-CIAB_TA_continuous_enabled            EQU FALSE
+ciab_ta_continuous_enabled            EQU FALSE
   ENDC
-CIAB_TB_continuous_enabled            EQU FALSE
+ciab_tb_continuous_enabled            EQU FALSE
 
 beam_position                         EQU $133 ;Wegen Music-Fader
 
-MINROW                                EQU VSTART_256_lines
+MINROW                                EQU VSTART_256_LINES
 
-display_window_HSTART                 EQU HSTART_320_pixel
-display_window_VSTART                 EQU MINROW
-DIWSTRTBITS                           EQU ((display_window_VSTART&$ff)*DIWSTRTF_V0)+(display_window_HSTART&$ff)
-display_window_HSTOP                  EQU HSTOP_320_pixel
-display_window_VSTOP                  EQU VSTOP_256_lines
-DIWSTOPBITS                           EQU ((display_window_VSTOP&$ff)*DIWSTOPF_V0)+(display_window_HSTOP&$ff)
+display_window_hstart                 EQU HSTART_320_PIXEL
+display_window_vstart                 EQU MINROW
+diwstrt_bits                          EQU ((display_window_VSTART&$ff)*DIWSTRTF_V0)+(display_window_HSTART&$ff)
+display_window_hstop                  EQU HSTOP_320_pixel
+display_window_vstop                  EQU VSTOP_256_lines
+diwstop_bits                          EQU ((display_window_VSTOP&$ff)*DIWSTOPF_V0)+(display_window_HSTOP&$ff)
 
 spr_pixel_per_datafetch               EQU 64 ;4x
 
@@ -259,12 +259,12 @@ vp1_pixel_per_line                    EQU 320
 vp1_visible_pixels_number             EQU 320
 vp1_visible_lines_number              EQU 26
 
-vp1_VSTART                            EQU MINROW
-vp1_VSTOP                             EQU vp1_VSTART+vp1_visible_lines_number
+vp1_vstart                            EQU MINROW
+vp1_vstop                             EQU vp1_VSTART+vp1_visible_lines_number
 
 vp1_pf_pixel_per_datafetch            EQU 64 ;4x
-vp1_DDFSTRTBITS                       EQU DDFSTART_320_pixel
-vp1_DDFSTOPBITS                       EQU DDFSTOP_320_pixel_4x
+vp1_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp1_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp1_pf1_depth                         EQU 2
 vp1_pf_depth                          EQU vp1_pf1_depth
@@ -276,12 +276,12 @@ vp2_pixel_per_line                    EQU 320
 vp2_visible_pixels_number             EQU 320
 vp2_visible_lines_number              EQU 182
 
-vp2_VSTART                            EQU vp1_VSTOP
-vp2_VSTOP                             EQU vp2_VSTART+vp2_visible_lines_number
+vp2_vstart                            EQU vp1_VSTOP
+vp2_vstop                             EQU vp2_VSTART+vp2_visible_lines_number
 
 vp2_pf_pixel_per_datafetch            EQU 64 ;4x
-vp2_DDFSTRTBITS                       EQU DDFSTART_320_pixel
-vp2_DDFSTOPBITS                       EQU DDFSTOP_320_pixel_4x
+vp2_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp2_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp2_pf1_depth                         EQU 4
 vp2_pf2_depth                         EQU 3
@@ -295,12 +295,12 @@ vp3_pixel_per_line                    EQU 320
 vp3_visible_pixels_number             EQU 320
 vp3_visible_lines_number              EQU 48
 
-vp3_VSTART                            EQU vp2_VSTOP
-vp3_VSTOP                             EQU vp3_VSTART+vp3_visible_lines_number
+vp3_vstart                            EQU vp2_VSTOP
+vp3_vstop                             EQU vp3_VSTART+vp3_visible_lines_number
 
 vp3_pf_pixel_per_datafetch            EQU 64 ;4x
-vp3_DDFSTRTBITS                       EQU DDFSTART_320_pixel
-vp3_DDFSTOPBITS                       EQU DDFSTOP_320_pixel_4x
+vp3_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp3_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp3_pf1_depth                         EQU 3
 vp3_pf2_depth                         EQU 2
@@ -339,63 +339,63 @@ vp3_pf1_plane_moduli                  EQU (40*8)  ;-(extra_pf4_plane_width-(extr
 vp3_pf2_plane_moduli                  EQU (extra_pf8_plane_width*(extra_pf8_depth-1))+extra_pf8_plane_width-vp3_data_fetch_width
 
 ; **** View ****
-BPLCON0BITS                           EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) ;lores
-BPLCON3BITS1                          EQU BPLCON3F_SPRES0
-BPLCON3BITS2                          EQU BPLCON3BITS1|BPLCON3F_LOCT
-BPLCON4BITS                           EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
-DIWHIGHBITS                           EQU (((display_window_HSTOP&$100)>>8)*DIWHIGHF_HSTOP8)|(((display_window_VSTOP&$700)>>8)*DIWHIGHF_VSTOP8)|(((display_window_HSTART&$100)>>8)*DIWHIGHF_HSTART8)|((display_window_VSTART&$700)>>8)
-FMODEBITS                             EQU FMODEF_SPR32|FMODEF_SPAGEM|FMODEF_SSCAN2
-COLOR00BITS                           EQU $001122
-COLOR00HIGHBITS                       EQU $012
-COLOR00LOWBITS                        EQU $012
+bplcon0_bits                          EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) 
+bplcon3_bits1                         EQU BPLCON3F_SPRES0
+bplcon3_bits2                         EQU bplcon3_bits1|BPLCON3F_LOCT
+bplcon4_bits                          EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
+diwhigh_bits                          EQU (((display_window_HSTOP&$100)>>8)*DIWHIGHF_HSTOP8)|(((display_window_VSTOP&$700)>>8)*DIWHIGHF_VSTOP8)|(((display_window_HSTART&$100)>>8)*DIWHIGHF_HSTART8)|((display_window_VSTART&$700)>>8)
+fmode_bits                            EQU FMODEF_SPR32|FMODEF_SPAGEM|FMODEF_SSCAN2
+color00_bits                          EQU $001122
+color00_high_bits                     EQU $012
+color00_low_bits                      EQU $012
 ; **** Viewport 1 ****
-vp1_BPLCON0BITS                       EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
-vp1_BPLCON1BITS                       EQU 0
-vp1_BPLCON2BITS                       EQU 0
-vp1_BPLCON3BITS1                      EQU BPLCON3BITS1
-vp1_BPLCON3BITS2                      EQU vp1_BPLCON3BITS1|BPLCON3F_LOCT
-vp1_BPLCON3BITS3                      EQU vp1_BPLCON3BITS1|(BPLCON3F_BANK0*7)
-vp1_BPLCON3BITS4                      EQU vp1_BPLCON3BITS3|BPLCON3F_LOCT
-vp1_BPLCON4BITS                       EQU BPLCON4BITS|(BPLCON4F_BPLAM0*252)
-vp1_FMODEBITS                         EQU FMODEBITS|FMODEF_BPL32|FMODEF_BPAGEM
-vp1_COLOR00BITS                       EQU COLOR00BITS
+vp1_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
+vp1_bplcon1_bits                      EQU 0
+vp1_bplcon2_bits                      EQU 0
+vp1_bplcon3_bits1                     EQU bplcon3_bits1
+vp1_bplcon3_bits2                     EQU vp1_bplcon3_bits1|BPLCON3F_LOCT
+vp1_bplcon3_bits3                     EQU vp1_bplcon3_bits1|(BPLCON3F_BANK0*7)
+vp1_bplcon3_bits4                     EQU vp1_bplcon3_bits3|BPLCON3F_LOCT
+vp1_bplcon4_bits                      EQU bplcon4_bits|(BPLCON4F_BPLAM0*252)
+vp1_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
+vp1_color00_bits                      EQU color00_bits
 ; **** Viewport 2 ****
-vp2_BPLCON0BITS                       EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
-vp2_BPLCON1BITS                       EQU 0
-vp2_BPLCON2BITS                       EQU BPLCON2F_PF2PRI
-vp2_BPLCON3BITS1                      EQU BPLCON3BITS1|BPLCON3F_PF2OF2
-vp2_BPLCON3BITS2                      EQU vp2_BPLCON3BITS1|BPLCON3F_LOCT
-vp2_BPLCON4BITS                       EQU BPLCON4BITS
-vp2_FMODEBITS                         EQU FMODEBITS|FMODEF_BPL32|FMODEF_BPAGEM
-vp2_COLOR00BITS                       EQU COLOR00BITS
+vp2_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
+vp2_bplcon1_bits                      EQU 0
+vp2_bplcon2_bits                      EQU BPLCON2F_PF2PRI
+vp2_bplcon3_bits1                     EQU bplcon3_bits1|BPLCON3F_PF2OF2
+vp2_bplcon3_bits2                     EQU vp2_bplcon3_bits1|BPLCON3F_LOCT
+vp2_bplcon4_bits                      EQU bplcon4_bits
+vp2_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
+vp2_color00_bits                      EQU color00_bits
 ; **** Viewport 3 ****
-vp3_BPLCON0BITS                       EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
-vp3_BPLCON1BITS                       EQU 0
-vp3_BPLCON2BITS                       EQU 0
-vp3_BPLCON3BITS1                      EQU BPLCON3BITS1|BPLCON3F_PF2OF0|BPLCON3F_PF2OF1
-vp3_BPLCON3BITS2                      EQU vp3_BPLCON3BITS1|BPLCON3F_LOCT
-vp3_BPLCON3BITS3                      EQU vp3_BPLCON3BITS1|(BPLCON3F_BANK0*7)
-vp3_BPLCON3BITS4                      EQU vp3_BPLCON3BITS3|BPLCON3F_LOCT
-vp3_BPLCON4BITS                       EQU BPLCON4BITS|(BPLCON4F_BPLAM0*240)
-vp3_FMODEBITS                         EQU FMODEBITS|FMODEF_BPL32|FMODEF_BPAGEM
-vp3_COLOR00BITS                       EQU COLOR00BITS
+vp3_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
+vp3_bplcon1_bits                      EQU 0
+vp3_bplcon2_bits                      EQU 0
+vp3_bplcon3_bits1                     EQU bplcon3_bits1|BPLCON3F_PF2OF0|BPLCON3F_PF2OF1
+vp3_bplcon3_bits2                     EQU vp3_bplcon3_bits1|BPLCON3F_LOCT
+vp3_bplcon3_bits3                     EQU vp3_bplcon3_bits1|(BPLCON3F_BANK0*7)
+vp3_bplcon3_bits4                     EQU vp3_bplcon3_bits3|BPLCON3F_LOCT
+vp3_bplcon4_bits                      EQU bplcon4_bits|(BPLCON4F_BPLAM0*240)
+vp3_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
+vp3_color00_bits                      EQU color00_bits
 
 ; **** Viewport 1 ****
-cl2_vp1_HSTART1                       EQU $00
-cl2_vp1_VSTART1                       EQU MINROW
-cl2_vp1_HSTART2                       EQU $00
-cl2_vp1_VSTART2                       EQU MINROW
+cl2_vp1_hstart1                       EQU $00
+cl2_vp1_vstart1                       EQU MINROW
+cl2_vp1_hstart2                       EQU $00
+cl2_vp1_vstart2                       EQU MINROW
 ; **** Viewport 2 ****
-cl2_vp2_HSTART                        EQU HSTOP_320_pixel-(4*CMOVE_slot_period)
-cl2_vp2_VSTART                        EQU vp1_VSTOP-1
+cl2_vp2_hstart                        EQU HSTOP_320_pixel-(4*CMOVE_SLOT_PERIOD)
+cl2_vp2_vstart                        EQU vp1_VSTOP-1
 ; **** Viewport 3 ****
-cl2_vp3_HSTART1                       EQU HSTOP_320_pixel-(9*CMOVE_slot_period)
-cl2_vp3_VSTART1                       EQU vp2_VSTOP-1
-cl2_vp3_HSTART2                       EQU $00
-cl2_vp3_VSTART2                       EQU vp2_VSTOP
+cl2_vp3_hstart1                       EQU HSTOP_320_pixel-(9*CMOVE_SLOT_PERIOD)
+cl2_vp3_vstart1                       EQU vp2_VSTOP-1
+cl2_vp3_hstart2                       EQU $00
+cl2_vp3_vstart2                       EQU vp2_VSTOP
 ; **** Copper-Interrupt ****
-cl2_HSTART                            EQU $00
-cl2_VSTART                            EQU beam_position&$ff
+cl2_hstart                            EQU $00
+cl2_vstart                            EQU beam_position&$ff
 
 sine_table_length                     EQU 512
 
@@ -585,7 +585,7 @@ cfc_fader_speed_max                   EQU 8
 cfc_fader_radius                      EQU cfc_fader_speed_max
 cfc_fader_center                      EQU cfc_fader_speed_max+1
 cfc_fader_angle_speed                 EQU 4
-cfc_fader_delay                       EQU 3*PALFPS
+cfc_fader_delay                       EQU 3*PAL_FPS
 
 
 vp1_pf1_bitplanes_x_offset            EQU 1*vp1_pf_pixel_per_datafetch
@@ -639,7 +639,7 @@ cl1_ext1_BPL5PTL    RS.L 1
 cl1_ext1_BPL7PTH    RS.L 1
 cl1_ext1_BPL7PTL    RS.L 1
 
-cl1_extension1_SIZE RS.B 0
+cl1_extension1_size RS.B 0
 
 
   RSRESET
@@ -648,7 +648,7 @@ cl1_begin            RS.B 0
 
   INCLUDE "copperlist1-offsets.i"
 
-cl1_extension1_entry RS.B cl1_extension1_SIZE
+cl1_extension1_entry RS.B cl1_extension1_size
 
 cl1_COPJMP2          RS.L 1
 
@@ -675,7 +675,7 @@ cl2_ext1_BPL1PTL    RS.L 1
 cl2_ext1_BPL2PTH    RS.L 1
 cl2_ext1_BPL2PTL    RS.L 1
 
-cl2_extension1_SIZE RS.B 0
+cl2_extension1_size RS.B 0
 
 
   RSRESET
@@ -718,7 +718,7 @@ cl2_ext3_BPL6PTH    RS.L 1
 cl2_ext3_BPL6PTL    RS.L 1
 cl2_ext3_BPLCON0    RS.L 1
 
-cl2_extension3_SIZE RS.B 0
+cl2_extension3_size RS.B 0
 
 
   RSRESET
@@ -747,7 +747,7 @@ cl2_ext4_BPL5PTH    RS.L 1
 cl2_ext4_BPL5PTL    RS.L 1
 cl2_ext4_BPLCON0    RS.L 1
 
-cl2_extension4_SIZE RS.B 0
+cl2_extension4_size RS.B 0
 
 
   RSRESET
@@ -763,7 +763,7 @@ cl2_ext5_COLOR25_low8  RS.L 1
 cl2_ext5_COLOR26_low8  RS.L 1
 cl2_ext5_NOOP          RS.L 1
 
-cl2_extension5_SIZE    RS.B 0
+cl2_extension5_size    RS.B 0
 
 
   RSRESET
@@ -771,15 +771,15 @@ cl2_extension5_SIZE    RS.B 0
 cl2_begin            RS.B 0
 
 ; **** Viewport 1 ****
-cl2_extension1_entry RS.B cl2_extension1_SIZE
+cl2_extension1_entry RS.B cl2_extension1_size
 cl2_WAIT1            RS.L 1
-cl2_BPLCON0_1        RS.L 1
+cl2_bplcon0_1        RS.L 1
 cl2_extension2_entry RS.B cl2_extension2_SIZE*vp1_visible_lines_number
 ; **** Viewport 2 ****
-cl2_extension3_entry RS.B cl2_extension3_SIZE
+cl2_extension3_entry RS.B cl2_extension3_size
 ; **** Viewport 3 ****
-cl2_extension4_entry RS.B cl2_extension4_SIZE
-cl2_extension5_entry RS.B cl2_extension5_SIZE*vp3_visible_lines_number
+cl2_extension4_entry RS.B cl2_extension4_size
+cl2_extension5_entry RS.B cl2_extension5_size*vp3_visible_lines_number
 ; **** Copper-Interrupt ****
 cl1_WAIT             RS.L 1
 cl1_INTREQ           RS.L 1
@@ -808,7 +808,7 @@ spr0_extension1       RS.B 0
 spr0_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr0_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr0_extension1_SIZE  RS.B 0
+spr0_extension1_size  RS.B 0
 
 ; ** Sprite0-Hauptstruktur **
 ; ---------------------------
@@ -816,7 +816,7 @@ spr0_extension1_SIZE  RS.B 0
 
 spr0_begin            RS.B 0
 
-spr0_extension1_entry RS.B spr0_extension1_SIZE
+spr0_extension1_entry RS.B spr0_extension1_size
 
 spr0_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -831,7 +831,7 @@ spr1_extension1       RS.B 0
 spr1_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr1_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr1_extension1_SIZE  RS.B 0
+spr1_extension1_size  RS.B 0
 
 ; ** Sprite1-Hauptstruktur **
 ; ---------------------------
@@ -839,7 +839,7 @@ spr1_extension1_SIZE  RS.B 0
 
 spr1_begin            RS.B 0
 
-spr1_extension1_entry RS.B spr1_extension1_SIZE
+spr1_extension1_entry RS.B spr1_extension1_size
 
 spr1_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -854,7 +854,7 @@ spr2_extension1       RS.B 0
 spr2_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr2_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr2_extension1_SIZE  RS.B 0
+spr2_extension1_size  RS.B 0
 
 ; ** Sprite2-Hauptstruktur **
 ; ---------------------------
@@ -862,7 +862,7 @@ spr2_extension1_SIZE  RS.B 0
 
 spr2_begin            RS.B 0
 
-spr2_extension1_entry RS.B spr2_extension1_SIZE
+spr2_extension1_entry RS.B spr2_extension1_size
 
 spr2_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -877,7 +877,7 @@ spr3_extension1       RS.B 0
 spr3_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr3_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr3_extension1_SIZE  RS.B 0
+spr3_extension1_size  RS.B 0
 
 ; ** Sprite3-Hauptstruktur **
 ; ---------------------------
@@ -885,7 +885,7 @@ spr3_extension1_SIZE  RS.B 0
 
 spr3_begin            RS.B 0
 
-spr3_extension1_entry RS.B spr3_extension1_SIZE
+spr3_extension1_entry RS.B spr3_extension1_size
 
 spr3_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -900,7 +900,7 @@ spr4_extension1       RS.B 0
 spr4_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr4_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr4_extension1_SIZE  RS.B 0
+spr4_extension1_size  RS.B 0
 
 ; ** Sprite4-Hauptstruktur **
 ; ---------------------------
@@ -908,7 +908,7 @@ spr4_extension1_SIZE  RS.B 0
 
 spr4_begin            RS.B 0
 
-spr4_extension1_entry RS.B spr4_extension1_SIZE
+spr4_extension1_entry RS.B spr4_extension1_size
 
 spr4_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -923,7 +923,7 @@ spr5_extension1       RS.B 0
 spr5_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr5_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr5_extension1_SIZE  RS.B 0
+spr5_extension1_size  RS.B 0
 
 ; ** Sprite5-Hauptstruktur **
 ; ---------------------------
@@ -931,7 +931,7 @@ spr5_extension1_SIZE  RS.B 0
 
 spr5_begin            RS.B 0
 
-spr5_extension1_entry RS.B spr5_extension1_SIZE
+spr5_extension1_entry RS.B spr5_extension1_size
 
 spr5_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -946,7 +946,7 @@ spr6_extension1       RS.B 0
 spr6_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr6_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr6_extension1_SIZE  RS.B 0
+spr6_extension1_size  RS.B 0
 
 ; ** Sprite6-Hauptstruktur **
 ; ---------------------------
@@ -954,7 +954,7 @@ spr6_extension1_SIZE  RS.B 0
 
 spr6_begin            RS.B 0
 
-spr6_extension1_entry RS.B spr6_extension1_SIZE
+spr6_extension1_entry RS.B spr6_extension1_size
 
 spr6_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -969,7 +969,7 @@ spr7_extension1       RS.B 0
 spr7_ext1_header      RS.L 1*(spr_pixel_per_datafetch/16)
 spr7_ext1_planedata   RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
-spr7_extension1_SIZE  RS.B 0
+spr7_extension1_size  RS.B 0
 
 ; ** Sprite7-Hauptstruktur **
 ; ---------------------------
@@ -977,7 +977,7 @@ spr7_extension1_SIZE  RS.B 0
 
 spr7_begin            RS.B 0
 
-spr7_extension1_entry RS.B spr7_extension1_SIZE
+spr7_extension1_entry RS.B spr7_extension1_size
 
 spr7_end              RS.L 1*(spr_pixel_per_datafetch/16)
 
@@ -1052,7 +1052,7 @@ vp2_pf2_display                 RS.L 1
 hst_image                       RS.L 1
 hst_enabled     RS.W 1
 hst_text_table_start            RS.W 1
-hst_text_BLTCON0BITS            RS.W 1
+hst_text_BLTCON0_bits           RS.W 1
 hst_character_toggle_image      RS.W 1
 hst_variable_horiz_scroll_speed RS.W 1
 
@@ -1208,7 +1208,7 @@ init_own_variables
   move.l  a0,hst_image(a3)
   move.w  d1,hst_enabled(a3)
   move.w  d0,hst_text_table_start(a3)
-  move.w  d0,hst_text_BLTCON0BITS(a3)
+  move.w  d0,hst_text_bltcon0_bits(a3)
   move.w  d0,hst_character_toggle_image(a3)
   moveq   #hst_horiz_scroll_speed1,d2
   move.w  d2,hst_variable_horiz_scroll_speed(a3)
@@ -1400,9 +1400,9 @@ bvm_init_audio_channel_info_tables
 ; --------------------------------------
   CNOP 0,4
 bvm_init_color_table
-  move.l  #COLOR00BITS,d1
+  move.l  #color00_bits,d1
   lea     bvm_color_gradients(pc),a0 ;Quelle Farbverlauf
-  lea     bfi_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Ziel
+  lea     bfi_color_table+(bf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Ziel
   moveq   #bvm_bars_number-1,d7 ;Anzahl der Abschnitte
 bvm_init_color_table_loop1
   moveq   #(bvm_bar_height/2)-1,d6 ;Anzahl der Zeilen
@@ -1519,14 +1519,14 @@ cb_init_bitmap_table_loop2
 cb_init_color_tables
   lea     cb_color_gradient1(pc),a0 ;Quelle1
   lea     cb_color_gradient2(pc),a1 ;Quelle2
-  lea     cfi_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a2 ;Ziel
+  lea     cfi_color_table+(cf_color_table_offset*LONGWORD_SIZE)(pc),a2 ;Ziel
   moveq   #vp3_visible_lines_number-1,d7
 cb_init_color_tables_loop1
   move.l  (a0)+,(a2)+        ;Farbwerte verschachteln
   move.l  (a1)+,(a2)+
   dbf     d7,cb_init_color_tables_loop1
 
-  move.l  #COLOR00BITS,d0
+  move.l  #color00_bits,d0
   move.l  extra_memory(a3),a0
   ADDF.L  em_color_table,a0
   moveq   #(vp3_visible_lines_number*2)-1,d7
@@ -1540,11 +1540,11 @@ cb_init_color_tables_loop2
 ; ---------------------------------
   CNOP 0,4
 init_color_registers
-  CPU_SELECT_COLORHI_BANK 7
-  CPU_INIT_COLORHI COLOR16,8,vp3_pf1_color_table
+  CPU_SELECT_COLOR_HIGH_BANK 7
+  CPU_INIT_COLOR_HIGH COLOR16,8,vp3_pf1_color_table
 
-  CPU_SELECT_COLORLO_BANK 7
-  CPU_INIT_COLORLO COLOR16,8,vp3_pf1_color_table
+  CPU_SELECT_COLOR_LOW_BANK 7
+  CPU_INIT_COLOR_LOW COLOR16,8,vp3_pf1_color_table
   rts
 
 ; ** Sprites initialisieren **
@@ -1580,7 +1580,7 @@ init_first_copperlist
   bsr     cl1_init_sprite_pointers
   bsr     cl1_init_color_registers
   bsr     cl1_vp2_init_bitplane_pointers
-  COPMOVEQ TRUE,COPJMP2
+  COP_MOVE_QUICK TRUE,COPJMP2
   bsr     cl1_set_sprite_pointers
   bra     cl1_vp2_pf1_set_bitplane_pointers
 
@@ -1590,52 +1590,52 @@ init_first_copperlist
 
   CNOP 0,4
 cl1_init_color_registers
-  COP_INIT_COLORHI COLOR00,16,vp2_pf1_color_table
-  COP_INIT_COLORHI COLOR16,16,vp2_pf2_color_table
-  COP_SELECT_COLORHI_BANK 1
-  COP_INIT_COLORHI COLOR00,16,spr_color_table
-  COP_INIT_COLORHI COLOR16,16,bvm_color_table
-  COP_SELECT_COLORHI_BANK 2
-  COP_INIT_COLORHI COLOR00,32
-  COP_SELECT_COLORHI_BANK 3
-  COP_INIT_COLORHI COLOR00,32
-  COP_SELECT_COLORHI_BANK 4
-  COP_INIT_COLORHI COLOR00,32
-  COP_SELECT_COLORHI_BANK 5
-  COP_INIT_COLORHI COLOR00,32
-  COP_SELECT_COLORHI_BANK 6
-  COP_INIT_COLORHI COLOR00,32
-  COP_SELECT_COLORHI_BANK 7
-  COP_INIT_COLORHI COLOR00,16
+  COP_INIT_COLOR_HIGH COLOR00,16,vp2_pf1_color_table
+  COP_INIT_COLOR_HIGH COLOR16,16,vp2_pf2_color_table
+  COP_SELECT_COLOR_HIGH_BANK 1
+  COP_INIT_COLOR_HIGH COLOR00,16,spr_color_table
+  COP_INIT_COLOR_HIGH COLOR16,16,bvm_color_table
+  COP_SELECT_COLOR_HIGH_BANK 2
+  COP_INIT_COLOR_HIGH COLOR00,32
+  COP_SELECT_COLOR_HIGH_BANK 3
+  COP_INIT_COLOR_HIGH COLOR00,32
+  COP_SELECT_COLOR_HIGH_BANK 4
+  COP_INIT_COLOR_HIGH COLOR00,32
+  COP_SELECT_COLOR_HIGH_BANK 5
+  COP_INIT_COLOR_HIGH COLOR00,32
+  COP_SELECT_COLOR_HIGH_BANK 6
+  COP_INIT_COLOR_HIGH COLOR00,32
+  COP_SELECT_COLOR_HIGH_BANK 7
+  COP_INIT_COLOR_HIGH COLOR00,16
 
-  COP_SELECT_COLORLO_BANK 0
-  COP_INIT_COLORLO COLOR00,16,vp2_pf1_color_table
-  COP_INIT_COLORLO COLOR16,16,vp2_pf2_color_table
-  COP_SELECT_COLORLO_BANK 1
-  COP_INIT_COLORLO COLOR00,16,spr_color_table
-  COP_INIT_COLORLO COLOR16,16,bvm_color_table
-  COP_SELECT_COLORLO_BANK 2
-  COP_INIT_COLORLO COLOR00,32
-  COP_SELECT_COLORLO_BANK 3
-  COP_INIT_COLORLO COLOR00,32
-  COP_SELECT_COLORLO_BANK 4
-  COP_INIT_COLORLO COLOR00,32
-  COP_SELECT_COLORLO_BANK 5
-  COP_INIT_COLORLO COLOR00,32
-  COP_SELECT_COLORLO_BANK 6
-  COP_INIT_COLORLO COLOR00,32
-  COP_SELECT_COLORLO_BANK 7
-  COP_INIT_COLORLO COLOR00,16
+  COP_SELECT_COLOR_LOW_BANK 0
+  COP_INIT_COLOR_LOW COLOR00,16,vp2_pf1_color_table
+  COP_INIT_COLOR_LOW COLOR16,16,vp2_pf2_color_table
+  COP_SELECT_COLOR_LOW_BANK 1
+  COP_INIT_COLOR_LOW COLOR00,16,spr_color_table
+  COP_INIT_COLOR_LOW COLOR16,16,bvm_color_table
+  COP_SELECT_COLOR_LOW_BANK 2
+  COP_INIT_COLOR_LOW COLOR00,32
+  COP_SELECT_COLOR_LOW_BANK 3
+  COP_INIT_COLOR_LOW COLOR00,32
+  COP_SELECT_COLOR_LOW_BANK 4
+  COP_INIT_COLOR_LOW COLOR00,32
+  COP_SELECT_COLOR_LOW_BANK 5
+  COP_INIT_COLOR_LOW COLOR00,32
+  COP_SELECT_COLOR_LOW_BANK 6
+  COP_INIT_COLOR_LOW COLOR00,32
+  COP_SELECT_COLOR_LOW_BANK 7
+  COP_INIT_COLOR_LOW COLOR00,16
   rts
 
   CNOP 0,4
 cl1_vp2_init_bitplane_pointers
-  COPMOVEQ TRUE,BPL3PTH
-  COPMOVEQ TRUE,BPL3PTL
-  COPMOVEQ TRUE,BPL5PTH
-  COPMOVEQ TRUE,BPL5PTL
-  COPMOVEQ TRUE,BPL7PTH
-  COPMOVEQ TRUE,BPL7PTL
+  COP_MOVE_QUICK TRUE,BPL3PTH
+  COP_MOVE_QUICK TRUE,BPL3PTL
+  COP_MOVE_QUICK TRUE,BPL5PTH
+  COP_MOVE_QUICK TRUE,BPL5PTL
+  COP_MOVE_QUICK TRUE,BPL7PTH
+  COP_MOVE_QUICK TRUE,BPL7PTL
   rts
 
   COP_SET_SPRITE_POINTERS cl1,display,spr_number
@@ -1662,21 +1662,21 @@ init_second_copperlist
 ; **** Viewport 1 ****
   bsr     cl2_vp1_init_playfield_registers
   bsr     cl2_vp1_init_bitplane_pointers
-  COPWAIT cl2_vp1_HSTART1,cl2_vp1_VSTART1
-  COPMOVEQ vp1_BPLCON0BITS,BPLCON0
+  COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
+  COP_MOVE_QUICK vp1_bplcon0_bits,BPLCON0
   bsr     cl2_vp1_init_color_gradient_registers
 ; **** Viewport 2 ****
-  COPWAIT cl2_vp2_HSTART,cl2_vp2_VSTART
+  COP_WAIT cl2_vp2_HSTART,cl2_vp2_VSTART
   bsr     cl2_vp2_init_playfield_registers
   bsr     cl2_vp2_init_bitplane_pointers
 ; **** Viewport 3 ****
-  COPWAIT cl2_vp3_HSTART1,cl2_vp3_VSTART1
+  COP_WAIT cl2_vp3_hstart1,cl2_vp3_vstart1
   bsr     cl2_vp3_init_playfield_registers
   bsr     cl2_vp3_init_bitplane_pointers
   bsr     cl2_vp3_init_color_gradient_registers
 ; **** Copper-Interrupt ****
-  bsr     cl2_init_copint
-  COPLISTEND
+  bsr     cl2_init_copper_interrupt
+  COP_LIST_END
   bsr     cl2_vp1_pf1_set_bitplane_pointers
   bsr     cl2_vp1_set_fill_color_gradient
   bsr     cl2_vp1_set_outline_color_gradient
@@ -1704,16 +1704,16 @@ cl2_vp1_init_bitplane_pointers_loop
 
   CNOP 0,4
 cl2_vp1_init_color_gradient_registers
-  move.l  #(((cl2_vp1_VSTART2<<24)|(((cl2_vp1_HSTART2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
-  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS3,d1 ;High-Werte
-  move.l  #(COLOR29<<16)|COLOR00HIGHBITS,d2
-  move.l  #(COLOR30<<16)|COLOR00HIGHBITS,d3
-  move.l  #(BPLCON3<<16)|vp1_BPLCON3BITS4,d4 ;Low-RGB-Werte
-  move.l  #(COLOR29<<16)|COLOR00LOWBITS,d5
+  move.l  #(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
+  move.l  #(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ;High-Werte
+  move.l  #(COLOR29<<16)|color00_high_bits,d2
+  move.l  #(COLOR30<<16)|color00_high_bits,d3
+  move.l  #(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ;Low-RGB-Werte
+  move.l  #(COLOR29<<16)|color00_low_bits,d5
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
-  move.l  #(COLOR30<<16)|COLOR00LOWBITS,a1
-  move.l  #(BPLCON4<<16)|vp1_BPLCON4BITS,a2
+  move.l  #(COLOR30<<16)|color00_low_bits,a1
+  move.l  #(BPLCON4<<16)|vp1_bplcon4_bits,a2
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp1_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
@@ -1733,15 +1733,15 @@ cl2_vp1_init_color_gradient_registers_loop
 
   CNOP 0,4
 cl2_vp2_init_bitplane_pointers
-  COPMOVEQ TRUE,BPL1PTH
-  COPMOVEQ TRUE,BPL1PTL
-  COPMOVEQ TRUE,BPL2PTH
-  COPMOVEQ TRUE,BPL2PTL
-  COPMOVEQ TRUE,BPL4PTH
-  COPMOVEQ TRUE,BPL4PTL
-  COPMOVEQ TRUE,BPL6PTH
-  COPMOVEQ TRUE,BPL6PTL
-  COPMOVEQ vp2_BPLCON0BITS,BPLCON0
+  COP_MOVE_QUICK TRUE,BPL1PTH
+  COP_MOVE_QUICK TRUE,BPL1PTL
+  COP_MOVE_QUICK TRUE,BPL2PTH
+  COP_MOVE_QUICK TRUE,BPL2PTL
+  COP_MOVE_QUICK TRUE,BPL4PTH
+  COP_MOVE_QUICK TRUE,BPL4PTL
+  COP_MOVE_QUICK TRUE,BPL6PTH
+  COP_MOVE_QUICK TRUE,BPL6PTL
+  COP_MOVE_QUICK vp2_bplcon0_bits,BPLCON0
   rts
 
 ; **** Viewport 3 ****
@@ -1749,31 +1749,31 @@ cl2_vp2_init_bitplane_pointers
 
   CNOP 0,4
 cl2_vp3_init_bitplane_pointers
-  COPMOVEQ TRUE,BPL1PTH
-  COPMOVEQ TRUE,BPL1PTL
-  COPMOVEQ TRUE,BPL2PTH
-  COPMOVEQ TRUE,BPL2PTL
-  COPMOVEQ TRUE,BPL3PTH
-  COPMOVEQ TRUE,BPL3PTL
-  COPMOVEQ TRUE,BPL4PTH
-  COPMOVEQ TRUE,BPL4PTL
-  COPMOVEQ TRUE,BPL5PTH
-  COPMOVEQ TRUE,BPL5PTL
-  COPMOVEQ vp3_BPLCON0BITS,BPLCON0
+  COP_MOVE_QUICK TRUE,BPL1PTH
+  COP_MOVE_QUICK TRUE,BPL1PTL
+  COP_MOVE_QUICK TRUE,BPL2PTH
+  COP_MOVE_QUICK TRUE,BPL2PTL
+  COP_MOVE_QUICK TRUE,BPL3PTH
+  COP_MOVE_QUICK TRUE,BPL3PTL
+  COP_MOVE_QUICK TRUE,BPL4PTH
+  COP_MOVE_QUICK TRUE,BPL4PTL
+  COP_MOVE_QUICK TRUE,BPL5PTH
+  COP_MOVE_QUICK TRUE,BPL5PTL
+  COP_MOVE_QUICK vp3_bplcon0_bits,BPLCON0
   rts
 
   CNOP 0,4
 cl2_vp3_init_color_gradient_registers
-  move.l  #(((cl2_vp3_VSTART2<<24)|(((cl2_vp3_HSTART2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
-  move.l  #(BPLCON3<<16)|vp3_BPLCON3BITS3,d1 ;High-Werte
-  move.l  #(COLOR25<<16)|COLOR00HIGHBITS,d2
-  move.l  #(COLOR26<<16)|COLOR00HIGHBITS,d3
-  move.l  #(BPLCON3<<16)|vp3_BPLCON3BITS4,d4 ;Low-Werte
-  move.l  #(((cl_y_wrap<<24)|(((cl2_vp3_HSTART2/4)*2)<<16))|$10000)|$fffe,d5 ;WAIT-Befehl
+  move.l  #(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
+  move.l  #(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ;High-Werte
+  move.l  #(COLOR25<<16)|color00_high_bits,d2
+  move.l  #(COLOR26<<16)|color00_high_bits,d3
+  move.l  #(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ;Low-Werte
+  move.l  #(((CL_Y_WRAP<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ;WAIT-Befehl
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
-  move.l  #(COLOR25<<16)|COLOR00LOWBITS,a1
-  move.l  #(COLOR26<<16)|COLOR00LOWBITS,a2
+  move.l  #(COLOR25<<16)|color00_low_bits,a1
+  move.l  #(COLOR26<<16)|color00_low_bits,a2
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp3_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y
@@ -1786,17 +1786,17 @@ cl2_vp3_init_color_gradient_registers_loop
   cmp.l   d5,d0              ;Rasterzeile $ff erreicht ?
   bne.s   no_patch_copperlist2 ;Nein -> verzweige
 patch_copperlist2
-  COPWAIT cl_x_wrap,cl_y_wrap ;Copperliste patchen
+  COP_WAIT CL_X_WRAP,CL_Y_WRAP ;Copperliste patchen
   bra.s   cl2_vp3_init_color_gradient_registers_skip
   CNOP 0,4
 no_patch_copperlist2
-  COPMOVEQ TRUE,NOOP
+  COP_MOVE_QUICK TRUE,NOOP
 cl2_vp3_init_color_gradient_registers_skip
   add.l   d6,d0              ;nächste Zeile
   dbf     d7,cl2_vp3_init_color_gradient_registers_loop
   rts
 
-  COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART
+  COP_INIT_COPPER_INTERRUPT cl2,cl2_HSTART,cl2_VSTART
 
 ; **** Viewport 1 ****
   CNOP 0,4
@@ -1814,7 +1814,7 @@ cl2_vp1_pf1_set_bitplane_pointers_loop
 
   CNOP 0,4
 cl2_vp1_set_fill_color_gradient
-  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
+  move.w  #$0f0f,d3          ;Maske RGB-Nibbles
   lea     hst_fill_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR29_high8+2,a1
@@ -1824,9 +1824,9 @@ cl2_vp1_set_fill_color_gradient
 cl2_vp1_set_fill_color_gradient_loop
   move.l  (a0)+,d0
   move.l  d0,d2
-  RGB8_TO_RGB4HI d0,d1,d3
+  RGB8_TO_RGB4_HIGH d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
-  RGB8_TO_RGB4LO d2,d1,d3
+  RGB8_TO_RGB4_LOW d2,d1,d3
   move.w  d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_fill_color_gradient_loop
@@ -1834,7 +1834,7 @@ cl2_vp1_set_fill_color_gradient_loop
 
   CNOP 0,4
 cl2_vp1_set_outline_color_gradient
-  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
+  move.w  #$0f0f,d3          ;Maske RGB-Nibbles
   lea     hst_outline_color_gradient(pc),a0
   move.l  cl2_construction2(a3),a1
   ADDF.W  cl2_extension2_entry+cl2_ext2_COLOR30_high8+2,a1
@@ -1843,9 +1843,9 @@ cl2_vp1_set_outline_color_gradient
 cl2_vp1_set_outline_color_gradient_loop
   move.l  (a0)+,d0
   move.l  d0,d2
-  RGB8_TO_RGB4HI d0,d1,d3
+  RGB8_TO_RGB4_HIGH d0,d1,d3
   move.w  d0,(a1)            ;High-Werte
-  RGB8_TO_RGB4LO d2,d1,d3
+  RGB8_TO_RGB4_LOW d2,d1,d3
   move.w  d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ;Low-Werte
   add.l   a2,a1
   dbf     d7,cl2_vp1_set_outline_color_gradient_loop
@@ -2106,13 +2106,12 @@ horiz_scrolltext_loop
   move.w  d0,d2              
   lsr.w   #3,d0              ;X/8
   add.l   d3,d0              ;X-Offset
-  WAITBLITTER
+  WAIT_BLITTER
   move.l  (a1)+,(a2)         ;Char-Image
   move.l  d0,(a4)            ;Playfield
   move.w  d4,(a5)            ;Blitter starten
   sub.w   hst_variable_horiz_scroll_speed(a3),d2 ;X-Position verringern
   bpl.s   hst_set_character_x_position ;Wenn positiv -> verzweige
-hst_new_character_image
   move.l  a0,-(a7)
   bsr.s   hst_get_new_character_image
   move.l  (a7)+,a0
@@ -2128,7 +2127,7 @@ no_horiz_scrolltext
   CNOP 0,4
 hst_init_character_blit
   move.w  #DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
-  WAITBLITTER
+  WAIT_BLITTER
   move.l  #(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ;Minterm D=A
   moveq   #FALSE,d0
   move.l  d0,BLTAFWM-DMACONR(a6) ;keine Ausmaskierung
@@ -2143,7 +2142,7 @@ hst_get_text_softscroll
   and.w   (a0),d0            ;X-Pos.&$f
   ror.w   #4,d0              ;Bits in richtige Position bringen
   or.w    #BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC,d0 ;Minterm  D=A
-  move.w  d0,hst_text_BLTCON0BITS(a3) 
+  move.w  d0,hst_text_bltcon0_bits(a3) 
   rts
 
 ; ** Neues Image für Character ermitteln **
@@ -2202,8 +2201,8 @@ hst_horiz_scroll
   move.l  vp1_pf1_construction2(a3),a0
   move.l  (a0),a0
   ADDF.W  (hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),a0
-  WAITBLITTER
-  move.w  hst_text_BLTCON0BITS(a3),BLTCON0-DMACONR(a6)
+  WAIT_BLITTER
+  move.w  hst_text_bltcon0_bits(a3),BLTCON0-DMACONR(a6)
   move.l  a0,BLTAPT-DMACONR(a6) ;Quelle
   addq.w  #2,a0              ;16 Pixel überspringen
   move.l  a0,BLTDPT-DMACONR(a6) ;Ziel
@@ -2254,7 +2253,7 @@ bvm_no_get_channel_amplitude
 ; ----------------------------------------
   CNOP 0,4
 bvm_clear_second_copperlist
-  MOVEF.W vp1_BPLCON4BITS&FALSEB,d0
+  MOVEF.W vp1_bplcon4_bits&FALSE_BYTE,d0
   move.l  cl2_construction2(a3),a0
   ADDF.W  cl2_extension2_entry+cl2_ext2_BPLCON4+3,a0
   move.w  #cl2_extension2_SIZE,a1
@@ -2309,7 +2308,7 @@ bvm_set_bars_loop2
   CNOP 0,4
 mvb_clear_playfield1_1
   move.l  vp2_pf2_construction1(a3),a0
-  WAITBLITTER
+  WAIT_BLITTER
   move.l  #BC0F_DEST<<16,BLTCON0-DMACONR(a6)
   move.l  (a0),BLTDPT-DMACONR(a6)
   moveq   #0,d0
@@ -2618,7 +2617,7 @@ mvb_z_plane1_found
   swap    d0                 ;Shift-Bits 
   add.l   d4,d1              ;+ Playfield-Adresse
   add.l   a7,d6              ;+ Adresse Ball-Masken
-  WAITBLITTER
+  WAIT_BLITTER
   move.w  d0,BLTCON1-DMACONR(a6)
   or.w    d3,d0              ;restliche Bits von BLTCON0
   move.w  d0,BLTCON0-DMACONR(a6)
@@ -2635,7 +2634,7 @@ mvb_z_plane1_found
   CNOP 0,4
 mvb_init_balls_blit
   move.w  #DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
-  WAITBLITTER
+  WAIT_BLITTER
   move.w  vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6) ;Ausmaskierung
   moveq   #0,d0
   move.w  d0,BLTALWM-DMACONR(a6)
@@ -2697,24 +2696,24 @@ cb_move_chessboard
   ADDF.L  em_color_table,a1  ;Zeiger auf Farbtabelle
   move.l  cl2_construction2(a3),a2
   ADDF.W  cl2_extension5_entry+cl2_ext5_COLOR25_high8+2,a2 
-  move.w  #cl2_extension5_SIZE,a4
+  move.w  #cl2_extension5_size,a4
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cb_move_chessboard_loop
   move.w  (a0)+,d0           ;Farboffset 
   move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert 
   move.l  d0,d2              
-  RGB8_TO_RGB4HI d0,d1,d3
+  RGB8_TO_RGB4_HIGH d0,d1,d3
   move.w  d0,(a2)            ;COLOR29 High-Bits
-  RGB8_TO_RGB4LO d2,d1,d3
+  RGB8_TO_RGB4_LOW d2,d1,d3
   move.w  d2,cl2_ext5_COLOR25_low8-cl2_ext5_COLOR25_high8(a2) ;COLOR01 Low-Bits
   add.l   a4,a2              ;nächste Zeile
   move.w  (a0)+,d0           ;Farboffset 
   move.l  (a1,d0.w*4),d0     ;RGB8-Farbwert 
   move.l  d0,d2              
-  RGB8_TO_RGB4HI d0,d1,d3
-  move.w  d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 High-Bits
-  RGB8_TO_RGB4LO d2,d1,d3
-  move.w  d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_SIZE(a2) ;COLOR02 Low-Bits
+  RGB8_TO_RGB4_HIGH d0,d1,d3
+  move.w  d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ;COLOR02 High-Bits
+  RGB8_TO_RGB4_LOW d2,d1,d3
+  move.w  d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ;COLOR02 Low-Bits
   addq.w  #8,a1              ;Nächster Farbwert in Farbtabelle
   dbf     d7,cb_move_chessboard_loop
   move.l  (a7)+,a4
@@ -2742,8 +2741,8 @@ bfi_save_fader_angle
   MULUF.L bfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  bfi_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     bvm_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     bfi_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     bvm_color_table+(bf_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     bfi_color_table+(bf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2781,8 +2780,8 @@ bfo_save_fader_angle
   MULUF.L bfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  bfo_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     bvm_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     bfo_color_table+(bf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     bvm_color_table+(bf_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     bfo_color_table+(bf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2824,8 +2823,8 @@ ifi_save_fader_angle
   MULUF.L ifi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  ifi_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     ifi_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     ifi_color_table+(if_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2863,8 +2862,8 @@ ifo_save_fader_angle
   MULUF.L ifo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  ifo_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     ifo_color_table+(if_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     vp2_pf1_color_table+(if_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     ifo_color_table+(if_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2909,8 +2908,8 @@ cfi_save_fader_angle
   swap    d0
   ADDF.W  cfi_fader_center,d0 ;+ Fader-Mittelpunkt
   move.l  extra_memory(a3),a0
-  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORDSIZE),a0  ;Puffer für Farbwerte
-  lea     cfi_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORD_SIZE),a0  ;Puffer für Farbwerte
+  lea     cfi_color_table+(cf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2949,8 +2948,8 @@ cfo_save_fader_angle
   swap    d0
   ADDF.W  cfo_fader_center,d0 ;+ Fader-Mittelpunkt
   move.l  extra_memory(a3),a0
-  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORDSIZE),a0  ;Puffer für Farbwerte
-  lea     cfo_color_table+(cf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  ADDF.L  em_color_table+(cf_color_table_offset*LONGWORD_SIZE),a0  ;Puffer für Farbwerte
+  lea     cfo_color_table+(cf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -2988,8 +2987,8 @@ sprfi_save_fader_angle
   MULUF.L sprfi_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  sprfi_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     spr_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     sprfi_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     spr_color_table+(sprf_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     sprfi_color_table+(sprf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -3027,8 +3026,8 @@ sprfo_save_fader_angle
   MULUF.L sprfo_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  sprfo_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     spr_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     sprfo_color_table+(sprf_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     spr_color_table+(sprf_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     sprfo_color_table+(sprf_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
   clr.w   d0                 ;Bits 0-15 löschen
@@ -3062,7 +3061,7 @@ fade_balls_in
   move.w  fb_mask(a3),d1     ;2. Maske
   eor.w   d1,d0              ;Masken miteinander verknüpfen
   move.w  d0,vb_copy_blit_mask(a3)
-  cmp.w   #FALSEW,d0         ;Maske fertig?
+  cmp.w   #FALSE_WORD,d0         ;Maske fertig?
   beq.s   fbi_finished       ;Ja -> verzweige
   lsr.w   #1,d1              ;2. Maske verschieben
   move.w  d1,fb_mask(a3)     
@@ -3119,10 +3118,10 @@ cfc_save_fader_angle
   MULUF.L cfc_fader_radius*2,d0,d1 ;y'=(yr*sin(w))/2^15
   swap    d0
   ADDF.W  cfc_fader_center,d0 ;+ Fader-Mittelpunkt
-  lea     vp2_pf2_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
-  lea     cfc_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a1 ;Sollwerte
+  lea     vp2_pf2_color_table+(cfc_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     cfc_color_table+(cfc_color_table_offset*LONGWORD_SIZE)(pc),a1 ;Sollwerte
   move.w  cfc_color_table_start(a3),d1
-  MULUF.W LONGWORDSIZE,d1
+  MULUF.W LONGWORD_SIZE,d1
   lea     (a1,d1.w*8),a1
   move.w  d0,a5              ;Additions-/Subtraktionswert für Blau
   swap    d0                 ;WORDSHIFT
@@ -3149,11 +3148,11 @@ cfc_copy_color_table
   ENDC
   tst.w   cfc_copy_colors_active(a3) ;Kopieren der Farbwerte beendet ?
   bne.s   cfc_no_copy_color_table ;Ja -> verzweige
-  move.w  #$0f0f,d3          ;Maske für RGB-Nibbles
+  move.w  #$0f0f,d3          ;Maske RGB-Nibbles
   IFGT cfc_colors_number-32
     moveq   #cfc_start_xolor*8,d4 ;Color-Bank Farbregisterzähler
   ENDC
-  lea     vp2_pf2_color_table+(cfc_color_table_offset*LONGWORDSIZE)(pc),a0 ;Puffer für Farbwerte
+  lea     vp2_pf2_color_table+(cfc_color_table_offset*LONGWORD_SIZE)(pc),a0 ;Puffer für Farbwerte
   move.l  cl1_display(a3),a1 
   ADDF.W  cl1_COLOR17_high1+2,a1
   IFNE cl1_size1
@@ -3168,7 +3167,7 @@ cfc_copy_color_table
 cfc_copy_color_table_loop
   move.l  (a0)+,d0           ;RGB8-Farbwert
   move.l  d0,d2              
-  RGB8_TO_RGB4HI d0,d1,d3
+  RGB8_TO_RGB4_HIGH d0,d1,d3
   move.w  d0,(a1)            ;COLORxx High-Bits
   IFNE cl1_size1
     move.w  d0,(a2)          ;COLORxx High-Bits
@@ -3176,7 +3175,7 @@ cfc_copy_color_table_loop
   IFNE cl1_size2
     move.w  d0,(a4)          ;COLORxx High-Bits
   ENDC
-  RGB8_TO_RGB4LO d2,d1,d3
+  RGB8_TO_RGB4_LOW d2,d1,d3
   move.w  d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a1) ;Low-Bits COLORxx
   addq.w  #4,a1              ;nächstes Farbregister
   IFNE cl1_size1
@@ -3314,7 +3313,7 @@ mh_quit_with_scrolltext
 ; ** CIA-B timer A interrupt server **
 ; ------------------------------------
   CNOP 0,4
-CIAB_TA_int_server
+ciab_ta_int_server
   ENDC
 
   IFNE pt_ciatiming_enabled
@@ -3422,7 +3421,7 @@ pt_trigger_morphing
 
 ; ** CIA-B Timer B interrupt server **
   CNOP 0,4
-CIAB_TB_int_server
+ciab_tb_int_server
   PT_TIMER_INTERRUPT_SERVER
 
 ; ** Level-6-Interrupt-Server **
@@ -3454,19 +3453,19 @@ NMI_int_server
 ; **** View ****
   CNOP 0,4
 pf1_color_table
-  DC.L COLOR00BITS
+  DC.L color00_bits
 ; **** Viewport 2 ****
 vp2_pf1_color_table
   REPT vp2_visible_lines_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 vp2_pf2_color_table
   REPT vp2_pf2_colors_number*2
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 ; **** Viewport 3 ****
 vp3_pf1_color_table
-    DC.L COLOR00BITS
+    DC.L color00_bits
   REPT vp3_pf1_colors_number-1
     DC.L $000000
   ENDR
@@ -3475,7 +3474,7 @@ vp3_pf1_color_table
 ; ------------------------
 spr_color_table
   REPT spr_colors_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; ** Adressen der Sprites **
@@ -3527,16 +3526,16 @@ hst_outline_color_gradient
 
 ; ** ASCII-Buchstaben **
 ; ----------------------
-hst_ASCII
+hst_ascii
   DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+>< "
-hst_ASCII_end
+hst_ascii_end
   EVEN
 
 ; ** Offsets der einzelnen Chars **
 ; ---------------------------------
   CNOP 0,2
 hst_characters_offsets
-  DS.W hst_ASCII_end-hst_ASCII
+  DS.W hst_ascii_end-hst_ascii
   
 ; ** X-Koordinaten der einzelnen Chars der Laufschrift **
 ; -------------------------------------------------------
@@ -3559,7 +3558,7 @@ bvm_color_gradients
 ; -----------------
 bvm_color_table
   REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; ** Tabelle mit Switchwerten **
@@ -3739,14 +3738,14 @@ bfi_color_table
 ; -------------------------------------                                           p
 bfo_color_table
   REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; ** Puffer für Farbwerte **
 ; --------------------------
 bf_color_cache
   REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; **** Image-Fader ****
@@ -3760,7 +3759,7 @@ ifi_color_table
 ; ---------------------------------------
 ifo_color_table
   REPT vp2_pf1_colors_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; **** Chessboard-Fader ****
@@ -3769,14 +3768,14 @@ ifo_color_table
   CNOP 0,4
 cfi_color_table
   REPT vp3_visible_lines_number*2
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; ** Zielfarbwerte für Chessboard-Fader-Out **
 ; --------------------------------------------                                           p
 cfo_color_table
   REPT vp3_visible_lines_number*2
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; **** Sprite-Fader ****
@@ -3790,7 +3789,7 @@ sprfi_color_table
 ; ----------------------------------------
 sprfo_color_table
   REPT spr_colors_number
-    DC.L COLOR00BITS
+    DC.L color00_bits
   ENDR
 
 ; **** Color-Fader-Cross ****

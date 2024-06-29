@@ -1138,7 +1138,7 @@ cfc_copy_colors_active          RS.W 1
 fx_active                       RS.W 1
 quit_active                     RS.W 1
 
-variables_SIZE                  RS.B 0
+variables_size                  RS.B 0
 
 
 ; **** PT-Replay ****
@@ -1580,7 +1580,7 @@ init_first_copperlist
   bsr     cl1_init_sprite_pointers
   bsr     cl1_init_color_registers
   bsr     cl1_vp2_init_bitplane_pointers
-  COP_MOVE_QUICK TRUE,COPJMP2
+  COP_MOVEQ TRUE,COPJMP2
   bsr     cl1_set_sprite_pointers
   bra     cl1_vp2_pf1_set_bitplane_pointers
 
@@ -1630,12 +1630,12 @@ cl1_init_color_registers
 
   CNOP 0,4
 cl1_vp2_init_bitplane_pointers
-  COP_MOVE_QUICK TRUE,BPL3PTH
-  COP_MOVE_QUICK TRUE,BPL3PTL
-  COP_MOVE_QUICK TRUE,BPL5PTH
-  COP_MOVE_QUICK TRUE,BPL5PTL
-  COP_MOVE_QUICK TRUE,BPL7PTH
-  COP_MOVE_QUICK TRUE,BPL7PTL
+  COP_MOVEQ TRUE,BPL3PTH
+  COP_MOVEQ TRUE,BPL3PTL
+  COP_MOVEQ TRUE,BPL5PTH
+  COP_MOVEQ TRUE,BPL5PTL
+  COP_MOVEQ TRUE,BPL7PTH
+  COP_MOVEQ TRUE,BPL7PTL
   rts
 
   COP_SET_SPRITE_POINTERS cl1,display,spr_number
@@ -1663,7 +1663,7 @@ init_second_copperlist
   bsr     cl2_vp1_init_playfield_registers
   bsr     cl2_vp1_init_bitplane_pointers
   COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
-  COP_MOVE_QUICK vp1_bplcon0_bits,BPLCON0
+  COP_MOVEQ vp1_bplcon0_bits,BPLCON0
   bsr     cl2_vp1_init_color_gradient_registers
 ; **** Viewport 2 ****
   COP_WAIT cl2_vp2_HSTART,cl2_vp2_VSTART
@@ -1676,7 +1676,7 @@ init_second_copperlist
   bsr     cl2_vp3_init_color_gradient_registers
 ; **** Copper-Interrupt ****
   bsr     cl2_init_copper_interrupt
-  COP_LIST_END
+  COP_LISTEND
   bsr     cl2_vp1_pf1_set_bitplane_pointers
   bsr     cl2_vp1_set_fill_color_gradient
   bsr     cl2_vp1_set_outline_color_gradient
@@ -1733,15 +1733,15 @@ cl2_vp1_init_color_gradient_registers_loop
 
   CNOP 0,4
 cl2_vp2_init_bitplane_pointers
-  COP_MOVE_QUICK TRUE,BPL1PTH
-  COP_MOVE_QUICK TRUE,BPL1PTL
-  COP_MOVE_QUICK TRUE,BPL2PTH
-  COP_MOVE_QUICK TRUE,BPL2PTL
-  COP_MOVE_QUICK TRUE,BPL4PTH
-  COP_MOVE_QUICK TRUE,BPL4PTL
-  COP_MOVE_QUICK TRUE,BPL6PTH
-  COP_MOVE_QUICK TRUE,BPL6PTL
-  COP_MOVE_QUICK vp2_bplcon0_bits,BPLCON0
+  COP_MOVEQ TRUE,BPL1PTH
+  COP_MOVEQ TRUE,BPL1PTL
+  COP_MOVEQ TRUE,BPL2PTH
+  COP_MOVEQ TRUE,BPL2PTL
+  COP_MOVEQ TRUE,BPL4PTH
+  COP_MOVEQ TRUE,BPL4PTL
+  COP_MOVEQ TRUE,BPL6PTH
+  COP_MOVEQ TRUE,BPL6PTL
+  COP_MOVEQ vp2_bplcon0_bits,BPLCON0
   rts
 
 ; **** Viewport 3 ****
@@ -1749,17 +1749,17 @@ cl2_vp2_init_bitplane_pointers
 
   CNOP 0,4
 cl2_vp3_init_bitplane_pointers
-  COP_MOVE_QUICK TRUE,BPL1PTH
-  COP_MOVE_QUICK TRUE,BPL1PTL
-  COP_MOVE_QUICK TRUE,BPL2PTH
-  COP_MOVE_QUICK TRUE,BPL2PTL
-  COP_MOVE_QUICK TRUE,BPL3PTH
-  COP_MOVE_QUICK TRUE,BPL3PTL
-  COP_MOVE_QUICK TRUE,BPL4PTH
-  COP_MOVE_QUICK TRUE,BPL4PTL
-  COP_MOVE_QUICK TRUE,BPL5PTH
-  COP_MOVE_QUICK TRUE,BPL5PTL
-  COP_MOVE_QUICK vp3_bplcon0_bits,BPLCON0
+  COP_MOVEQ TRUE,BPL1PTH
+  COP_MOVEQ TRUE,BPL1PTL
+  COP_MOVEQ TRUE,BPL2PTH
+  COP_MOVEQ TRUE,BPL2PTL
+  COP_MOVEQ TRUE,BPL3PTH
+  COP_MOVEQ TRUE,BPL3PTL
+  COP_MOVEQ TRUE,BPL4PTH
+  COP_MOVEQ TRUE,BPL4PTL
+  COP_MOVEQ TRUE,BPL5PTH
+  COP_MOVEQ TRUE,BPL5PTL
+  COP_MOVEQ vp3_bplcon0_bits,BPLCON0
   rts
 
   CNOP 0,4
@@ -1790,13 +1790,13 @@ patch_copperlist2
   bra.s   cl2_vp3_init_color_gradient_registers_skip
   CNOP 0,4
 no_patch_copperlist2
-  COP_MOVE_QUICK TRUE,NOOP
+  COP_MOVEQ TRUE,NOOP
 cl2_vp3_init_color_gradient_registers_skip
   add.l   d6,d0              ;nächste Zeile
   dbf     d7,cl2_vp3_init_color_gradient_registers_loop
   rts
 
-  COP_INIT_COPPER_INTERRUPT cl2,cl2_HSTART,cl2_VSTART
+  COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART
 
 ; **** Viewport 1 ****
   CNOP 0,4

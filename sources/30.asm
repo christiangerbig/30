@@ -2039,7 +2039,7 @@ horiz_scrolltext_loop
   move.w  d0,d2              
   lsr.w   #3,d0              ;X/8
   add.l   d3,d0              ;X-Offset
-  WAIT_BLITTER
+  WAITBLIT
   move.l  (a1)+,(a2)         ;Char-Image
   move.l  d0,(a4)            ;Playfield
   move.w  d4,(a5)            ;Blitter starten
@@ -2060,7 +2060,7 @@ no_horiz_scrolltext
   CNOP 0,4
 hst_init_character_blit
   move.w  #DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
-  WAIT_BLITTER
+  WAITBLIT
   move.l  #(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ;Minterm D=A
   moveq   #FALSE,d0
   move.l  d0,BLTAFWM-DMACONR(a6) ;keine Ausmaskierung
@@ -2131,7 +2131,7 @@ hst_horiz_scroll
   move.l  vp1_pf1_construction2(a3),a0
   move.l  (a0),a0
   ADDF.W  (hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),a0
-  WAIT_BLITTER
+  WAITBLIT
   move.w  hst_text_bltcon0_bits(a3),BLTCON0-DMACONR(a6)
   move.l  a0,BLTAPT-DMACONR(a6) ;Quelle
   addq.w  #2,a0              ;16 Pixel überspringen
@@ -2235,7 +2235,7 @@ bvm_set_bars_loop2
   CNOP 0,4
 mvb_clear_playfield1_1
   move.l  vp2_pf2_construction1(a3),a0
-  WAIT_BLITTER
+  WAITBLIT
   move.l  #BC0F_DEST<<16,BLTCON0-DMACONR(a6)
   move.l  (a0),BLTDPT-DMACONR(a6)
   moveq   #0,d0
@@ -2539,7 +2539,7 @@ mvb_z_plane1_found
   swap    d0                 ;Shift-Bits 
   add.l   d4,d1              ;+ Playfield-Adresse
   add.l   a7,d6              ;+ Adresse Ball-Masken
-  WAIT_BLITTER
+  WAITBLIT
   move.w  d0,BLTCON1-DMACONR(a6)
   or.w    d3,d0              ;restliche Bits von BLTCON0
   move.w  d0,BLTCON0-DMACONR(a6)
@@ -2556,7 +2556,7 @@ mvb_z_plane1_found
   CNOP 0,4
 mvb_init_balls_blit
   move.w  #DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6) ;BLTPRI an
-  WAIT_BLITTER
+  WAITBLIT
   move.w  vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6) ;Ausmaskierung
   moveq   #0,d0
   move.w  d0,BLTALWM-DMACONR(a6)

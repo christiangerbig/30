@@ -1647,13 +1647,13 @@ cl2_vp1_init_bitplane_pointers_loop
 cl2_vp1_init_color_gradient_registers
   move.l  #(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ;High-Werte
-  move.l  #(COLOR29<<16)|color00_high_bits,d2
-  move.l  #(COLOR30<<16)|color00_high_bits,d3
+  move.l  #(COLOR29<<16)+color00_high_bits,d2
+  move.l  #(COLOR30<<16)+color00_high_bits,d3
   move.l  #(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ;Low-RGB-Werte
-  move.l  #(COLOR29<<16)|color00_low_bits,d5
+  move.l  #(COLOR29<<16)+color00_low_bits,d5
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
-  move.l  #(COLOR30<<16)|color00_low_bits,a1
+  move.l  #(COLOR30<<16)+color00_low_bits,a1
   move.l  #(BPLCON4<<16)|vp1_bplcon4_bits,a2
   MOVEF.W vp1_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp1_init_color_gradient_registers_loop
@@ -1707,14 +1707,14 @@ cl2_vp3_init_bitplane_pointers
 cl2_vp3_init_color_gradient_registers
   move.l  #(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ;WAIT-Befehl
   move.l  #(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ;High-Werte
-  move.l  #(COLOR25<<16)|color00_high_bits,d2
-  move.l  #(COLOR26<<16)|color00_high_bits,d3
+  move.l  #(COLOR25<<16)+color00_high_bits,d2
+  move.l  #(COLOR26<<16)+color00_high_bits,d3
   move.l  #(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ;Low-Werte
   move.l  #(((CL_Y_WRAP<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ;WAIT-Befehl
   moveq   #1,d6
   ror.l   #8,d6              ;$01000000 Additionswert
-  move.l  #(COLOR25<<16)|color00_low_bits,a1
-  move.l  #(COLOR26<<16)|color00_low_bits,a2
+  move.l  #(COLOR25<<16)+color00_low_bits,a1
+  move.l  #(COLOR26<<16)+color00_low_bits,a2
   moveq   #vp3_visible_lines_number-1,d7 ;Anzahl der Zeilen
 cl2_vp3_init_color_gradient_registers_loop
   move.l  d0,(a0)+           ;WAIT x,y

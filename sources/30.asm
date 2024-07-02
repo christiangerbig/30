@@ -87,9 +87,9 @@
 ; ** Konstanten **
   INCLUDE "equals.i"
 
-requires_68030                        EQU FALSE
-requires_68040                        EQU FALSE
-requires_68060                        EQU FALSE
+requires_030_cpu                      EQU FALSE
+requires_040_cpu                      EQU FALSE
+requires_060_cpu                      EQU FALSE
 requires_fast_memory                  EQU FALSE
 requires_multiscan_monitor            EQU FALSE
 
@@ -244,10 +244,10 @@ MINROW                                EQU VSTART_256_LINES
 
 display_window_hstart                 EQU HSTART_320_PIXEL
 display_window_vstart                 EQU MINROW
-diwstrt_bits                          EQU ((display_window_VSTART&$ff)*DIWSTRTF_V0)+(display_window_HSTART&$ff)
+diwstrt_bits                          EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)+(display_window_hstart&$ff)
 display_window_hstop                  EQU HSTOP_320_pixel
 display_window_vstop                  EQU VSTOP_256_lines
-diwstop_bits                          EQU ((display_window_VSTOP&$ff)*DIWSTOPF_V0)+(display_window_HSTOP&$ff)
+diwstop_bits                          EQU ((display_window_vstop&$ff)*DIWSTOPF_V0)+(display_window_hstop&$ff)
 
 spr_pixel_per_datafetch               EQU 64 ;4x
 
@@ -340,7 +340,7 @@ bplcon0_bits                          EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0
 bplcon3_bits1                         EQU BPLCON3F_SPRES0
 bplcon3_bits2                         EQU bplcon3_bits1|BPLCON3F_LOCT
 bplcon4_bits                          EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
-diwhigh_bits                          EQU (((display_window_HSTOP&$100)>>8)*DIWHIGHF_HSTOP8)|(((display_window_VSTOP&$700)>>8)*DIWHIGHF_VSTOP8)|(((display_window_HSTART&$100)>>8)*DIWHIGHF_HSTART8)|((display_window_VSTART&$700)>>8)
+diwhigh_bits                          EQU (((display_window_hstop&$100)>>8)*DIWHIGHF_HSTOP8)|(((display_window_vstop&$700)>>8)*DIWHIGHF_VSTOP8)|(((display_window_hstart&$100)>>8)*DIWHIGHF_HSTART8)|((display_window_vstart&$700)>>8)
 fmode_bits                            EQU FMODEF_SPR32|FMODEF_SPAGEM|FMODEF_SSCAN2
 color00_bits                          EQU $001122
 color00_high_bits                     EQU $012

@@ -34,6 +34,11 @@
 ;   ist überflüssig.
 ; - Sprite-Fader-In: Timing geändert
 
+; V.1.3 beta
+; - Laufschrift setzt jetzt später ein
+; - Das Schachbrett steht erst still und wird dabb später animiert
+; - Neuer Fx-Befehl: 8a0
+
 
 ; PT 8xy-Befehl
 ; 810 Start-Fade-Bars-In
@@ -43,20 +48,18 @@
 ; 850 Start-Fade-Balls-In
 ; 860 Start-Fade-Cross
 ; 870 Start-Scrolltext
-; 880 Enable Skip-Commands
-; 890 Trigger-Morphing
+; 880 Decrease-Chessboars-Speed
+; 890 Enable Skip-Commands
+; 8a0 Trigger-Morphing
 
 ; 68020: 187 Rasterzeilen
+
 
   SECTION code_and_variables,CODE
 
   MC68040
 
 
-DEF_PT_VERSION_3.0B
-
-
-; ** Library-Includes V.3.x nachladen **
   INCDIR "Daten:include3.5/"
 
   INCLUDE "exec/exec.i"
@@ -84,10 +87,16 @@ DEF_PT_VERSION_3.0B
   INCLUDE "hardware/dmabits.i"
   INCLUDE "hardware/intbits.i"
 
+
   INCDIR "Daten:Asm-Sources.AGA/normsource-includes/"
 
 
-; ** Konstanten **
+PROTRACKER_VERSION_3.0B               SET 1
+
+
+  INCLUDE "macros.i"
+
+
   INCLUDE "equals.i"
 
 requires_030_cpu                      EQU FALSE
@@ -100,15 +109,15 @@ workbench_start_enabled               EQU FALSE
 workbench_fade_enabled                EQU FALSE
 text_output_enabled                   EQU FALSE
 
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
     INCLUDE "music-tracker/pt2-equals.i"
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
     INCLUDE "music-tracker/pt3-equals.i"
   ENDC
 pt_ciatiming_enabled                  EQU TRUE
 pt_finetune_enabled                   EQU FALSE
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
 pt_metronome_enabled                  EQU FALSE
   ENDC
 pt_mute_enabled                       EQU FALSE
@@ -207,10 +216,10 @@ spr_odd_color_table_select            EQU 2
 spr_even_color_table_select           EQU 2
 spr_used_number                       EQU 8
 
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
 audio_memory_size                     EQU 0
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
 audio_memory_size                     EQU 2
   ENDC
 
@@ -246,10 +255,8 @@ MINROW                                EQU VSTART_256_LINES
 
 display_window_hstart                 EQU HSTART_320_PIXEL
 display_window_vstart                 EQU MINROW
-diwstrt_bits                          EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)+(display_window_hstart&$ff)
 display_window_hstop                  EQU HSTOP_320_pixel
 display_window_vstop                  EQU VSTOP_256_lines
-diwstop_bits                          EQU ((display_window_vstop&$ff)*DIWSTOPF_V0)+(display_window_hstop&$ff)
 
 spr_pixel_per_datafetch               EQU 64 ;4x
 
@@ -262,8 +269,6 @@ vp1_vstart                            EQU MINROW
 vp1_vstop                             EQU vp1_VSTART+vp1_visible_lines_number
 
 vp1_pf_pixel_per_datafetch            EQU 64 ;4x
-vp1_ddfstrt_bits                      EQU DDFSTART_320_pixel
-vp1_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp1_pf1_depth                         EQU 2
 vp1_pf_depth                          EQU vp1_pf1_depth
@@ -279,8 +284,6 @@ vp2_vstart                            EQU vp1_VSTOP
 vp2_vstop                             EQU vp2_VSTART+vp2_visible_lines_number
 
 vp2_pf_pixel_per_datafetch            EQU 64 ;4x
-vp2_ddfstrt_bits                      EQU DDFSTART_320_pixel
-vp2_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp2_pf1_depth                         EQU 4
 vp2_pf2_depth                         EQU 3
@@ -298,8 +301,6 @@ vp3_vstart                            EQU vp2_VSTOP
 vp3_vstop                             EQU vp3_VSTART+vp3_visible_lines_number
 
 vp3_pf_pixel_per_datafetch            EQU 64 ;4x
-vp3_ddfstrt_bits                      EQU DDFSTART_320_pixel
-vp3_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 
 vp3_pf1_depth                         EQU 3
 vp3_pf2_depth                         EQU 2
@@ -338,7 +339,9 @@ vp3_pf1_plane_moduli                  EQU (40*8)  ;-(extra_pf4_plane_width-(extr
 vp3_pf2_plane_moduli                  EQU (extra_pf8_plane_width*(extra_pf8_depth-1))+extra_pf8_plane_width-vp3_data_fetch_width
 
 ; **** View ****
-bplcon0_bits                          EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0) 
+diwstrt_bits                          EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)+(display_window_hstart&$ff)
+diwstop_bits                          EQU ((display_window_vstop&$ff)*DIWSTOPF_V0)+(display_window_hstop&$ff)
+bplcon0_bits                          EQU BPLCON0F_ECSENA+((pf_depth>>3)*BPLCON0F_BPU3)+(BPLCON0F_COLOR)+((pf_depth&$07)*BPLCON0F_BPU0)
 bplcon3_bits1                         EQU BPLCON3F_SPRES0
 bplcon3_bits2                         EQU bplcon3_bits1|BPLCON3F_LOCT
 bplcon4_bits                          EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
@@ -348,6 +351,8 @@ color00_bits                          EQU $001122
 color00_high_bits                     EQU $012
 color00_low_bits                      EQU $012
 ; **** Viewport 1 ****
+vp1_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp1_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp1_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
 vp1_bplcon1_bits                      EQU 0
 vp1_bplcon2_bits                      EQU 0
@@ -359,6 +364,8 @@ vp1_bplcon4_bits                      EQU bplcon4_bits|(BPLCON4F_BPLAM0*252)
 vp1_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp1_color00_bits                      EQU color00_bits
 ; **** Viewport 2 ****
+vp2_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp2_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp2_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
 vp2_bplcon1_bits                      EQU 0
 vp2_bplcon2_bits                      EQU BPLCON2F_PF2PRI
@@ -368,6 +375,8 @@ vp2_bplcon4_bits                      EQU bplcon4_bits
 vp2_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp2_color00_bits                      EQU color00_bits
 ; **** Viewport 3 ****
+vp3_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp3_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp3_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
 vp3_bplcon1_bits                      EQU 0
 vp3_bplcon2_bits                      EQU 0
@@ -498,7 +507,8 @@ cb_x_max                              EQU vp3_visible_pixels_number
 cb_stripes_y_radius                   EQU vp3_visible_lines_number-1
 cb_stripes_y_center                   EQU vp3_visible_lines_number-1
 cb_stripes_y_step                     EQU 1
-cb_stripes_y_angle_speed              EQU 3
+cb_stripes_y_angle_speed1             EQU 0
+cb_stripes_y_angle_speed2             EQU 3
 cb_stripes_number                     EQU 8
 cb_stripe_height                      EQU 16
 
@@ -591,32 +601,14 @@ vp1_pf1_bitplanes_x_offset            EQU 1*vp1_pf_pixel_per_datafetch
 vp1_pf1_bitplanes_y_offset            EQU 0
 
 
-; ## Makrobefehle ##
-  INCLUDE "macros.i"
-
-
-; ** Extra-Memory-Abschnitte **
-  RSRESET
-
-em_bitmap_table   RS.B cb_source_image_x_size*cb_destination_image_y_size
-  RS_ALIGN_LONGWORD
-em_color_table    RS.L vp3_visible_lines_number*2
-extra_memory_size RS.B 0
-
-
-; ** Struktur, die alle Exception-Vektoren-Offsets enthält **
   INCLUDE "except-vectors-offsets.i"
 
 
-; ** Struktur, die alle Eigenschaften des Extra-Playfields enthält **
   INCLUDE "extra-pf-attributes-structure.i"
 
 
-; ** Struktur, die alle Eigenschaften der Sprites enthält **
   INCLUDE "sprite-attributes-structure.i"
 
-
-; ** Struktur, die alle Registeroffsets der ersten Copperliste enthält **
 
   RSRESET
 
@@ -644,8 +636,6 @@ cl1_COPJMP2          RS.L 1
 
 copperlist1_size     RS.B 0
 
-
-; ** Struktur, die alle Registeroffsets der zweiten Copperliste enthält **
 
   RSRESET
 
@@ -993,122 +983,132 @@ spr7_x_size2               EQU spr_x_size2
 spr7_y_size2               EQU sprite7_size/(spr_x_size2/8)
 
 
-; ** Struktur, die alle Variablenoffsets enthält **
+  RSRESET
+
+em_bitmap_table   RS.B cb_source_image_x_size*cb_destination_image_y_size
+  RS_ALIGN_LONGWORD
+em_color_table    RS.L vp3_visible_lines_number*2
+extra_memory_size RS.B 0
+
+
+  RSRESET
+
   INCLUDE "variables-offsets.i"
 
 save_a7                         RS.L 1
 
 ; **** PT-Replay ****
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
     INCLUDE "music-tracker/pt2-variables-offsets.i"
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
     INCLUDE "music-tracker/pt3-variables-offsets.i"
   ENDC
 
-pt_effects_handler_active            RS.W 1
-pt_skip_commands_enabled        RS.W 1
+pt_effects_handler_active         RS.W 1
+pt_skip_commands_enabled          RS.W 1
 
 ; **** Viewport 1 ****
-vp1_pf1_construction2           RS.L 1
-vp1_pf1_display                 RS.L 1
+vp1_pf1_construction2             RS.L 1
+vp1_pf1_display                   RS.L 1
 
 ; **** Viewport 2 ****
-vp2_pf2_construction1           RS.L 1
-vp2_pf2_construction2           RS.L 1
-vp2_pf2_display                 RS.L 1
+vp2_pf2_construction1             RS.L 1
+vp2_pf2_construction2             RS.L 1
+vp2_pf2_display                   RS.L 1
 
 ; **** Horiz-Scrolltext ****
-hst_image                       RS.L 1
+hst_image                         RS.L 1
 hst_enabled     RS.W 1
-hst_text_table_start            RS.W 1
-hst_text_BLTCON0_bits           RS.W 1
-hst_character_toggle_image      RS.W 1
-hst_variable_horiz_scroll_speed RS.W 1
+hst_text_table_start              RS.W 1
+hst_text_BLTCON0_bits             RS.W 1
+hst_character_toggle_image        RS.W 1
+hst_variable_horiz_scroll_speed   RS.W 1
 
 ; **** Morph-Vector-Balls ****
-mvb_rotation_x_angle            RS.W 1
-mvb_rotation_y_angle            RS.W 1
-mvb_rotation_z_angle            RS.W 1
+mvb_rotation_x_angle              RS.W 1
+mvb_rotation_y_angle              RS.W 1
+mvb_rotation_z_angle              RS.W 1
 
-mvb_morph_active                RS.W 1
-mvb_morph_shapes_table_start    RS.W 1
+mvb_morph_active                  RS.W 1
+mvb_morph_shapes_table_start      RS.W 1
 
 ; **** Chessboard ****
-cb_stripes_y_angle              RS.W 1
+cb_stripes_y_angle                RS.W 1
+cb_variable_stripes_y_angle_speed RS.W 1
 
 ; **** Bar-Fader ****
-bf_colors_counter               RS.W 1
-bf_copy_colors_active           RS.W 1
+bf_colors_counter                 RS.W 1
+bf_copy_colors_active             RS.W 1
 
 ; **** Bar-Fader-In ****
-bfi_active                      RS.W 1
-bfi_fader_angle                 RS.W 1
+bfi_active                        RS.W 1
+bfi_fader_angle                   RS.W 1
 
 ; **** Bar-Fader-Out ****
-bfo_active                      RS.W 1
-bfo_fader_angle                 RS.W 1
+bfo_active                        RS.W 1
+bfo_fader_angle                   RS.W 1
 
 ; **** Image-Fader ****
-if_colors_counter               RS.W 1
-if_copy_colors_active           RS.W 1
+if_colors_counter                 RS.W 1
+if_copy_colors_active             RS.W 1
 
 ; **** Image-Fader-In ****
-ifi_active                      RS.W 1
-ifi_fader_angle                 RS.W 1
+ifi_active                        RS.W 1
+ifi_fader_angle                   RS.W 1
 
 ; **** Image-Fader-Out ****
-ifo_active                      RS.W 1
-ifo_fader_angle                 RS.W 1
+ifo_active                        RS.W 1
+ifo_fader_angle                   RS.W 1
 
 ; **** Chessboard-Fader ****
-cf_colors_counter               RS.W 1
+cf_colors_counter                 RS.W 1
 
 ; **** Chessboard-Fader-In ****
-cfi_active                      RS.W 1
-cfi_fader_angle                 RS.W 1
+cfi_active                        RS.W 1
+cfi_fader_angle                   RS.W 1
 
 ; **** Chessboard-Fader-Out ****
-cfo_active                      RS.W 1
-cfo_fader_angle                 RS.W 1
+cfo_active                        RS.W 1
+cfo_fader_angle                   RS.W 1
 
 ; **** Sprite-Fader ****
-sprf_colors_counter             RS.W 1
-sprf_copy_colors_active         RS.W 1
+sprf_colors_counter               RS.W 1
+sprf_copy_colors_active           RS.W 1
 
 ; **** Sprite-Fader-In ****
-sprfi_active                    RS.W 1
-sprfi_fader_angle               RS.W 1
+sprfi_active                      RS.W 1
+sprfi_fader_angle                 RS.W 1
 
 ; **** Sprite-Fader-Out ****
-sprfo_active                    RS.W 1
-sprfo_fader_angle               RS.W 1
+sprfo_active                      RS.W 1
+sprfo_fader_angle                 RS.W 1
 
 ; **** Fade-Balls ****
-fb_mask                         RS.W 1
-vb_copy_blit_mask               RS.W 1
+fb_mask                           RS.W 1
+vb_copy_blit_mask                 RS.W 1
 
 ; **** Fade-Balls-In ****
-fbi_active                      RS.W 1
-fbi_delay_counter               RS.W 1
+fbi_active                        RS.W 1
+fbi_delay_counter                 RS.W 1
 
 ; **** Fade-Balls-Out ****
-fbo_active                      RS.W 1
-fbo_delay_counter               RS.W 1
+fbo_active                        RS.W 1
+fbo_delay_counter                 RS.W 1
 
 ; **** Colors-Fader-Cross ****
-cfc_active                      RS.W 1
-cfc_fader_angle                 RS.W 1
-cfc_fader_delay_counter         RS.W 1
-cfc_color_table_start           RS.W 1
-cfc_colors_counter              RS.W 1
-cfc_copy_colors_active          RS.W 1
+cfc_active                        RS.W 1
+cfc_fader_angle                   RS.W 1
+cfc_fader_delay_counter           RS.W 1
+cfc_color_table_start             RS.W 1
+cfc_colors_counter                RS.W 1
+cfc_copy_colors_active            RS.W 1
 
 ; **** Main ****
-fx_active                       RS.W 1
-quit_active                     RS.W 1
+fx_active                         RS.W 1
+quit_active                       RS.W 1
 
-variables_size                  RS.B 0
+variables_size                    RS.B 0
 
 
 ; **** PT-Replay ****
@@ -1142,7 +1142,6 @@ mvb_morph_shape_size         RS.B 0
 
   INCLUDE "sys-wrapper.i"
 
-; ** Eigene Variablen initialisieren **
   CNOP 0,4
 init_own_variables
 
@@ -1156,10 +1155,10 @@ init_own_variables
   move.l  extra_pf6(a3),vp2_pf2_display(a3)
 
 ; **** PT-Replay ****
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
     PT2_INIT_VARIABLES
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
     PT3_INIT_VARIABLES
   ENDC
 
@@ -1192,6 +1191,8 @@ init_own_variables
 
 ; **** Chessboard ****
   move.w  d0,cb_stripes_y_angle(a3)
+  moveq   #cb_stripes_y_angle_speed1,d2
+  move.w  d2,cb_variable_stripes_y_angle_speed(a3)
 
 ; **** Bar-Fader ****
   move.w  d0,bf_colors_counter(a3)
@@ -1315,7 +1316,6 @@ init_all
   PT_INIT_AUDIO_TEMP_STRUCTURES
 
 ; ** Höchstes Pattern ermitteln und Tabelle mit Zeigern auf Samples initialisieren **
-
   PT_EXAMINE_SONG_STRUCTURE
 
   IFEQ pt_finetune_enabled
@@ -1485,7 +1485,6 @@ cb_init_color_tables_loop2
   rts
 
 
-; ** Farbregister initialisieren **
   CNOP 0,4
 init_color_registers
   CPU_SELECT_COLOR_HIGH_BANK 7
@@ -1495,20 +1494,17 @@ init_color_registers
   CPU_INIT_COLOR_LOW COLOR16,8,vp3_pf1_color_table
   rts
 
-; ** Sprites initialisieren **
+
   CNOP 0,4
 init_sprites
   bsr.s   spr_init_pointers_table
   bra.s   bg1_init_attached_sprites_cluster
 
-; ** Tabelle mit Zeigern auf Sprites initialisieren **
-; ----------------------------------------------------
   INIT_SPRITE_POINTERS_TABLE
 
-; ** Spritestrukturen initialisieren **
   INIT_ATTACHED_SPRITES_CLUSTER bg1,spr_pointers_display,bg1_image_x_position,bg1_image_y_position,spr_x_size2,bg1_image_y_size,,,REPEAT
 
-; ** CIA-Timer initialisieren **
+
   CNOP 0,4
 init_CIA_timers
 
@@ -1516,7 +1512,7 @@ init_CIA_timers
   PT_INIT_TIMERS
   rts
 
-; ** 1. Copperliste initialisieren **
+
   CNOP 0,4
 init_first_copperlist
   move.l  cl1_display(a3),a0
@@ -1598,7 +1594,6 @@ cl1_vp2_pf1_set_bitplane_pointers_loop
   dbf     d7,cl1_vp2_pf1_set_bitplane_pointers_loop
   rts
 
-; ** 2. Copperliste initialisieren **
   CNOP 0,4
 init_second_copperlist
   move.l  cl2_construction2(a3),a0
@@ -1838,25 +1833,34 @@ cl2_vp3_pf2_set_bitplane_pointers_loop
   COPY_COPPERLIST cl2,2
 
 
-; ## Hauptprogramm ##
-; a3 ... Basisadresse aller Variablen
-; a4 ... CIA-A-Base
-; a5 ... CIA-B-Base
-; a6 ... DMACONR
   CNOP 0,4
 main_routine
   bsr.s   no_sync_routines
   bra     beam_routines
 
 
-; ## Routinen, die nicht mit der Bildwiederholfrequenz gekoppelt sind ##
   CNOP 0,4
 no_sync_routines
   IFEQ cfc_prefade_enabled
     bsr     cfc_init_start_colors
   ENDC
+  bsr     cb_scale_image
+  rts
+
+  IFEQ cfc_prefade_enabled
+    CNOP 0,4
+cfc_init_start_colors
+    bsr     cfc_copy_color_table
+    bsr     colors_fader_cross
+    tst.w   cfc_copy_colors_active(a3) ;Kopieren der Farbwerte beendet?
+    beq.s   cfc_init_start_colors ;Nein -> verzweige
+    moveq   #FALSE,d0
+    move.w  d0,cfc_copy_colors_active(a3) ;Verzögerungszähler desktivieren
+    rts
+  ENDC
 
 ; ** Playfield skalieren **
+  CNOP 0,4
 cb_scale_image
   movem.l a4-a5,-(a7)
   moveq   #TRUE,d4           ;1. X-Koord in Zielbild
@@ -1906,20 +1910,7 @@ cb_skip_column
   movem.l (a7)+,a4-a5
   rts
 
-  IFEQ cfc_prefade_enabled
-    CNOP 0,4
-cfc_init_start_colors
-    bsr     cfc_copy_color_table
-    bsr     colors_fader_cross
-    tst.w   cfc_copy_colors_active(a3) ;Kopieren der Farbwerte beendet?
-    beq.s   cfc_init_start_colors ;Nein -> verzweige
-    moveq   #FALSE,d0
-    move.w  d0,cfc_copy_colors_active(a3) ;Verzögerungszähler desktivieren
-    rts
-  ENDC
 
-
-; ## Rasterstahl-Routinen ##
   CNOP 0,4
 beam_routines
   bsr     wait_copint
@@ -1964,7 +1955,6 @@ beam_routines
   rts
 
 
-; ** Copperlisten vertauschen **
   SWAP_COPPERLIST cl2,2
 
 ; ** VP1-Playfield1 vertauschen **
@@ -2572,7 +2562,7 @@ cb_get_stripes_y_coordinates
   move.w  cb_stripes_y_angle(a3),d2 ;1. Y-Winkel
   move.w  d2,d0
   MOVEF.W (sine_table_length/4)-1,d4 ;Überlauf
-  subq.w  #cb_stripes_y_angle_speed,d0 ;nächster Y-Winkel
+  sub.w   cb_variable_stripes_y_angle_speed(a3),d0 ;nächster Y-Winkel
   and.w   d4,d0              ;Überlauf entfernen
   move.w  d0,cb_stripes_y_angle(a3) 
   moveq   #cb_stripes_y_center,d3
@@ -2717,7 +2707,6 @@ bfo_save_fader_angle
 no_bar_fader_out
   rts
 
-; ** Farbwerte in Copperliste kopieren **
   COPY_COLOR_TABLE_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
 
 ; ** Tempel einblenden **
@@ -2798,7 +2787,6 @@ no_image_fader_out
 
   COLOR_FADER if
 
-; ** Farbwerte in Copperliste kopieren **
   COPY_COLOR_TABLE_TO_COPPERLIST if,vp2_pf1,cl1,cl1_COLOR01_high1,cl1_COLOR01_low1
 
 ; ** Chessboard einblenden **
@@ -2955,7 +2943,6 @@ sprfo_save_fader_angle
 no_sprite_fader_out
   rts
 
-; ** Farbwerte in Copperliste kopieren **
   COPY_COLOR_TABLE_TO_COPPERLIST sprf,spr,cl1,cl1_COLOR01_high2,cl1_COLOR01_low2
 
 ; ** Bälle einblenden **
@@ -3046,7 +3033,6 @@ cfc_save_fader_angle
 no_colors_fader_cross
   rts
 
-; ** Farbwerte in Copperliste kopieren **
   CNOP 0,4
 cfc_copy_color_table
   IFNE cl1_size2
@@ -3123,7 +3109,6 @@ cfc_no_copy_color_table
   rts
 
 
-; ** Zähler kontrollieren **
   CNOP 0,4
 control_counters
   move.w  cfc_fader_delay_counter(a3),d0
@@ -3141,7 +3126,6 @@ cfc_save_fader_delay_counter
 cfc_no_fader_delay_counter
   rts
 
-; ** Mouse-Handler **
   CNOP 0,4
 mouse_handler
   btst    #CIAB_GAMEPORT0,CIAPRA(a4) ;Linke Maustaste gedrückt ?
@@ -3208,18 +3192,17 @@ mh_quit_with_scrolltext
   rts
 
 
-; ## Interrupt-Routinen ##
   INCLUDE "int-autovectors-handlers.i"
 
-  IFEQ pt_ciatiming_enabled
 ; ** CIA-B timer A interrupt server **
+  IFEQ pt_ciatiming_enabled
   CNOP 0,4
 ciab_ta_int_server
   ENDC
 
-  IFNE pt_ciatiming_enabled
 ; ** Vertical blank interrupt server **
-  CNOP 0,4
+  IFNE pt_ciatiming_enabled
+    CNOP 0,4
 VERTB_int_server
   ENDC
 
@@ -3228,16 +3211,15 @@ VERTB_int_server
     bra.s   pt_PlayMusic
 
 ; ** Musik ausblenden **
-    PT_FADE_OUT fx_active
-
+    PT_FADE_OUT_VOLUME fx_active
     CNOP 0,4
   ENDC
 
 ; ** PT-replay routine **
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
     PT2_REPLAY pt_effects_handler
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
     PT3_REPLAY pt_effects_handler
   ENDC
 
@@ -3264,9 +3246,11 @@ pt_effects_handler
   cmp.b   #$70,d0
   beq.s   pt_start_scrolltext
   cmp.b   #$80,d0
+  beq.s   pt_decrease_stripes_y_angle_speed
+  cmp.b   #$90,d0
   beq.s   pt_enable_skip_commands
 pt_skip_commands
-  cmp.b   #$90,d0
+  cmp.b   #$a0,d0
   beq.s   pt_trigger_morphing
 pt_no_fx_handler
   rts
@@ -3309,6 +3293,10 @@ pt_start_scrolltext
   clr.w   hst_enabled(a3)    ;Laufschrift an
   rts
   CNOP 0,4
+pt_decrease_stripes_y_angle_speed
+  move.w  #cb_stripes_y_angle_speed2,cb_variable_stripes_y_angle_speed(a3)
+  rts
+  CNOP 0,4
 pt_enable_skip_commands
   clr.w   pt_skip_commands_enabled(a3) ;Skip-Commands an
   rts
@@ -3333,12 +3321,11 @@ NMI_int_server
   rts
 
 
-; ## Hilfsroutinen ##
   INCLUDE "help-routines.i"
 
 
-; ## Speicherstellen für Tabellen und Strukturen ##
   INCLUDE "sys-structures.i"
+
 
 ; ** Farben der Playfields **
 ; **** View ****
@@ -3371,7 +3358,6 @@ spr_color_table
 spr_pointers_display
   DS.L spr_number
 
-; ** Sinus / Cosinustabelle **
   CNOP 0,2
 sine_table
   INCLUDE "sine-table-512x32.i"
@@ -3385,10 +3371,10 @@ sine_table
   INCLUDE "music-tracker/pt-vibrato-tremolo-table.i"
 
 ; ** "Arpeggio/Tone Portamento" **
-  IFD DEF_PT_VERSION_2.3A
+  IFD PROTRACKER_VERSION_2.3A 
     INCLUDE "music-tracker/pt2-period-table.i"
   ENDC
-  IFD DEF_PT_VERSION_3.0B
+  IFD PROTRACKER_VERSION_3.0B
     INCLUDE "music-tracker/pt3-period-table.i"
   ENDC
 
@@ -3447,7 +3433,6 @@ bvm_switch_table
   DC.B $cc,$dd,$ee,$ee,$dd,$cc ;Bar4
 
 ; Tabellen mit Amplituden und Y-Winkeln der einzelnen Kanäle **
-
   CNOP 0,2
 bvm_audio_channel1_info
   DS.B bvm_audchaninfo_size
@@ -3602,7 +3587,6 @@ bfi_color_table
   DS.L spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
 
 ; ** Zielfarbwerte für Bar-Fader-Out **
-; -------------------------------------                                           p
 bfo_color_table
   REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
     DC.L color00_bits
@@ -3663,20 +3647,18 @@ cfc_color_table
   INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls7.ct"
 
 
-
-; ## Speicherstellen allgemein ##
   INCLUDE "sys-variables.i"
 
 
-; ## Speicherstellen für Namen ##
   INCLUDE "sys-names.i"
 
 
-; ## Speicherstellen für Texte ##
   INCLUDE "error-texts.i"
 
-program_version DC.B "$VER: RSE-30 1.2 beta (16.6.24)",0
+
+  DC.B "$VER: RSE-30 1.2 beta (16.6.24)",0
   EVEN
+
 
 ; **** Horiz-Scrolltext ****
 ; ** Text für Laufschrift **
@@ -3696,7 +3678,7 @@ hst_stop_text
   EVEN
 
 
-; ## Audiodaten nachladen ##
+; ** Audiodaten nachladen **
 
 ; **** PT-Replay ****
   IFEQ pt_split_module_enabled
@@ -3710,7 +3692,7 @@ pt_auddata SECTION pt_audio,DATA_C
   ENDC
 
 
-; ## Grafikdaten nachladen ##
+; ** Grafikdaten nachladen **
 
 ; **** Background-Image-1 ****
 bg1_image_data SECTION bg1_gfx,DATA

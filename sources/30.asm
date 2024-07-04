@@ -255,8 +255,8 @@ MINROW                                EQU VSTART_256_LINES
 
 display_window_hstart                 EQU HSTART_320_PIXEL
 display_window_vstart                 EQU MINROW
-display_window_hstop                  EQU HSTOP_320_pixel
-display_window_vstop                  EQU VSTOP_256_lines
+display_window_hstop                  EQU HSTOP_320_PIXEL
+display_window_vstop                  EQU VSTOP_256_LINES
 
 spr_pixel_per_datafetch               EQU 64 ;4x
 
@@ -351,7 +351,7 @@ color00_bits                          EQU $001122
 color00_high_bits                     EQU $012
 color00_low_bits                      EQU $012
 ; **** Viewport 1 ****
-vp1_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp1_ddfstrt_bits                      EQU DDFSTART_320_PIXEL
 vp1_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp1_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
 vp1_bplcon1_bits                      EQU 0
@@ -364,7 +364,7 @@ vp1_bplcon4_bits                      EQU bplcon4_bits|(BPLCON4F_BPLAM0*252)
 vp1_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp1_color00_bits                      EQU color00_bits
 ; **** Viewport 2 ****
-vp2_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp2_ddfstrt_bits                      EQU DDFSTART_320_PIXEL
 vp2_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp2_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
 vp2_bplcon1_bits                      EQU 0
@@ -375,7 +375,7 @@ vp2_bplcon4_bits                      EQU bplcon4_bits
 vp2_fmode_bits                        EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp2_color00_bits                      EQU color00_bits
 ; **** Viewport 3 ****
-vp3_ddfstrt_bits                      EQU DDFSTART_320_pixel
+vp3_ddfstrt_bits                      EQU DDFSTART_320_PIXEL
 vp3_ddfstop_bits                      EQU DDFSTOP_320_PIXEL_4X
 vp3_bplcon0_bits                      EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
 vp3_bplcon1_bits                      EQU 0
@@ -394,10 +394,10 @@ cl2_vp1_vstart1                       EQU MINROW
 cl2_vp1_hstart2                       EQU $00
 cl2_vp1_vstart2                       EQU MINROW
 ; **** Viewport 2 ****
-cl2_vp2_hstart                        EQU HSTOP_320_pixel-(4*CMOVE_SLOT_PERIOD)
+cl2_vp2_hstart                        EQU HSTOP_320_PIXEL-(4*CMOVE_SLOT_PERIOD)
 cl2_vp2_vstart                        EQU vp1_VSTOP-1
 ; **** Viewport 3 ****
-cl2_vp3_hstart1                       EQU HSTOP_320_pixel-(9*CMOVE_SLOT_PERIOD)
+cl2_vp3_hstart1                       EQU HSTOP_320_PIXEL-(9*CMOVE_SLOT_PERIOD)
 cl2_vp3_vstart1                       EQU vp2_VSTOP-1
 cl2_vp3_hstart2                       EQU $00
 cl2_vp3_vstart2                       EQU vp2_VSTOP

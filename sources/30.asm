@@ -1,8 +1,8 @@
 ; ##############################
 ; # Programm: 30.asm           #
 ; # Autor:    Christian Gerbig #
-; # Datum:    16.06.2024       #
-; # Version:  1.2 beta         #
+; # Datum:    09.07.2024       #
+; # Version:  1.3 beta         #
 ; # CPU:      68020+           #
 ; # FASTMEM:  -                #
 ; # Chipset:  AGA              #
@@ -3656,7 +3656,7 @@ cfc_color_table
   INCLUDE "error-texts.i"
 
 
-  DC.B "$VER: RSE-30 1.2 beta (16.6.24)",0
+  DC.B "$VER: RSE-30 1.3 beta (9.7.24)",0
   EVEN
 
 

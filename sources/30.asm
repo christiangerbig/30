@@ -1,8 +1,8 @@
 ; ##############################
 ; # Programm: 30.asm           #
 ; # Autor:    Christian Gerbig #
-; # Datum:    09.07.2024       #
-; # Version:  1.3 beta         #
+; # Datum:    15.07.2024       #
+; # Version:  1.4 beta         #
 ; # CPU:      68020+           #
 ; # FASTMEM:  -                #
 ; # Chipset:  AGA              #
@@ -39,6 +39,12 @@
 ; - Das Schachbrett steht erst still und wird dabb später animiert
 ; - Neuer Fx-Befehl: 8a0
 
+; V.1.4 beta
+; - FX-Befele überarbeitet
+;   880 Enable Skip-Commands
+;   89n Set-Chessboars-Speed
+; - Schachbrett wird langsamer, wenn die Musik langsamer wird
+
 
 ; PT 8xy-Befehl
 ; 810 Start-Fade-Bars-In
@@ -48,8 +54,8 @@
 ; 850 Start-Fade-Balls-In
 ; 860 Start-Fade-Cross
 ; 870 Start-Scrolltext
-; 880 Decrease-Chessboars-Speed
-; 890 Enable Skip-Commands
+; 880 Enable Skip-Commands
+; 89n Set-Chessboars-Speed
 ; 8a0 Trigger-Morphing
 
 ; 68020: 187 Rasterzeilen
@@ -3228,29 +3234,30 @@ VERTB_int_server
 pt_effects_handler
   tst.w   pt_effects_handler_active(a3) ;FX-Handler an?
   bne.s   pt_no_fx_handler   ;Nein ->Verzweige
-  move.b  n_cmdlo(a2),d0     ;Command data x = Effekt y = TRUE/FALSE
+  move.b  n_cmdlo(a2),d0
+  lsr.b   #4,d0
   tst.w   pt_skip_commands_enabled(a3)
   beq.s   pt_skip_commands
-  cmp.b   #$10,d0
+  cmp.b   #$1,d0
   beq.s   pt_start_fade_bars_in
-  cmp.b   #$20,d0
+  cmp.b   #$2,d0
   beq.s   pt_start_image_fader_in
-  cmp.b   #$30,d0
+  cmp.b   #$3,d0
   beq.s   pt_start_fade_chessboard_in
-  cmp.b   #$40,d0
+  cmp.b   #$4,d0
   beq.s   pt_start_fade_sprites_in
-  cmp.b   #$50,d0
+  cmp.b   #$5,d0
   beq.s   pt_start_fade_balls_in
-  cmp.b   #$60,d0
+  cmp.b   #$6,d0
   beq.s   pt_start_colors_fader_scross
-  cmp.b   #$70,d0
+  cmp.b   #$7,d0
   beq.s   pt_start_scrolltext
-  cmp.b   #$80,d0
-  beq.s   pt_decrease_stripes_y_angle_speed
-  cmp.b   #$90,d0
+  cmp.b   #$8,d0
   beq.s   pt_enable_skip_commands
 pt_skip_commands
-  cmp.b   #$a0,d0
+  cmp.b   #$9,d0
+  beq.s   pt_set_stripes_y_angle_speed
+  cmp.b   #$a,d0
   beq.s   pt_trigger_morphing
 pt_no_fx_handler
   rts
@@ -3293,12 +3300,14 @@ pt_start_scrolltext
   clr.w   hst_enabled(a3)    ;Laufschrift an
   rts
   CNOP 0,4
-pt_decrease_stripes_y_angle_speed
-  move.w  #cb_stripes_y_angle_speed2,cb_variable_stripes_y_angle_speed(a3)
-  rts
-  CNOP 0,4
 pt_enable_skip_commands
   clr.w   pt_skip_commands_enabled(a3) ;Skip-Commands an
+  rts
+  CNOP 0,4
+pt_set_stripes_y_angle_speed
+  moveq   #$f,d0
+  and.b   n_cmdlo(a2),d0
+  move.w  d0,cb_variable_stripes_y_angle_speed(a3)
   rts
   CNOP 0,4
 pt_trigger_morphing
@@ -3656,7 +3665,7 @@ cfc_color_table
   INCLUDE "error-texts.i"
 
 
-  DC.B "$VER: RSE-30 1.3 beta (9.7.24)",0
+  DC.B "$VER: RSE-30 1.4 beta (15.7.24)",0
   EVEN
 
 
@@ -3667,7 +3676,7 @@ hst_text
     DC.B " "
   ENDR
 
-  DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!   "
+  DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY! "
   DC.B " "
 
 hst_stop_text

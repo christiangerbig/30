@@ -1860,8 +1860,7 @@ cfc_init_start_colors
     bsr     colors_fader_cross
     tst.w   cfc_copy_colors_active(a3) ;Kopieren der Farbwerte beendet?
     beq.s   cfc_init_start_colors ;Nein -> verzweige
-    moveq   #FALSE,d0
-    move.w  d0,cfc_copy_colors_active(a3) ;Verzögerungszähler desktivieren
+    move.w  #FALSE,cfc_copy_colors_active(a3) ;Verzögerungszähler desktivieren
     rts
   ENDC
 
@@ -2092,8 +2091,7 @@ hst_restart_scrolltext
   rts
   CNOP 0,4
 hst_stop_scrolltext
-  moveq   #FALSE,d0
-  move.w  d0,hst_enabled(a3)  ;Text stoppen
+  move.w  #FALSE,hst_enabled(a3)  ;Text stoppen
   moveq   #0,d0           ;Rückgabewert TRUE = Steuerungscode gefunden
   tst.w   quit_active(a3)    ;Soll Intro beendet werden?
   bne.s   hst_normal_stop_scrolltext ;Nein -> verzweige
@@ -2164,8 +2162,7 @@ bvm_get_channel_amplitude
   bne.s   bvm_no_get_channel_amplitude ;Nein -> verzweige
   moveq   #0,d0           ;NULL wegen Wortzugriff
   move.b  n_volume(a0),d0    ;Aktuelle Lautstärke
-  moveq   #FALSE,d1
-  move.b  d1,n_note_trigger(a0) ;Note Trigger Flag zurücksetzen
+  move.w  #FALSE,n_note_trigger(a0) ;Note Trigger Flag zurücksetzen
   MULUF.W bvm_max_amplitude,d0,d1 ;Aktuelle Lautstärke * maximale Amplitude
   lsr.w   #6,d0              ;/maximale Lautstärke
   cmp.w	  d2,d0              ;Amplitude <= maximale Amplitude ?
@@ -2432,8 +2429,7 @@ mvb_save_morph_shapes_table_start
   ENDC
   move.w  d1,mvb_morph_shapes_table_start(a3) 
 mvb_morph_object_disable
-  moveq   #FALSE,d0
-  move.w  d0,mvb_morph_active(a3) ;Morhing aus
+  move.w  #FALSE,mvb_morph_active(a3) ;Morhing aus
 mvb_no_morph_object
   rts
 
@@ -2670,8 +2666,7 @@ bfi_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,bf_colors_counter(a3) ;Image-Fader-In fertig ?
   bne.s   no_bar_fader_in    ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,bfi_active(a3)  ;Image-Fader-In aus
+  move.w  #FALSE,bfi_active(a3) ;Image-Fader-In aus
 no_bar_fader_in
   rts
 
@@ -2708,8 +2703,7 @@ bfo_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,bf_colors_counter(a3) ;Image-Fader-Out fertig ?
   bne.s   no_bar_fader_out ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,bfo_active(a3)  ;Image-Fader-Out aus
+  move.w  #FALSE,bfo_active(a3)  ;Image-Fader-Out aus
 no_bar_fader_out
   rts
 
@@ -2748,8 +2742,7 @@ ifi_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,if_colors_counter(a3) ;Image-Fader-In fertig ?
   bne.s   no_image_fader_in  ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,ifi_active(a3)  ;Image-Fader-In aus
+  move.w  #FALSE,ifi_active(a3)  ;Image-Fader-In aus
 no_image_fader_in
   rts
 
@@ -2786,8 +2779,7 @@ ifo_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,if_colors_counter(a3) ;Image-Fader-Out fertig ?
   bne.s   no_image_fader_out ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,ifo_active(a3)  ;Image-Fader-Out aus
+  move.w  #FALSE,ifo_active(a3)  ;Image-Fader-Out aus
 no_image_fader_out
   rts
 
@@ -2829,8 +2821,7 @@ cfi_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,cf_colors_counter(a3) ;Chessboard-Fader-In fertig ?
   bne.s   no_chessboard_fader_in  ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,cfi_active(a3)  ;Chessboard-Fader-In aus
+  move.w  #FALSE,cfi_active(a3)  ;Chessboard-Fader-In aus
 no_chessboard_fader_in
   rts
 
@@ -2868,8 +2859,7 @@ cfo_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,cf_colors_counter(a3) ;Image-Fader-Out fertig ?
   bne.s   no_chessboard_fader_out ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,cfo_active(a3)  ;Chessboard-Fader-Out aus
+  move.w  #FALSE,cfo_active(a3)  ;Chessboard-Fader-Out aus
 no_chessboard_fader_out
   rts
 
@@ -2906,8 +2896,7 @@ sprfi_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,sprf_colors_counter(a3) ;Image-Fader-In fertig ?
   bne.s   no_sprite_fader_in  ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,sprfi_active(a3) ;Sprite-Fader-In aus
+  move.w  #FALSE,sprfi_active(a3) ;Sprite-Fader-In aus
 no_sprite_fader_in
   rts
 
@@ -2944,8 +2933,7 @@ sprfo_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,sprf_colors_counter(a3) ;Image-Fader-Out fertig ?
   bne.s   no_sprite_fader_out ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,sprfo_active(a3) ;Sprite-Fader-Out aus
+  move.w  #FALSE,sprfo_active(a3) ;Sprite-Fader-Out aus
 no_sprite_fader_out
   rts
 
@@ -2971,8 +2959,7 @@ no_fade_balls_in
   rts
   CNOP 0,4
 fbi_finished
-  moveq   #FALSE,d0
-  move.w  d0,fbi_active(a3)  ;Fade-Balls-In aus
+  move.w  #FALSE,fbi_active(a3)  ;Fade-Balls-In aus
   rts
 
 ; ** Bälle ausblenden **
@@ -2994,8 +2981,7 @@ no_fade_balls_out
   rts
   CNOP 0,4
 fbo_finished
-  moveq   #FALSE,d0
-  move.w  d0,fbo_active(a3)  ;Fade-Balls-Out aus
+  move.w  #FALSE,fbo_active(a3)  ;Fade-Balls-Out aus
   rts
 
 ; ** Farben überblenden **
@@ -3034,8 +3020,7 @@ cfc_save_fader_angle
   movem.l (a7)+,a4-a6
   move.w  d6,cfc_colors_counter(a3) ;Color-Fader-Cross fertig ?
   bne.s   no_colors_fader_cross ;Nein -> verzweige
-  moveq   #FALSE,d0
-  move.w  d0,cfc_active(a3)  ;Color-Fader-Cross aus
+  move.w  #FALSE,cfc_active(a3)  ;Color-Fader-Cross aus
 no_colors_fader_cross
   rts
 
@@ -3100,8 +3085,7 @@ cfc_no_restart_color_bank
   tst.w   cfc_colors_counter(a3) ;Fading beendet ?
   bne.s   cfc_no_copy_color_table ;Nein -> verzweige
 cfc_disable_copy_color_table
-  moveq   #FALSE,d0
-  move.w  d0,cfc_copy_colors_active(a3) ;Kopieren beendet
+  move.w  #FALSE,cfc_copy_colors_active(a3) ;Kopieren beendet
 cfc_next_entry
   move.w  #cfc_fader_delay,cfc_fader_delay_counter(a3) ;Zähler zurücksetzen
   move.w  cfc_color_table_start(a3),d0

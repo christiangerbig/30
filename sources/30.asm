@@ -1387,7 +1387,7 @@ bvm_init_color_table_loop3
   CNOP 0,4
 mvb_init_object_coordinates_offsets
   lea     mvb_object_coordinates_offsets(pc),a0 ;Zeiger auf Offset-Tabelle
-  moveq   #0,d0           ;Startwert
+  moveq   #0,d0              ;Startwert
   moveq   #mvb_object_points_number-1,d7 ;Anzahl der Einträge
 mvb_init_object_coordinates_offsets_loop
   move.w  d0,(a0)+           ;Startwert eintragen
@@ -2031,7 +2031,7 @@ horiz_scrolltext
   bsr.s   hst_get_text_softscroll
   moveq   #hst_text_characters_number-1,d7 ;Anzahl der Chars
 horiz_scrolltext_loop
-  moveq   #0,d0           ;Langwort-Zugriff
+  moveq   #0,d0              ;Langwort-Zugriff
   move.w  (a0),d0            ;X-Position
   move.w  d0,d2              
   lsr.w   #3,d0              ;X/8
@@ -2086,17 +2086,17 @@ hst_check_control_codes
   rts
   CNOP 0,4
 hst_restart_scrolltext
-  moveq   #0,d0           ;Rückgabewert = Steuerungscode gefunden
+  moveq   #TRUE,d0           ;Steuerungscode gefunden
   move.w   d0,hst_text_table_start(a3) ;Startwert zurücksetzen
   rts
   CNOP 0,4
 hst_stop_scrolltext
   move.w  #FALSE,hst_enabled(a3)  ;Text stoppen
-  moveq   #0,d0           ;Rückgabewert TRUE = Steuerungscode gefunden
+  moveq   #TRUE,d0           ;Steuerungscode gefunden
   tst.w   quit_active(a3)    ;Soll Intro beendet werden?
   bne.s   hst_normal_stop_scrolltext ;Nein -> verzweige
 hst_quit_and_stop_scrolltext
-  move.w  d0,pt_fade_out_music_active(a3) ;Musik ausfaden
+  move.w  d0,pt_music_fader_active(a3) ;Musik ausfaden
 
   move.w  d0,fbo_active(a3)  ;Fade-Balls-Out an
   move.w  #fbo_delay,fbo_delay_counter(a3)
@@ -2160,7 +2160,7 @@ bvm_get_channels_amplitudes
 bvm_get_channel_amplitude
   tst.b   n_note_trigger(a0) ;Neue Note angespielt ?
   bne.s   bvm_no_get_channel_amplitude ;Nein -> verzweige
-  moveq   #0,d0           ;NULL wegen Wortzugriff
+  moveq   #0,d0              ;Wortzugriff
   move.b  n_volume(a0),d0    ;Aktuelle Lautstärke
   move.w  #FALSE,n_note_trigger(a0) ;Note Trigger Flag zurücksetzen
   MULUF.W bvm_max_amplitude,d0,d1 ;Aktuelle Lautstärke * maximale Amplitude
@@ -3125,11 +3125,11 @@ mouse_handler
 mh_quit
   moveq   #FALSE,d1
   move.w  d1,pt_effects_handler_active(a3) ;FX-Abfrage aus
-  moveq   #0,d0
+  moveq   #TRUE,d0
   tst.w   hst_enabled(a3)     ;Scrolltext aktiv ?
   beq.s   mh_quit_with_scrolltext ;Ja -> verzweige
 mh_quit_without_scrolltext
-  move.w  d0,pt_fade_out_music_active(a3) ;Musik ausfaden
+  move.w  d0,pt_music_fader_active(a3) ;Musik ausfaden
 
   tst.w   fbi_active(a3)     ;Fade-Balls-In aktiv ?
   bne.s   mh_skip1           ;Nein -> verzweige
@@ -3197,7 +3197,7 @@ VERTB_int_server
   ENDC
 
   IFEQ pt_music_fader_enabled
-    bsr.s   pt_fade_out_music
+    bsr.s   pt_music_fader
     bra.s   pt_PlayMusic
 
 ; ** Musik ausblenden **

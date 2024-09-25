@@ -1149,7 +1149,7 @@ mvb_morph_shape_size         RS.B 0
   INCLUDE "sys-wrapper.i"
 
   CNOP 0,4
-init_own_variables
+init_main_variables
 
 ; **** Viewport 1 ****
   move.l  extra_pf1(a3),vp1_pf1_construction2(a3)
@@ -1282,7 +1282,7 @@ init_own_variables
 
 ; ** Alle Initialisierungsroutinen ausführen **
   CNOP 0,4
-init_all
+init_main
   bsr.s   pt_DetectSysFrequ
   bsr.s   pt_InitRegisters
   bsr     pt_InitAudTempStrucs
@@ -1840,7 +1840,7 @@ cl2_vp3_pf2_set_bitplane_pointers_loop
 
 
   CNOP 0,4
-main_routine
+main
   bsr.s   no_sync_routines
   bra     beam_routines
 

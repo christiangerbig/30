@@ -51,6 +51,9 @@
 
 ; V.1.5 beta
 ; - Crossfader: Überblenden verlangsamt
+; - Mit Grass' Tempel + Sonnenaufgangs-Grafiken
+; - Credits hinzugefügt
+; - Farbverlauf des Scrolltexts geändert
 
 
 ; PT 8xy-Befehl
@@ -3312,10 +3315,10 @@ sine_table
 
 ; **** Horiz-Scrolltext ****
 hst_fill_gradient
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient3.ct"
 
 hst_outline_gradient
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient2.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient3.ct"
 
 hst_ascii
 	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+>< "
@@ -3335,7 +3338,7 @@ hst_characters_image_ptrs
 
 ; **** Bounce-VU-Meter ****
 bvm_rgb8_color_gradients
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient3.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient4.ct"
 
 bvm_rgb8_color_table
 	REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
@@ -3475,10 +3478,10 @@ mvb_morph_shapes_table
 
 ; **** Chessboard ****
 cb_color_gradient1
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient1.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient3.ct"
 
 cb_color_gradient2
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient2.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient4.ct"
 
 	CNOP 0,2
 cb_fill_pattern
@@ -3508,7 +3511,7 @@ bf_rgb8_color_cache
 ; **** Image-Fader ****
 	CNOP 0,4
 ifi_rgb8_color_table
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple2.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple.ct"
 
 ifo_rgb8_color_table
 	REPT vp2_pf1_colors_number
@@ -3530,7 +3533,7 @@ cfo_rgb8_color_table
 ; **** Sprite-Fader ****
 	CNOP 0,4
 sprfi_rgb8_color_table
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/256x208x16-Desert-Sunset2.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/256x208x16-Desert-Sunset.ct"
 
 sprfo_rgb8_color_table
 	REPT spr_colors_number
@@ -3560,7 +3563,7 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY! "
+	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING - DISSIDENT    GRAPHICS - GRASS    MUSIC - MA2E     "
 	DC.B " "
 
 hst_stop_text
@@ -3589,10 +3592,10 @@ pt_auddata SECTION pt_audio,DATA_C
 
 ; ** Grafikdaten nachladen **
 bg1_image_data SECTION bg1_gfx,DATA
-	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/256x208x16-Desert-Sunset2.rawblit"
+	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/256x208x16-Desert-Sunset.rawblit"
 
 bg2_image_data SECTION bg2_gfx,DATA
-	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/320x182x16-Temple2.rawblit"
+	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/320x182x16-Temple.rawblit"
 
 hst_image_data SECTION hst_gfx,DATA_C
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/fonts/32x26x4-Font.rawblit"

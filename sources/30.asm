@@ -1,7 +1,7 @@
 ; Programm:	30
 ; Autor:	Christian Gerbig
-; Datum:	15.07.2024
-; Version:	1.4 beta
+; Datum:	06.10.2024
+; Version:	1.6 beta
 
 ; Requirements
 ; CPU:		68020+
@@ -54,6 +54,10 @@
 ; - Mit Grass' Tempel + Sonnenaufgangs-Grafiken
 ; - Credits hinzugefügt
 ; - Farbverlauf des Scrolltexts geändert
+
+; V.1.6 beta
+; - Mit komplett überarbeitendem Font
+; - Scrolltext geändert
 
 
 ; PT 8xy-Befehl
@@ -3315,10 +3319,10 @@ sine_table
 
 ; **** Horiz-Scrolltext ****
 hst_fill_gradient
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient3.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient.ct"
 
 hst_outline_gradient
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient3.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient.ct"
 
 hst_ascii
 	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+>< "
@@ -3338,7 +3342,7 @@ hst_characters_image_ptrs
 
 ; **** Bounce-VU-Meter ****
 bvm_rgb8_color_gradients
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient4.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient.ct"
 
 bvm_rgb8_color_table
 	REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
@@ -3478,10 +3482,10 @@ mvb_morph_shapes_table
 
 ; **** Chessboard ****
 cb_color_gradient1
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient3.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-ColorgradientA.ct"
 
 cb_color_gradient2
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-Colorgradient4.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-ColorgradientB.ct"
 
 	CNOP 0,2
 cb_fill_pattern
@@ -3511,7 +3515,7 @@ bf_rgb8_color_cache
 ; **** Image-Fader ****
 	CNOP 0,4
 ifi_rgb8_color_table
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple.ct"m
 
 ifo_rgb8_color_table
 	REPT vp2_pf1_colors_number
@@ -3563,7 +3567,7 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING - DISSIDENT    GRAPHICS - GRASS    MUSIC - MA2E     "
+	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING # DISSIDENT     GRAPHICS # GRASS     MUSIC # MA2E     "
 	DC.B " "
 
 hst_stop_text
@@ -3574,7 +3578,7 @@ hst_stop_text
 	EVEN
 
 
-	DC.B "$VER: RSE-30 1.4 beta (15.7.24)",0
+	DC.B "$VER: RSE-30 1.6 beta (6.10.24)",0
 	EVEN
 
 

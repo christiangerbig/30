@@ -59,6 +59,9 @@
 ; - Mit komplett überarbeitendem Font
 ; - Scrolltext geändert
 
+; V1.7 beta
+; - Mit Grass´Ballgrafiken und Farbverläufen
+
 
 ; PT 8xy-Befehl
 ; 810 Start-Fade-Bars-In
@@ -3547,10 +3550,10 @@ sprfo_rgb8_color_table
 ; **** Color-Fader-Cross ****
 	CNOP 0,4
 cfc_rgb8_color_table
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls4.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls6.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls5.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls7.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls8.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls9.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls10.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls11.ct"
 
 
 	INCLUDE "sys-variables.i"

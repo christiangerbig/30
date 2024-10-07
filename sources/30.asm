@@ -61,6 +61,8 @@
 
 ; V1.7 beta
 ; - Mit Grass´Ballgrafiken und Farbverläufen
+; - Schattenfarbe geändert
+; - Crossfader: Intervall geändert
 
 
 ; PT 8xy-Befehl
@@ -608,7 +610,7 @@ cfc_rgb8_fader_speed_max	EQU 4
 cfc_rgb8_fader_radius		EQU cfc_rgb8_fader_speed_max
 cfc_rgb8_fader_center		EQU cfc_rgb8_fader_speed_max+1
 cfc_rgb8_fader_angle_speed	EQU 2
-cfc_rgb8_fader_delay		EQU 3*PAL_FPS
+cfc_rgb8_fader_delay		EQU 5*PAL_FPS
 
 
 vp1_pf1_planes_x_offset		EQU 1*vp1_pf_pixel_per_datafetch
@@ -3285,7 +3287,7 @@ vp2_pf2_rgb8_color_table
 vp3_pf1_rgb8_color_table
 	DC.L color00_bits
 	REPT vp3_pf1_colors_number-1
-		DC.L $000000
+		DC.L $202020
 	ENDR
 
 ; ** Farben der Sprites **
@@ -3550,10 +3552,10 @@ sprfo_rgb8_color_table
 ; **** Color-Fader-Cross ****
 	CNOP 0,4
 cfc_rgb8_color_table
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls8.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls9.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls10.ct"
-	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-Balls11.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-BallsDarkBlue.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-BallsGreen.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-BallsOrange.ct"
+	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-BallsLightBlue.ct"
 
 
 	INCLUDE "sys-variables.i"

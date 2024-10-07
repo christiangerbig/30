@@ -1,5 +1,0 @@
-
-		dc.l	color00_bits,$00ffffff,$00dcdcdc,$00bababa
-		dc.l	$00989898,$00787878,$00565656,$00343434
-		dc.l	color00_bits,$00ffffff,$00dccec2,$00baa290
-		dc.l	$00987b65,$00785942,$00563a25,$00342011

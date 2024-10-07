@@ -12,9 +12,9 @@
             . .. ........:     p r e s e n t s     :........ .. .
 
 
-                            Title >
+                            Title > 30
 
-                             Type > Demo
+                             Type > Intro
                      Release Date > xx/xx/xx
                       Released At >
                     Minimum Req's > AGA 020 PAL w/ setpatch

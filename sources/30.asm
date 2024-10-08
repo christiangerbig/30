@@ -1,7 +1,7 @@
 ; Programm:	30
 ; Autor:	Christian Gerbig
-; Datum:	06.10.2024
-; Version:	1.6 beta
+; Datum:	08.10.2024
+; Version:	1.7 beta
 
 ; Requirements
 ; CPU:		68020+
@@ -59,7 +59,7 @@
 ; - Mit komplett überarbeitendem Font
 ; - Scrolltext geändert
 
-; V1.7 beta
+; V.1.7 beta
 ; - Mit Grass´Ballgrafiken und Farbverläufen
 ; - Schattenfarbe geändert
 ; - Crossfader: Intervall geändert
@@ -3583,7 +3583,7 @@ hst_stop_text
 	EVEN
 
 
-	DC.B "$VER: RSE-30 1.6 beta (6.10.24)",0
+	DC.B "$VER: RSE-30 1.7 beta (8.10.24)",0
 	EVEN
 
 

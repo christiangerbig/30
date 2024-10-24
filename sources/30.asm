@@ -5,8 +5,8 @@
 
 ; Requirements
 ; CPU:		68020+
-; Fast-Memory:	nein
-; Chipset:	AGA
+; Fast-Memory:	-
+; Chipset:	AGA PAL
 ; OS:		3.0+
 
 
@@ -63,6 +63,9 @@
 ; - Mit Grass´Ballgrafiken und Farbverläufen
 ; - Schattenfarbe geändert
 ; - Crossfader: Intervall geändert
+
+; V.1.8 beta
+; - Hintergrundfarbe angepasst
 
 
 ; PT 8xy-Befehl
@@ -364,9 +367,9 @@ bplcon3_bits2			EQU bplcon3_bits1|BPLCON3F_LOCT
 bplcon4_bits			EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
 diwhigh_bits			EQU (((display_window_hstop&$100)>>8)*DIWHIGHF_HSTOP8)|(((display_window_vstop&$700)>>8)*DIWHIGHF_VSTOP8)|(((display_window_hstart&$100)>>8)*DIWHIGHF_HSTART8)|((display_window_vstart&$700)>>8)
 fmode_bits			EQU FMODEF_SPR32|FMODEF_SPAGEM|FMODEF_SSCAN2
-color00_bits			EQU $001122
-color00_high_bits		EQU $012
-color00_low_bits		EQU $012
+color00_bits			EQU $040921
+color00_high_bits		EQU $002
+color00_low_bits		EQU $491
 ; **** Viewport 1 ****
 vp1_ddfstrt_bits		EQU DDFSTART_320_PIXEL
 vp1_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X

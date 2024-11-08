@@ -67,6 +67,8 @@
 
 ; V.1.8 beta
 ; - Hintergrundfarbe angepasst
+; - Bugfix Font: Punkt + Doppelpunkt angeglichen
+
 
 
 ; PT 8xy-Befehl
@@ -117,7 +119,7 @@
 	INCLUDE "hardware/intbits.i"
 
 
-	INCDIR "Daten:Asm-Sources.AGA/normsource-includes/"
+	INCDIR "Daten:Asm-Sources.AGA/custom-includes/"
 
 
 PROTRACKER_VERSION_3.0B		SET 1
@@ -1127,7 +1129,7 @@ cfc_rgb8_colors_counter		RS.W 1
 cfc_rgb8_copy_colors_active	RS.W 1
 
 ; **** Main ****
-fx_active			RS.W 1
+stop_fx_active			RS.W 1
 quit_active			RS.W 1
 
 variables_size			RS.B 0
@@ -1264,7 +1266,7 @@ init_main_variables
 
 ; **** Fade-Balls ****
 	move.w	#$8888,fb_mask(a3)
-	move.w	#TRUE,vb_copy_blit_mask(a3)
+	move.w	d0,vb_copy_blit_mask(a3)
 
 ; **** Fade-Balls-In ****
 	move.w	d1,fbi_active(a3)
@@ -1289,7 +1291,7 @@ init_main_variables
 	move.w	d0,cfc_rgb8_color_table_start(a3)
 
 ; **** Main ****
-	move.w	d1,fx_active(a3)
+	move.w	d1,stop_fx_active(a3)
 	move.w	d1,quit_active(a3)
 	rts
 
@@ -1306,11 +1308,11 @@ init_main
 	bsr	hst_init_characters_offsets
 	bsr	hst_init_characters_x_positions
 	bsr	hst_init_characters_images
-	bsr	bvm_init_audio_chan_info_tables
+	bsr	bvm_init_audio_channels_info
 	bsr	bvm_init_rgb8_color_table
 	bsr	bg2_copy_image_to_plane
-	bsr	mvb_init_object_coords_offsets
-	bsr	mvb_init_morph_shapes_table
+	bsr	mvb_init_object_coords
+	bsr	mvb_init_morph_shapes
 	IFEQ mvb_premorph_enabled
 		bsr	mvb_init_start_shape
 	ENDC
@@ -1346,7 +1348,7 @@ init_main
 
 ; **** Bouncing-VU-Meter ****
 	CNOP 0,4
-bvm_init_audio_chan_info_tables
+bvm_init_audio_channels_info
 	lea	bvm_audio_channel1_info(pc),a0
 	move.w	#sine_table_length/4,(a0)+ ; Y-Winkel 90 Grad = maximaler Ausschlag
 	moveq	#0,d1
@@ -1386,31 +1388,28 @@ bvm_init_rgb8_color_table_loop3
 
 ; **** Morph-Vector-Balls ****
 	CNOP 0,4
-mvb_init_object_coords_offsets
+mvb_init_object_coords
 	lea	mvb_object_coords_offsets(pc),a0 ; Zeiger auf Offset-Tabelle
 	moveq	#0,d0			; Startwert
 	moveq	#mvb_object_points_number-1,d7
-mvb_init_object_coords_offsets_loop
+mvb_init_object_coords_loop
 	move.w	d0,(a0)+		; Startwert
 	addq.w	#3,d0			; nächste XYZ-Koordinate
-	dbf	d7,mvb_init_object_coords_offsets_loop
+	dbf	d7,mvb_init_object_coords_loop
 	rts
 
 	CNOP 0,4
-mvb_init_morph_shapes_table
-; ** Form 1 **
-	lea	mvb_object_shape1_coords(pc),a0 ; Zeiger auf 1. Form
-	lea	mvb_morph_shapes_table(pc),a1 ; Tabelle mit Zeigern auf Objektdaten
-	move.l	a0,(a1)+;Zeiger auf Form-Tabelle
-; ** Form 2 **
-	lea	mvb_object_shape2_coords(pc),a0 ; Zeiger auf 2. Form
+mvb_init_morph_shapes
+	lea	mvb_morph_shapes_table(pc),a0 ; Tabelle mit Zeigern auf Objektdaten
+	lea	mvb_object_shape1_coords(pc),a1
+	move.l	a1,(a0)+		; Zeiger auf Form-Tabelle
+	lea	mvb_object_shape2_coords(pc),a1
 	IFEQ mvb_morph_loop_enabled
-		move.l	a0,(a1)		; Zeiger auf Form-Tabelle
+		move.l	a1,(a0)		; Zeiger auf Form-Tabelle
 	ELSE
-		move.l	a0,(a1)+	; Zeiger auf Form-Tabelle
-; ** Form 3 **
-		lea	mvb_object_shape3_coords(pc),a0 ; Zeiger auf 6. Form
-		move.l	a0,(a1)		; Zeiger auf Form-Tabelle
+		move.l	a1,(a0)+	; Zeiger auf Form-Tabelle
+		lea	mvb_object_shape3_coords(pc),a1
+		move.l	a1,(a0)		; Zeiger auf Form-Tabelle
 	ENDC
 	rts
 
@@ -1428,8 +1427,8 @@ mvb_init_start_shape
 cb_init_chessboard_image
 	movem.w cb_fill_pattern(pc),d0-d3 ; Füllmuster High&Low 1. Wort, High&Low 2. Wort
 	move.l	extra_pf7(a3),a0
-	move.l	(a0)+,a1;BP0
-	move.l	(a0),a2;BP1
+	move.l	(a0)+,a1		; Bitplane0
+	move.l	(a0),a2			; Bitplane1
 	moveq	#(cb_source_x_size/32)-1,d7 ; Anzahl der Wiederholungen des Musters
 cb_init_chessboard_image_loop
 	move.w	d0,(a1)+		; High 1. Wort
@@ -1451,9 +1450,9 @@ cb_init_bitmap_table
 	MOVEF.W cb_destination_y_size-1,d7 ; Anzahl der Zeilen in Bitmap-Tabelle
 cb_init_bitmap_table_loop1
 	move.l	d3,d2			; Breite des Quellbildes untere 32 Bit
-	moveq	#TRUE,d6		; Breite des Quellbildes obere 32 Bit
+	moveq	#0,d6			; Breite des Quellbildes obere 32 Bit
 	divu.l	d4,d6:d2		; F=Breite des Quellbildes/Breite der Zielbildes
-	moveq	#TRUE,d1
+	moveq	#0,d1
 	move.w	d4,d6			; Breite des Zielbilds
 	subq.w	#1,d6			; wegen dbf
 cb_init_bitmap_table_loop2
@@ -1521,7 +1520,7 @@ init_first_copperlist
 	bsr	cl1_init_sprite_ptrs
 	bsr	cl1_init_colors
 	bsr	cl1_vp2_init_plane_ptrs
-	COP_MOVEQ TRUE,COPJMP2
+	COP_MOVEQ 0,COPJMP2
 	bsr	cl1_set_sprite_ptrs
 	bra	cl1_vp2_pf1_set_plane_ptrs
 
@@ -1571,12 +1570,12 @@ cl1_init_colors
 
 	CNOP 0,4
 cl1_vp2_init_plane_ptrs
-	COP_MOVEQ TRUE,BPL3PTH
-	COP_MOVEQ TRUE,BPL3PTL
-	COP_MOVEQ TRUE,BPL5PTH
-	COP_MOVEQ TRUE,BPL5PTL
-	COP_MOVEQ TRUE,BPL7PTH
-	COP_MOVEQ TRUE,BPL7PTL
+	COP_MOVEQ 0,BPL3PTH
+	COP_MOVEQ 0,BPL3PTL
+	COP_MOVEQ 0,BPL5PTH
+	COP_MOVEQ 0,BPL5PTL
+	COP_MOVEQ 0,BPL7PTH
+	COP_MOVEQ 0,BPL7PTL
 	rts
 
 	COP_SET_SPRITE_POINTERS cl1,display,spr_number
@@ -1586,7 +1585,7 @@ cl1_vp2_pf1_set_plane_ptrs
 	move.l	cl1_display(a3),a0
 	ADDF.L	cl1_extension1_entry+cl1_ext1_BPL3PTH+WORD_SIZE,a0
 	move.l	extra_pf3(a3),a1
-	addq.w	#LONGWORD_SIZE,a1	; Zeiger auf zweite Plane
+	addq.w	#LONGWORD_SIZE,a1	; Zeiger auf zweite Bitplane
 	moveq	#(vp2_pf1_depth-1)-1,d7	; Anzahl der Bitplanes
 cl1_vp2_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; High-Wert
@@ -1624,9 +1623,7 @@ init_second_copperlist
 	bsr	cl2_vp3_pf2_set_plane_ptrs
 	bsr	copy_second_copperlist
 	bsr	swap_second_copperlist
-	bsr	swap_vp1_playfield1
 	bsr	set_vp1_playfield1
-	bsr	swap_vp2_playfield2
 	bra	set_vp2_playfield2
 
 ; **** Viewport 1 ****
@@ -1674,14 +1671,14 @@ cl2_vp1_init_color_gradient_loop
 
 	CNOP 0,4
 cl2_vp2_init_plane_ptrs
-	COP_MOVEQ TRUE,BPL1PTH
-	COP_MOVEQ TRUE,BPL1PTL
-	COP_MOVEQ TRUE,BPL2PTH
-	COP_MOVEQ TRUE,BPL2PTL
-	COP_MOVEQ TRUE,BPL4PTH
-	COP_MOVEQ TRUE,BPL4PTL
-	COP_MOVEQ TRUE,BPL6PTH
-	COP_MOVEQ TRUE,BPL6PTL
+	COP_MOVEQ 0,BPL1PTH
+	COP_MOVEQ 0,BPL1PTL
+	COP_MOVEQ 0,BPL2PTH
+	COP_MOVEQ 0,BPL2PTL
+	COP_MOVEQ 0,BPL4PTH
+	COP_MOVEQ 0,BPL4PTL
+	COP_MOVEQ 0,BPL6PTH
+	COP_MOVEQ 0,BPL6PTL
 	COP_MOVEQ vp2_bplcon0_bits,BPLCON0
 	rts
 
@@ -1690,16 +1687,16 @@ cl2_vp2_init_plane_ptrs
 
 	CNOP 0,4
 cl2_vp3_init_plane_ptrs
-	COP_MOVEQ TRUE,BPL1PTH
-	COP_MOVEQ TRUE,BPL1PTL
-	COP_MOVEQ TRUE,BPL2PTH
-	COP_MOVEQ TRUE,BPL2PTL
-	COP_MOVEQ TRUE,BPL3PTH
-	COP_MOVEQ TRUE,BPL3PTL
-	COP_MOVEQ TRUE,BPL4PTH
-	COP_MOVEQ TRUE,BPL4PTL
-	COP_MOVEQ TRUE,BPL5PTH
-	COP_MOVEQ TRUE,BPL5PTL
+	COP_MOVEQ 0,BPL1PTH
+	COP_MOVEQ 0,BPL1PTL
+	COP_MOVEQ 0,BPL2PTH
+	COP_MOVEQ 0,BPL2PTL
+	COP_MOVEQ 0,BPL3PTH
+	COP_MOVEQ 0,BPL3PTL
+	COP_MOVEQ 0,BPL4PTH
+	COP_MOVEQ 0,BPL4PTL
+	COP_MOVEQ 0,BPL5PTH
+	COP_MOVEQ 0,BPL5PTL
 	COP_MOVEQ vp3_bplcon0_bits,BPLCON0
 	rts
 
@@ -1724,14 +1721,11 @@ cl2_vp3_init_color_gradient_loop
 	move.l	d4,(a0)+		; Low-Werte
 	move.l	a1,(a0)+		; COLOR25
 	move.l	a2,(a0)+		; COLOR26
+	COP_MOVEQ 0,NOOP
 	cmp.l	d5,d0			; Rasterzeile $ff erreicht ?
-	bne.s	no_patch_copperlist2
-patch_copperlist2
+	bne.s	cl2_vp3_init_color_gradient_skip
+	subq.w	#LONGWORD_SIZE,a0
 	COP_WAIT CL_X_WRAP,CL_Y_WRAP	; Copperliste patchen
-	bra.s	cl2_vp3_init_color_gradient_skip
-	CNOP 0,4
-no_patch_copperlist2
-	COP_MOVEQ TRUE,NOOP
 cl2_vp3_init_color_gradient_skip
 	add.l	d6,d0			; nächste Zeile in CL
 	dbf	d7,cl2_vp3_init_color_gradient_loop
@@ -1748,14 +1742,14 @@ cl2_vp1_pf1_set_plane_ptrs
 	moveq	#vp1_pf1_depth-1,d7	; Anzahl der Bitplanes
 cl2_vp1_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; High-Wert
-	addq.w	#2*LONGWORD_SIZE,a0	; nächter Bitplanezeiger
-	move.w	(a1)+,LONGWORD_SIZE-(2*LONGWORD_SIZE)(a0) ; Low-Wert
+	addq.w	#QUADWORD_SIZE,a0	; nächter Bitplanezeiger
+	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; Low-Wert
 	dbf	d7,cl2_vp1_pf1_set_plane_ptrs_loop
 	rts
 
 	CNOP 0,4
 cl2_vp1_set_fill_gradient
-	move.w	#GB_NIBBLES_MASK,d3
+	move.w	#RB_NIBBLES_MASK,d3
 	lea	hst_fill_gradient(pc),a0
 	move.l	cl2_construction2(a3),a1
 	ADDF.W	cl2_extension2_entry+cl2_ext2_COLOR29_high8+WORD_SIZE,a1
@@ -1775,7 +1769,7 @@ cl2_vp1_set_fill_gradient_loop
 
 	CNOP 0,4
 cl2_vp1_set_outline_gradient
-	move.w	#GB_NIBBLES_MASK,d3
+	move.w	#RB_NIBBLES_MASK,d3
 	lea	hst_outline_gradient(pc),a0
 	move.l	cl2_construction2(a3),a1
 	ADDF.W	cl2_extension2_entry+cl2_ext2_COLOR30_high8+WORD_SIZE,a1
@@ -1797,12 +1791,12 @@ cl2_vp1_set_outline_gradient_loop
 cl2_vp2_pf1_set_plane_ptrs
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension3_entry+cl2_ext3_BPL1PTH+WORD_SIZE,a0
-	move.l	extra_pf3(a3),a1	; Zeiger auf erste Plane
+	move.l	extra_pf3(a3),a1	; Zeiger auf erste Bitplane
 	moveq	#(vp2_pf1_depth-3)-1,d7	; Anzahl der Bitplanes
 cl2_vp2_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	addq.w	#2*LONGWORD_SIZE,a0	; nächter Bitplanezeiger
-	move.w	(a1)+,LONGWORD_SIZE-(2*LONGWORD_SIZE)(a0) ; BPLxPTL
+	addq.w	#QUADWORD_SIZE,a0	; nächter Bitplanezeiger
+	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; BPLxPTL
 	dbf	d7,cl2_vp2_pf1_set_plane_ptrs_loop
 	rts
 
@@ -1811,12 +1805,12 @@ cl2_vp2_pf1_set_plane_ptrs_loop
 cl2_vp3_pf1_set_plane_ptrs
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension4_entry+cl2_ext4_BPL1PTH+WORD_SIZE,a0
-	move.l	extra_pf4(a3),a1	; Zeiger auf erste Plane
+	move.l	extra_pf4(a3),a1	; Zeiger auf erste Bitplane
 	moveq	#vp3_pf1_depth-1,d7	; Anzahl der Bitplanes
 cl2_vp3_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	4*LONGWORD_SIZE,a0	; nächter Playfieldzeiger
-	move.w	(a1)+,LONGWORD_SIZE-(4*LONGWORD_SIZE)(a0) ; BPLxPTL
+	ADDF.W	2*QUADWORD_SIZE,a0	; nächter Playfieldzeiger
+	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf1_set_plane_ptrs_loop
 	rts
 
@@ -1828,8 +1822,8 @@ cl2_vp3_pf2_set_plane_ptrs
 	moveq	#vp3_pf2_depth-1,d7	; Anzahl der Bitplanes
 cl2_vp3_pf2_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	4*LONGWORD_SIZE,a0	; nächter Playfieldzeiger
-	move.w	(a1)+,LONGWORD_SIZE-(4*LONGWORD_SIZE)(a0) ; BPLxPTL
+	ADDF.W	2*QUADWORD_SIZE,a0	; nächter Playfieldzeiger
+	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf2_set_plane_ptrs_loop
 	rts
 
@@ -1863,45 +1857,45 @@ cfc_rgb8_init_start_colors
 	CNOP 0,4
 cb_scale_image
 	movem.l a4-a5,-(a7)
-	moveq	#TRUE,d4		; 1. X-Koord in Zielbild
+	moveq	#0,d4			; 1. X-Koord in Zielbild
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_bitmap_table,a0	; Zeiger auf Bitmap-Tabelle
+	ADDF.L	em_bitmap_table,a0
 	move.l	extra_pf7(a3),a1	
 	move.l	(a1),a1			; Zeiger auf Quellbild
 	move.l	extra_pf8(a3),a2
 	move.l	(a2),a2         	; Zeiger auf Zielbild
 	move.w	#cb_x_max,a4		; X-Max in Zielbild
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
-	moveq	#cb_destination_y_size-1,d7 ; Höhe des Zielbildes
+	moveq	#cb_destination_y_size-1,d7
 cb_scale_image_loop1
 	moveq	#0,d2			; 1. X-Koord in Quellbild
 	move.w	d4,d3			; X-Koord in Zielbild
-	MOVEF.W cb_source_x_size-1,d6	; Breite des Quellbildes
+	MOVEF.W cb_source_x_size-1,d6
 cb_scale_image_loop2
 	tst.b	(a0)+			; Spalte setzen ?
-	beq.s	cb_skip_column		; Nein -> verzweige
+	beq.s	cb_scale_image_skip4
 	move.w	d3,d1			; X-Koord in Zielbild
-	bmi.s	cb_column_outside
+	bmi.s	cb_scale_image_skip3
 	cmp.w	a4,d1			; X >= X-Max ?
-	bge.s	cb_column_outside
+	bge.s	cb_scale_image_skip3
 	move.w	d2,d0			; X-Koord in Quellbild
-	lsr.w	#3,d0			; /8 X-Offset in Quellbild
+	lsr.w	#3,d0			; X-Offset in Quellbild
 	not.b	d2			; Shiftwert für Quellbyte ermitteln
-	lsr.w	#3,d1			; /8 X-Offset in Zielbild
+	lsr.w	#3,d1			; X-Offset in Zielbild
 	not.b	d3			; Shiftwert für Zielbyte ermitteln
 	btst	d2,(a1,d0.w)		; Pixel in Quellbyte gesetzt ?
-	beq.s	cb_plane0_no_pixel_set
+	beq.s	cb_scale_image_skip1
 	bset	d3,(a2,d1.w)		; Pixel setzen
-cb_plane0_no_pixel_set
+cb_scale_image_skip1
 	btst	d2,(extra_pf7_plane_width,a1,d0.w) ; Pixel in Quellbyte gesetzt ?
-	beq.s	cb_plane1_no_pixel_set
+	beq.s	cb_scale_image_skip2
 	bset	d3,extra_pf8_plane_width(a2,d1.w) ; Pixel setzen
-cb_plane1_no_pixel_set
+cb_scale_image_skip2
 	not.b	d3			; Bitnummer wieder in X-Koord Zielbild umwandeln
 	not.b	d2			; Bitnummer wieder in X-Koord Quellbild umwandeln
-cb_column_outside
+cb_scale_image_skip3
 	addq.w	#1,d3			; nächstes Pixel in Zielbild
-cb_skip_column
+cb_scale_image_skip4
 	addq.w	#1,d2			; nächstes Pixel in Quellbild
 	dbf	d6,cb_scale_image_loop2
 	add.l	a5,a2			; nächste Zeile in Zielbild
@@ -1923,7 +1917,7 @@ beam_routines
 	bsr	horiz_scrolltext
 	bsr	hst_horiz_scroll
 	bsr	mvb_clear_playfield1_2
-	bsr	bvm_get_chans_amplitudes
+	bsr	bvm_get_channels_amplitudes
 	bsr	bvm_clear_second_copperlist
 	bsr	bvm_set_bars
 	bsr	fade_balls_in
@@ -1953,7 +1947,7 @@ beam_routines
 	bsr	cfc_rgb8_copy_color_table
 	bsr	control_counters
 	bsr	mouse_handler
-	tst.w	fx_active(a3)
+	tst.w	stop_fx_active(a3)
 	bne	beam_routines
 	rts
 
@@ -2022,10 +2016,10 @@ set_vp3_playfield1_loop
 
 	CNOP 0,4
 horiz_scrolltext
-	tst.w	hst_enabled(a3)
-	bne.s	no_horiz_scrolltext
 	movem.l a4-a5,-(a7)
-	bsr.s	hst_init_character_blit
+	tst.w	hst_enabled(a3)
+	bne.s	horiz_scrolltext_quit
+	bsr.s	horiz_scrolltext_init
 	move.l	vp1_pf1_construction2(a3),a0
 	MOVEF.L (hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),d3
 	add.l	(a0),d3
@@ -2049,21 +2043,21 @@ horiz_scrolltext_loop
 	move.l	d0,(a4)			; Playfield
 	move.w	d4,(a5)			; Blitter starten
 	sub.w	hst_horiz_scroll_speed(a3),d2
-	bpl.s	hst_set_character_x_position
+	bpl.s	horiz_scrolltext_skip
 	move.l	a0,-(a7)
-	bsr.s	hst_get_new_character_image
+	bsr.s   hst_get_new_character_image
 	move.l	(a7)+,a0
-	move.l	d0,-4(a1)		; Neues Bild für Character
+	move.l	d0,-4(a1)		; Bild für Character
 	add.w	d5,d2			; X-Pos. Neustart
-hst_set_character_x_position
+horiz_scrolltext_skip
 	move.w	d2,(a0)+
 	dbf	d7,horiz_scrolltext_loop
-	movem.l (a7)+,a4-a5
 	move.w	#DMAF_BLITHOG,DMACON-DMACONR(a6)
-no_horiz_scrolltext
+horiz_scrolltext_quit
+	movem.l (a7)+,a4-a5
 	rts
 	CNOP 0,4
-hst_init_character_blit
+horiz_scrolltext_init
 	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
 	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ; Minterm D=A
@@ -2085,35 +2079,39 @@ hst_get_text_softscroll
 
 	CNOP 0,4
 hst_check_control_codes
+; Input
+; d0.b	... ASCII-Code
+; Result
+; d0.l	... Rückgabewert: Return-Code
 	cmp.b	#ASCII_CTRL_S,d0
 	beq.s	hst_stop_scrolltext
 	rts
 	CNOP 0,4
 hst_stop_scrolltext
 	move.w	#FALSE,hst_enabled(a3)	; Text stoppen
-	moveq	#TRUE,d0		; Steuerungscode gefunden
 	tst.w	quit_active(a3)		; Soll Intro beendet werden?
-	bne.s	hst_normal_stop_scrolltext ; Nein -> verzweige
-	move.w	d0,pt_music_fader_active(a3)
+	bne.s	hst_stop_scrolltext_quit
+	clr.w	pt_music_fader_active(a3)
 
-	move.w	d0,fbo_active(a3)
+	clr.w	fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
 
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
-	move.w	d0,sprfo_rgb8_active(a3)
-	move.w	d0,sprf_rgb8_copy_colors_active(a3)
+	clr.w	sprfo_rgb8_active(a3)
+	clr.w	sprf_rgb8_copy_colors_active(a3)
 
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
-	move.w	d0,ifo_rgb8_active(a3)
-	move.w	d0,if_rgb8_copy_colors_active(a3)
+	clr.w	ifo_rgb8_active(a3)
+	clr.w	if_rgb8_copy_colors_active(a3)
 
-	move.w	d0,cfo_rgb8_active(a3)
+	clr.w	cfo_rgb8_active(a3)
 
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
-	move.w	d0,bfo_rgb8_active(a3)
-	move.w	d0,bf_rgb8_copy_colors_active(a3)
-hst_normal_stop_scrolltext
+	clr.w	bfo_rgb8_active(a3)
+	clr.w	bf_rgb8_copy_colors_active(a3)
+hst_stop_scrolltext_quit
+	moveq	#RETURN_OK,d0
 	rts
 
 	CNOP 0,4
@@ -2134,21 +2132,21 @@ hst_horiz_scroll_quit
 	rts
 
 	CNOP 0,4
-bvm_get_chans_amplitudes
+bvm_get_channels_amplitudes
 	MOVEF.W bvm_max_amplitude,d2
 	MOVEF.W sine_table_length/4,d3
 	lea	pt_audchan1temp(pc),a0
 	lea	bvm_audio_channel1_info(pc),a1
-	bsr.s	bvm_get_chan_amplitude
+	bsr.s	bvm_get_channel_amplitude
 	lea	pt_audchan2temp(pc),a0
 	lea	bvm_audio_channel2_info(pc),a1
-	bsr.s	bvm_get_chan_amplitude
+	bsr.s	bvm_get_channel_amplitude
 	lea	pt_audchan3temp(pc),a0
 	lea	bvm_audio_channel3_info(pc),a1
-	bsr.s	bvm_get_chan_amplitude
+	bsr.s	bvm_get_channel_amplitude
 	lea	pt_audchan4temp(pc),a0
 	lea	bvm_audio_channel4_info(pc),a1
-	bsr.s	bvm_get_chan_amplitude
+	bsr.s	bvm_get_channel_amplitude
 	rts
 
 
@@ -2160,21 +2158,21 @@ bvm_get_chans_amplitudes
 ; Result
 ; d0.l	... Kein Rückgabewert
 	CNOP 0,4
-bvm_get_chan_amplitude
-	tst.b	n_note_trigger(a0)
-	bne.s	bvm_get_chan_amplitude_quit
+bvm_get_channel_amplitude
+	tst.b	n_notetrigger(a0)	; Neue Note angespielt ?
+	bne.s	bvm_get_channel_amplitude_quit
 	moveq	#0,d0
 	move.b	n_volume(a0),d0		; Aktuelle Lautstärke
-	move.w	#FALSE,n_note_trigger(a0)
+	move.w	#FALSE,n_notetrigger(a0)
 	MULUF.W bvm_max_amplitude,d0,d1
 	lsr.w	#6,d0
 	cmp.w	d2,d0			; Amplitude <= maximale Amplitude ?
-	ble.s	bvm_get_chan_amplitude_set
+	ble.s	bvm_get_channel_amplitude_skip
 	move.w	d2,d0			; Maximale Amplitude
-bvm_get_chan_amplitude_set
+bvm_get_channel_amplitude_skip
 	move.w	d3,(a1)+                ; Winkel
 	move.w	d0,(a1)			; Amplitudenwert
-bvm_get_chan_amplitude_quit
+bvm_get_channel_amplitude_quit
 	rts
 
 	CNOP 0,4
@@ -2195,8 +2193,8 @@ bvm_set_bars
 	movem.l a3-a6,-(a7)
 	MOVEF.W (sine_table_length/2)-1,d5
 	lea	sine_table(pc),a0	
-	lea	bvm_audio_channel1_info(pc),a1 ; Zeiger auf Amplitude und Y-Winkeldes Kanals
-	lea	bvm_switch_table(pc),a4
+	lea	bvm_audio_channel1_info(pc),a1
+	lea	bvm_bplam_table(pc),a4
 	move.l	cl2_construction2(a3),a5 
 	ADDF.W	cl2_extension2_entry+cl2_ext2_BPLCON4+WORD_SIZE+BYTE_SIZE,a5
 	move.w	#bvm_y_centre,a3
@@ -2210,9 +2208,9 @@ bvm_set_bars_loop1
 	MULUF.L 2,d0
 	swap	d0
 	cmp.w	d5,d3			; 180 Grad erreicht ?
-	ble.s	bvm_y_angle_ok		; Nein -> verzweige
+	ble.s	bvm_set_bars_skip
 	lsr.w	-2(a1)			; Amplitude/2
-bvm_y_angle_ok
+bvm_set_bars_skip
 	and.w	d5,d3			; Überlauf bei 180 Grad
 	move.w	d3,-4(a1)	
 	add.w	a3,d0			; y' + Y-Mittelpunkt
@@ -2283,7 +2281,7 @@ mvb_rotation
 		MOVEF.W sine_table_length,d3
 	ENDC
 	add.w	a4,d0			; + 90 Grad
-	swap	d4			; Bits 16-31 = sin(a)
+	swap	d4			; Bits 16-31: sin(a)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; Übertrag entfernen
 	ELSE
@@ -2292,7 +2290,7 @@ mvb_rotation
 		sub.w	d3,d0		; Neustart
 mvb_rotation_skip1
 	ENDC
-	move.w	2(a2,d0.w*4),d4		; Bits 0-15 = cos(a)
+	move.w	2(a2,d0.w*4),d4		; Bits 0-15: cos(a)
 	addq.w	#mvb_rotation_x_angle_speed,d1 ; nächster X-Winkel
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; Übertrag entfernen
@@ -2307,7 +2305,7 @@ mvb_rotation_skip2
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d5		; sin(b)
 	add.w	a4,d0			; + 90 Grad
-	swap	d5			; Bits 16-31 = sin(b)
+	swap	d5			; Bits 16-31: sin(b)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; Übertrag entfernen
 	ELSE
@@ -2316,7 +2314,7 @@ mvb_rotation_skip2
 		sub.w	d3,d0		; Neustart
 mvb_rotation_skip3
 	ENDC
-	move.w	2(a2,d0.w*4),d5		; Bits 0-15 = cos(b)
+	move.w	2(a2,d0.w*4),d5		; Bits 0-15: cos(b)
 	addq.w	#mvb_rotation_y_angle_speed,d1 ; nächster Y-Winkel
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; Übertrag entfernen
@@ -2331,7 +2329,7 @@ mvb_rotation_skip4
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d6		; sin(c)
 	add.w	a4,d0			; + 90 Grad
-	swap	d6			; Bits 16-31 = sin(c)
+	swap	d6			; Bits 16-31: sin(c)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; Übertrag entfernen
 	ELSE
@@ -2340,7 +2338,7 @@ mvb_rotation_skip4
 		sub.w	d3,d0		; Neustart
 mvb_rotation_skip5
 	ENDC
-	move.w	2(a2,d0.w*4),d6		; Bits 0-15 = cos(c)
+	move.w	2(a2,d0.w*4),d6		; Bits 0-15: cos(c)
 	addq.w	#mvb_rotation_z_angle_speed,d1 ; nächster Z-Winkel
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; Übertrag entfernen
@@ -2358,15 +2356,15 @@ mvb_rotation_skip6
 	move.w	#mvb_rotation_y_center,a6
 	moveq	#mvb_object_points_number-1,d7
 mvb_rotation_loop
-	move.w	(a0)+,d0		; X-Koord.
+	move.w	(a0)+,d0		; X
 	move.l	d7,a2	
-	move.w	(a0)+,d1		; Y-Koord.
-	move.w	(a0)+,d2		; Z-Koord.
+	move.w	(a0)+,d1		; Y
+	move.w	(a0)+,d2		; Z
 	ROTATE_X_AXIS
 	ROTATE_Y_AXIS
 	ROTATE_Z_AXIS
 ; ** Zentralprojektion und Translation **
-	move.w	d2,d3			; z retten
+	move.w	d2,d3			; Z retten
 	ext.l	d0
 	add.w	a4,d3			; z+d
 	MULUF.L mvb_rotation_d,d0,d7 	; X-Projektion
@@ -2379,7 +2377,7 @@ mvb_rotation_loop
 	add.w	a6,d1			; y' + Y-Mittelpunkt
 	move.w	d1,(a1)+		; Y-Pos.
 	asr.w	#3,d2			; Z/8
-	move.l	a2,d7
+	move.l	a2,d7			; Schleifenzähler
 	move.w	d2,(a1)+		; Z-Pos.
 	dbf	d7,mvb_rotation_loop
 	movem.l (a7)+,a4-a6
@@ -2390,40 +2388,40 @@ mvb_morph_object
 	tst.w	mvb_morph_active(a3)
 	bne.s	mvb_morph_object_quit
 	move.w	mvb_morph_shapes_table_start(a3),d1
-	moveq	#TRUE,d2		; Koordinatenzähler
-	lea	mvb_object_coords(pc),a0 ; Aktuelle Objektdaten
-	lea	mvb_morph_shapes_table(pc),a1 ; Tabelle mit Adressen der Formen-Tabellen
+	moveq	#0,d2			; Koordinatenzähler
+	lea	mvb_object_coords(pc),a0
+	lea	mvb_morph_shapes_table(pc),a1
 	move.l	(a1,d1.w*4),a1		; Zeiger auf Tabelle
 	MOVEF.W mvb_object_points_number*3-1,d7
 mvb_morph_object_loop
-	move.w	(a0),d0			; aktuelle Koordinate lesen
+	move.w	(a0),d0			; aktuelle Koordinate
 	cmp.w	(a1)+,d0		; mit Ziel-Koordinate vergleichen
-	beq.s	mvb_morph_object_skip1
-	bgt.s	mvb_morph_object_zoom_size
+	beq.s	mvb_morph_object_skip3
+	bgt.s	mvb_morph_object_skip1
 	addq.w	#mvb_morph_speed,d0	; aktuelle Koordinate erhöhen
-	bra.s	mvb_morph_object_save
+	bra.s	mvb_morph_object_skip2
 	CNOP 0,4
-mvb_morph_object_zoom_size
+mvb_morph_object_skip1
 	subq.w	#mvb_morph_speed,d0	; aktuelle Koordinate verringern
-mvb_morph_object_save
+mvb_morph_object_skip2
 	move.w	d0,(a0)
 	addq.w	#1,d2			; Koordinatenzähler erhöhen
-mvb_morph_object_skip1
+mvb_morph_object_skip3
 	addq.w	#WORD_SIZE,a0		; Nächste Koordinate
 	dbf	d7,mvb_morph_object_loop
-	tst.w	d2			; Morphing beendet?
+	tst.w	d2			; Morphing beendet ?
 	bne.s	mvb_morph_object_quit
 	addq.w	#1,d1			; nächster Eintrag in Objekttablelle
 	cmp.w	#mvb_morph_shapes_number,d1 ; Ende der Tabelle ?
 	IFEQ mvb_morph_loop_enabled
-		bne.s	mvb_morph_object_skip2
+		bne.s	mvb_morph_object_skip4
 		moveq	#0,d1		; Neustart
-mvb_morph_object_skip2
+mvb_morph_object_skip4
 	ELSE
-		beq.s	mvb_morph_object_disable
+		beq.s	mvb_morph_object_skip5
 	ENDC
 	move.w	d1,mvb_morph_shapes_table_start(a3) 
-mvb_morph_object_disable
+mvb_morph_object_skip5
 	move.w	#FALSE,mvb_morph_active(a3)
 mvb_morph_object_quit
 	rts
@@ -2486,7 +2484,7 @@ mvb_quick6
 set_vector_balls
 	movem.l a3-a5,-(a7)
 	move.l	a7,save_a7(a3)	
-	bsr	mvb_init_balls_blit
+	bsr	set_vector_balls_init
 	move.w	#BC0F_SRCA+BC0F_SRCB+BC0F_SRCC+BC0F_DEST+NANBC+NABC+ABNC+ABC,d3 ; Minterm D=A+B
 	move.w	#(mvb_copy_blit_y_size*64)+(mvb_copy_blit_x_size/16),a4
 	move.l	vp2_pf2_construction2(a3),a0
@@ -2503,11 +2501,11 @@ set_vector_balls_loop
 	moveq	#0,d5
 	movem.w (a1,d0.w*2),d0-d2	; XYZ lesen
 	cmp.w	a2,d2			; 1. Z-Plane ?
-	blt.s	set_vector_balls_skip3  ; Ja -> verzweige
+	blt.s	set_vector_balls_skip3
 	cmp.w	a3,d2			; 2. Z-Plane ?
-	blt.s	set_vector_balls_skip2 	; Ja -> verzweige
+	blt.s	set_vector_balls_skip2
 	cmp.w	#mvb_z_plane3,d2	; 3. Z-Plane ?
-	blt.s	set_vector_balls_skip1 	; Ja -> verzweige
+	blt.s	set_vector_balls_skip1
 	ADDF.W	mvb_image_width,d5
 set_vector_balls_skip1
 	ADDF.W	mvb_image_width,d5
@@ -2538,7 +2536,7 @@ set_vector_balls_skip3
 	movem.l (a7)+,a3-a5
 	rts
 	CNOP 0,4
-mvb_init_balls_blit
+set_vector_balls_init
 	move.w	#DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
 	move.w	vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6) ; Ausmaskierung
@@ -2590,7 +2588,7 @@ cb_make_color_offsets_loop2
 	CNOP 0,4
 cb_move_chessboard
 	move.l	a4,-(a7)
-	move.w	#GB_NIBBLES_MASK,d3
+	move.w	#RB_NIBBLES_MASK,d3
 	lea	cb_color_offsets_table(pc),a0
 	move.l	extra_memory(a3),a1
 	ADDF.L	em_rgb8_color_table,a1
@@ -2622,18 +2620,18 @@ cb_move_chessboard_loop
 
 	CNOP 0,4
 rgb8_bar_fader_in
+	movem.l a4-a6,-(a7)
 	tst.w	bfi_rgb8_active(a3)
 	bne.s	rgb8_bar_fader_in_quit
-	movem.l a4-a6,-(a7)
 	move.w	bfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	bfi_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	bfi_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_bar_fader_in_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_bar_fader_in_skip
 	move.w	d0,bfi_rgb8_fader_angle(a3) 
-	MOVEF.W bf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L bfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2649,27 +2647,27 @@ rgb8_bar_fader_in_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,bf_rgb8_colors_counter(a3)
 	bne.s	rgb8_bar_fader_in_quit
 	move.w	#FALSE,bfi_rgb8_active(a3)
 rgb8_bar_fader_in_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	CNOP 0,4
 rgb8_bar_fader_out
+	movem.l a4-a6,-(a7)
 	tst.w	bfo_rgb8_active(a3)
 	bne.s	rgb8_bar_fader_out_quit
-	movem.l a4-a6,-(a7)
 	move.w	bfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	bfo_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	bfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_bar_fader_out_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_bar_fader_out_skip
 	move.w	d0,bfo_rgb8_fader_angle(a3) 
-	MOVEF.W bf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L bfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2685,11 +2683,11 @@ rgb8_bar_fader_out_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,bf_rgb8_colors_counter(a3)
 	bne.s	rgb8_bar_fader_out_quit
 	move.w	#FALSE,bfo_rgb8_active(a3)
 rgb8_bar_fader_out_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	COPY_RGB8_COLORS_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
@@ -2697,18 +2695,18 @@ rgb8_bar_fader_out_quit
 ; ** Tempel einfaden **
 	CNOP 0,4
 rgb8_image_fader_in
+	movem.l a4-a6,-(a7)
 	tst.w	ifi_rgb8_active(a3)
 	bne.s	rgb8_image_fader_in_quit
-	movem.l a4-a6,-(a7)
 	move.w	ifi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	ifi_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	ifi_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0 ; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_image_fader_in_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_image_fader_in_skip
 	move.w	d0,ifi_rgb8_fader_angle(a3) 
-	MOVEF.W if_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L ifi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2724,28 +2722,28 @@ rgb8_image_fader_in_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,if_rgb8_colors_counter(a3)
 	bne.s	rgb8_image_fader_in_quit
 	move.w	#FALSE,ifi_rgb8_active(a3)
 rgb8_image_fader_in_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 ; ** Tempel ausfaden **
 	CNOP 0,4
 rgb8_image_fader_out
+	movem.l a4-a6,-(a7)
 	tst.w	ifo_rgb8_active(a3)
 	bne.s	rgb8_image_fader_out_quit
-	movem.l a4-a6,-(a7)
 	move.w	ifo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	ifo_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	ifo_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_image_fader_out_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_image_fader_out_skip
 	move.w	d0,ifo_rgb8_fader_angle(a3) 
-	MOVEF.W if_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L ifo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2761,11 +2759,11 @@ rgb8_image_fader_out_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr.s	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,if_rgb8_colors_counter(a3)
 	bne.s	rgb8_image_fader_out_quit
 	move.w	#FALSE,ifo_rgb8_active(a3)
 rgb8_image_fader_out_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	RGB8_COLOR_FADER if
@@ -2774,18 +2772,18 @@ rgb8_image_fader_out_quit
 
 	CNOP 0,4
 rgb8_chessboard_fader_in
+	movem.l a4-a6,-(a7)
 	tst.w	cfi_rgb8_active(a3)
 	bne.s	rgb8_chessboard_fader_in_quit
-	movem.l a4-a6,-(a7)
 	move.w	cfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfi_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	cfi_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_chessboard_fader_in_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_chessboard_fader_in_skip
 	move.w	d0,cfi_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2802,27 +2800,27 @@ rgb8_chessboard_fader_in_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,cf_rgb8_colors_counter(a3)
 	bne.s	rgb8_chessboard_fader_in_quit
 	move.w	#FALSE,cfi_rgb8_active(a3)
 rgb8_chessboard_fader_in_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	CNOP 0,4
 rgb8_chessboard_fader_out
+	movem.l a4-a6,-(a7)
 	tst.w	cfo_rgb8_active(a3)
 	bne.s	rgb8_chessboard_fader_out_quit
-	movem.l a4-a6,-(a7)
 	move.w	cfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfo_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	cfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_chessboard_fader_out_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_chessboard_fader_out_skip
 	move.w	d0,cfo_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2839,18 +2837,18 @@ rgb8_chessboard_fader_out_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,cf_rgb8_colors_counter(a3)
 	bne.s	rgb8_chessboard_fader_out_quit
 	move.w	#FALSE,cfo_rgb8_active(a3)
 rgb8_chessboard_fader_out_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	CNOP 0,4
 rgb8_sprite_fader_in
+	movem.l a4-a6,-(a7)
 	tst.w	sprfi_rgb8_active(a3)
 	bne.s	rgb8_sprite_fader_in_quit
-	movem.l a4-a6,-(a7)
 	move.w	sprfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	sprfi_rgb8_fader_angle_speed,d0
@@ -2859,7 +2857,7 @@ rgb8_sprite_fader_in
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_sprite_fader_in_skip
 	move.w	d0,sprfi_rgb8_fader_angle(a3) 
-	MOVEF.W sprf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L sprfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2875,27 +2873,27 @@ rgb8_sprite_fader_in_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W sprf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,sprf_rgb8_colors_counter(a3)
 	bne.s	rgb8_sprite_fader_in_quit
 	move.w	#FALSE,sprfi_rgb8_active(a3)
 rgb8_sprite_fader_in_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	CNOP 0,4
 rgb8_sprite_fader_out
+	movem.l a4-a6,-(a7)
 	tst.w	sprfo_rgb8_active(a3)
 	bne.s	rgb8_sprite_fader_out_quit
-	movem.l a4-a6,-(a7)
 	move.w	sprfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	sprfo_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
+	ADDF.W	sprfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
 	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
 	ble.s	rgb8_sprite_fader_out_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_sprite_fader_out_skip
 	move.w	d0,sprfo_rgb8_fader_angle(a3) 
-	MOVEF.W sprf_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB-Zähler
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L sprfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
@@ -2911,11 +2909,11 @@ rgb8_sprite_fader_out_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W sprf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,sprf_rgb8_colors_counter(a3)
 	bne.s	rgb8_sprite_fader_out_quit
 	move.w	#FALSE,sprfo_rgb8_active(a3)
 rgb8_sprite_fader_out_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	COPY_RGB8_COLORS_TO_COPPERLIST sprf,spr,cl1,cl1_COLOR01_high2,cl1_COLOR01_low2
@@ -2932,14 +2930,14 @@ fade_balls_in
 	eor.w	d1,d0			; Masken miteinander verknüpfen
 	move.w	d0,vb_copy_blit_mask(a3)
 	cmp.w	#-1,d0			; Maske fertig ?
-	beq.s	fade_balls_in_skip
+	bne.s	fade_balls_in_skip
+	move.w	#FALSE,fbi_active(a3)
+	bra.s	fade_balls_in_quit
+	CNOP 0,4
+fade_balls_in_skip
 	lsr.w	#1,d1			; 2. Maske verschieben
 	move.w	d1,fb_mask(a3)	
 fade_balls_in_quit
-	rts
-	CNOP 0,4
-fade_balls_in_skip
-	move.w	#FALSE,fbi_active(a3)
 	rts
 
 	CNOP 0,4
@@ -2953,25 +2951,25 @@ fade_balls_out
 	move.w	fb_mask(a3),d1		; 2. Maske
 	eor.w	d1,d0			; Masken verknüpfen
 	move.w	d0,vb_copy_blit_mask(a3) ; Maske fertig ?
-	beq.s	fade_balls_out_skip
+	bne.s	fade_balls_out_skip
+	move.w	#FALSE,fbo_active(a3)
+	bra.s	fade_balls_out_quit
+	CNOP 0,4
+fade_balls_out_skip
 	lsr.w	#1,d1			; 2. Maske verschieben
 	move.w	d1,fb_mask(a3)	
 fade_balls_out_quit
 	rts
-	CNOP 0,4
-fade_balls_out_skip
-	move.w	#FALSE,fbo_active(a3)
-	rts
 
 	CNOP 0,4
 rgb8_colors_fader_cross
+	movem.l a4-a6,-(a7)
 	tst.w	cfc_rgb8_active(a3)
 	bne.s	rgb8_colors_fader_cross_quit
-	movem.l a4-a6,-(a7)
 	move.w	cfc_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfc_rgb8_fader_angle_speed,d0 ; nächster Fader-Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	cfc_rgb8_fader_angle_speed,d0 ; nächster Winkel
+	cmp.w	#sine_table_length/2,d0	; Winkel <= 180 Grad ?
 	ble.s	rgb8_colors_fader_cross_skip
 	MOVEF.W sine_table_length/2,d0	; 180 Grad
 rgb8_colors_fader_cross_skip
@@ -2985,7 +2983,7 @@ rgb8_colors_fader_cross_skip
 	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
 	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
 	move.w	cfc_rgb8_color_table_start(a3),d1
-	MULUF.W LONGWORD_SIZE,d1
+	MULUF.W LONGWORD_SIZE,d1	; *32
 	lea	(a1,d1.w*8),a1
 	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
 	swap	d0
@@ -2995,11 +2993,11 @@ rgb8_colors_fader_cross_skip
 	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
 	MOVEF.W cfc_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	movem.l (a7)+,a4-a6
 	move.w	d6,cfc_rgb8_colors_counter(a3)
 	bne.s	rgb8_colors_fader_cross_quit
 	move.w	#FALSE,cfc_rgb8_active(a3)
 rgb8_colors_fader_cross_quit
+	movem.l (a7)+,a4-a6
 	rts
 
 	CNOP 0,4
@@ -3008,8 +3006,8 @@ cfc_rgb8_copy_color_table
 		move.l	a4,-(a7)
 	ENDC
 	tst.w	cfc_rgb8_copy_colors_active(a3)
-	bne.s	cfc_rgb8_copy_color_table_skip2
-	move.w	#GB_NIBBLES_MASK,d3
+	bne.s	cfc_rgb8_copy_color_table_quit
+	move.w	#RB_NIBBLES_MASK,d3
 	IFGT cfc_rgb8_colors_number-32
 		moveq	#cfc_rgb8_start_color<<3,d4 ; Color-Bank Farbregisterzähler
 	ENDC
@@ -3049,7 +3047,7 @@ cfc_rgb8_copy_color_table_loop
 	ENDC
 	IFGT cfc_rgb8_colors_number-32
 		addq.b	#1<<3,d4	; Farbregister-Zähler erhöhen
-		bne.s	cfc_rgb8_copy_color_table_skip1
+		bne.s	cfc_rgb8_copy_color_table_skip
 		addq.w	#LONGWORD_SIZE,a1 ; CMOVE überspringen
 		IFNE cl1_size1
 			addq.w	#LONGWORD_SIZE,a2 ; CMOVE überspringen
@@ -3057,18 +3055,18 @@ cfc_rgb8_copy_color_table_loop
 		IFNE cl1_size2
 			addq.w	#LONGWORD_SIZE,a4 ; CMOVE überspringen
 		ENDC
-cfc_rgb8_copy_color_table_skip1
+cfc_rgb8_copy_color_table_skip
 	ENDC
 	dbf	d7,cfc_rgb8_copy_color_table_loop
 	tst.w	cfc_rgb8_colors_counter(a3) ; Fading beendet ?
-	bne.s	cfc_rgb8_copy_color_table_skip2
+	bne.s	cfc_rgb8_copy_color_table_quit
 	move.w	#FALSE,cfc_rgb8_copy_colors_active(a3)
 	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_delay_counter(a3)
 	move.w	cfc_rgb8_color_table_start(a3),d0
 	addq.w	#1,d0			; nächste Farbtabelle
 	and.w	#cfc_rgb8_color_tables_number-1,d0 ; Überlauf entfernen
 	move.w	d0,cfc_rgb8_color_table_start(a3)
-cfc_rgb8_copy_color_table_skip2
+cfc_rgb8_copy_color_table_quit
 	IFNE cl1_size2
 		move.l	(a7)+,a4
 	ENDC
@@ -3082,9 +3080,8 @@ control_counters
 	subq.w	#1,d0
 	bpl.s	control_counters_skip1
 	move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
-	moveq	#TRUE,d1
-	move.w	d1,cfc_rgb8_copy_colors_active(a3)
-	move.w	d1,cfc_rgb8_active(a3)
+	clr.w	cfc_rgb8_copy_colors_active(a3)
+	clr.w	cfc_rgb8_active(a3)
 	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90 Grad
 control_counters_skip1
 	move.w	d0,cfc_rgb8_fader_delay_counter(a3) 
@@ -3098,80 +3095,77 @@ mouse_handler
 	rts
 	CNOP 0,4
 mh_exit_demo
-	moveq	#FALSE,d1
-	move.w	d1,pt_effects_handler_active(a3)
-	moveq	#TRUE,d0
+	move.w	#FALSE,pt_effects_handler_active(a3)
 	tst.w	hst_enabled(a3)
 	bne.s	mh_exit_demo_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; Doppelte Geschwindigkeit für Laufschrift
 	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; Scrolltext beenden
-	move.w	d0,quit_active(a3)	; Intro nach Text-Stopp beenden
-	rts
+	clr.w	quit_active(a3)	; Intro nach Text-Stopp beenden
+	bra	mh_exit_demo_quit
 	CNOP 0,4
 mh_exit_demo_skip1
-	move.w	d0,pt_music_fader_active(a3)
+	clr.w	pt_music_fader_active(a3)
 	tst.w	fbi_active(a3)
 	bne.s	mh_exit_demo_skip2
-	move.w	d1,fbi_active(a3)
+	move.w	#FALSE,fbi_active(a3)
 mh_exit_demo_skip2
 	tst.w	vb_copy_blit_mask(a3)
 	beq.s	mh_exit_demo_skip3
-	move.w	d0,fbo_active(a3)
+	clr.w	fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
 mh_exit_demo_skip3
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	tst.w	sprfi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip4
-	move.w	d1,sprfi_rgb8_active(a3)
+	move.w	#FALSE,sprfi_rgb8_active(a3)
 mh_exit_demo_skip4
-	move.w	d0,sprfo_rgb8_active(a3)
-	move.w	d0,sprf_rgb8_copy_colors_active(a3)
+	clr.w	sprfo_rgb8_active(a3)
+	clr.w	sprf_rgb8_copy_colors_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	tst.w	ifi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip5
-	move.w	d1,ifi_rgb8_active(a3)
+	move.w	#FALSE,ifi_rgb8_active(a3)
 mh_exit_demo_skip5
-	move.w	d0,ifo_rgb8_active(a3)
-	move.w	d0,if_rgb8_copy_colors_active(a3)
+	clr.w	ifo_rgb8_active(a3)
+	clr.w	if_rgb8_copy_colors_active(a3)
 	tst.w	cfi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip6
-	move.w	d1,cfi_rgb8_active(a3)
+	move.w	#FALSE,cfi_rgb8_active(a3)
 mh_exit_demo_skip6
-	move.w	d0,cfo_rgb8_active(a3)
+	clr.w	cfo_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	tst.w	bfi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip7
-	move.w	d1,bfi_rgb8_active(a3)
+	move.w	#FALSE,bfi_rgb8_active(a3)
 mh_exit_demo_skip7
-	move.w	d0,bfo_rgb8_active(a3)
-	move.w	d0,bf_rgb8_copy_colors_active(a3)
+	clr.w	bfo_rgb8_active(a3)
+	clr.w	bf_rgb8_copy_colors_active(a3)
+mh_exit_demo_quit
 	rts
 
 
 	INCLUDE "int-autovectors-handlers.i"
 
-; ** CIA-B timer A interrupt server **
 	IFEQ pt_ciatiming_enabled
 		CNOP 0,4
 ciab_ta_int_server
 	ENDC
 
-; ** Vertical blank interrupt server **
 	IFNE pt_ciatiming_enabled
 		CNOP 0,4
 VERTB_int_server
 	ENDC
 
+; **** PT-Replay ****
 	IFEQ pt_music_fader_enabled
 		bsr.s	pt_music_fader
 		bra.s	pt_PlayMusic
 
-		PT_FADE_OUT_VOLUME fx_active
+		PT_FADE_OUT_VOLUME stop_fx_active
 		CNOP 0,4
 	ENDC
 
-; ** PT-replay routine **
 	IFD PROTRACKER_VERSION_2.3A 
 		PT2_REPLAY pt_effects_handler
 	ENDC
@@ -3179,11 +3173,10 @@ VERTB_int_server
 		PT3_REPLAY pt_effects_handler
 	ENDC
 
-; --> 8xy "Not used/custom" <--
 	CNOP 0,4
 pt_effects_handler
 	tst.w	pt_effects_handler_active(a3)
-	bne.s	pt_effects_handler_skip2
+	bne.s	pt_effects_handler_quit
 	move.b	n_cmdlo(a2),d0
 	lsr.b	#4,d0
 	tst.w	pt_skip_commands_enabled(a3)
@@ -3209,21 +3202,19 @@ pt_effects_handler_skip1
 	beq.s	pt_set_stripes_y_angle_speed
 	cmp.b	#$a,d0
 	beq.s	pt_trigger_morphing
-pt_effects_handler_skip2
+pt_effects_handler_quit
 	rts
 	CNOP 0,4
 pt_start_fade_bars_in
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
-	moveq	#TRUE,d0
-	move.w	d0,bfi_rgb8_active(a3)
-	move.w	d0,bf_rgb8_copy_colors_active(a3)
+	clr.w	bfi_rgb8_active(a3)
+	clr.w	bf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_image_fader_in
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
-	moveq	#TRUE,d0
-	move.w	d0,ifi_rgb8_active(a3)
-	move.w	d0,if_rgb8_copy_colors_active(a3)
+	clr.w	ifi_rgb8_active(a3)
+	clr.w	if_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_fade_chessboard_in
@@ -3232,9 +3223,8 @@ pt_start_fade_chessboard_in
 	CNOP 0,4
 pt_start_fade_sprites_in
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
-	moveq	#TRUE,d0
-	move.w	d0,sprfi_rgb8_active(a3)
-	move.w	d0,sprf_rgb8_copy_colors_active(a3)
+	clr.w	sprfi_rgb8_active(a3)
+	clr.w	sprf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_fade_balls_in
@@ -3264,18 +3254,14 @@ pt_trigger_morphing
 	clr.w	mvb_morph_active(a3)
 	rts
 
-
-; ** CIA-B Timer B interrupt server **
 	CNOP 0,4
 ciab_tb_int_server
 	PT_TIMER_INTERRUPT_SERVER
 
-; ** Level-6-Interrupt-Server **
 	CNOP 0,4
 EXTER_int_server
 	rts
 
-; ** Level-7-Interrupt-Server **
 	CNOP 0,4
 NMI_int_server
 	rts
@@ -3287,7 +3273,6 @@ NMI_int_server
 	INCLUDE "sys-structures.i"
 
 
-; ** Farben der Playfields **
 ; **** View ****
 	CNOP 0,4
 pf1_rgb8_color_table
@@ -3308,17 +3293,15 @@ vp2_pf2_rgb8_color_table
 vp3_pf1_rgb8_color_table
 	DC.L color00_bits
 	REPT vp3_pf1_colors_number-1
-		DC.L $202020
+		DC.L $202020		; Schatten der Bälle
 	ENDR
 
-; ** Farben der Sprites **
 	CNOP 0,4
 spr_rgb8_color_table
 	REPT spr_colors_number
 		DC.L color00_bits
 	ENDR
 
-; ** Adressen der Sprites **
 	CNOP 0,4
 spr_ptrs_display
 	DS.L spr_number
@@ -3382,7 +3365,7 @@ bvm_rgb8_color_table
 		DC.L color00_bits
 	ENDR
 
-bvm_switch_table
+bvm_bplam_table
 	DC.B $33,$44,$55,$55,$44,$33 	; Bar1
 	DC.B $66,$77,$88,$88,$77,$66	; Bar2
 	DC.B $99,$aa,$bb,$bb,$aa,$99	; Bar3
@@ -3428,7 +3411,6 @@ mvb_object_shape1_coords
 	DC.W -(44*8),-(13*8),25*8	; P8
 	DC.W -(44*8),6*8,25*8		; P9
 	DC.W -(44*8),19*8,25*8		; P10
-
 ; * "S" *
 	DC.W -(19*8),-(25*8),25*8	; P11
 	DC.W -(19*8),-(13*8),25*8	; P12
@@ -3441,7 +3423,6 @@ mvb_object_shape1_coords
 	DC.W 6*8,-(32*8),25*8		; P16
 	DC.W 6*8,0,25*8			; P18
 	DC.W 6*8,13*8,25*8		; P19
-
 ; * "E" *
 	DC.W 32*8,-(32*8),25*8		; P20
 	DC.W 32*8,-(19*8),25*8		; P19
@@ -3475,7 +3456,6 @@ mvb_object_shape2_coords
 	DC.W -(13*8),6*8,25*8		; P10
 	DC.W -(13*8),19*8,25*8		; P11
 	DC.W -(19*8),32*8,25*8		; P12
-
 ; * "0" *
 	DC.W 13*8,-(44*8),25*8		; P13
 	DC.W 6*8,-(32*8),25*8		; P13
@@ -3513,7 +3493,7 @@ mvb_object_coords_offsets
 
 	CNOP 0,2
 mvb_rotation_xyz_coords
-	DS.W mvb_object_points_number*6
+	DS.W mvb_object_points_number*3
 
 	CNOP 0,4
 mvb_morph_shapes_table
@@ -3615,7 +3595,10 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING # DISSIDENT     GRAPHICS # GRASS     MUSIC # MA2E     "
+	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING # DISSIDENT     GRAPHICS # GRASS     MUSIC # MA2E           "
+
+	DC.B "RESISTANCE 1995#2025 AND BEYOND...     "
+
 	DC.B FALSE
 
 hst_stop_text
@@ -3631,6 +3614,7 @@ hst_stop_text
 
 
 ; ## Audiodaten nachladen ##
+
 	IFEQ pt_split_module_enabled
 pt_auddata SECTION pt_audio,DATA
 		INCBIN "Daten:Asm-Sources.AGA/projects/30/modules/MOD.run in neon lights.song"
@@ -3643,6 +3627,7 @@ pt_auddata SECTION pt_audio,DATA_C
 
 
 ; ## Grafikdaten nachladen ##
+
 ; **** Background-Image1 ****
 bg1_image_data SECTION bg1_gfx,DATA
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/256x208x16-Desert-Sunset.rawblit"

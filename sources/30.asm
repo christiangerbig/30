@@ -3169,6 +3169,7 @@ VERTB_int_server
 	IFD PROTRACKER_VERSION_2.3A 
 		PT2_REPLAY pt_effects_handler
 	ENDC
+
 	IFD PROTRACKER_VERSION_3.0B
 		PT3_REPLAY pt_effects_handler
 	ENDC
@@ -3206,14 +3207,14 @@ pt_effects_handler_quit
 	rts
 	CNOP 0,4
 pt_start_fade_bars_in
-	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	clr.w	bfi_rgb8_active(a3)
+	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	clr.w	bf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_image_fader_in
-	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	clr.w	ifi_rgb8_active(a3)
+	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	clr.w	if_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
@@ -3222,8 +3223,8 @@ pt_start_fade_chessboard_in
 	rts
 	CNOP 0,4
 pt_start_fade_sprites_in
-	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	clr.w	sprfi_rgb8_active(a3)
+	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	clr.w	sprf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
@@ -3245,7 +3246,7 @@ pt_enable_skip_commands
 	rts
 	CNOP 0,4
 pt_set_stripes_y_angle_speed
-	moveq	#$f,d0
+	moveq	#NIBBLE_MASK_LOW,d0
 	and.b	n_cmdlo(a2),d0
 	move.w	d0,cb_stripes_y_angle_speed(a3)
 	rts
@@ -3318,6 +3319,7 @@ sine_table
 	IFD PROTRACKER_VERSION_2.3A 
 		INCLUDE "music-tracker/pt2-period-table.i"
 	ENDC
+
 	IFD PROTRACKER_VERSION_3.0B
 		INCLUDE "music-tracker/pt3-period-table.i"
 	ENDC
@@ -3393,7 +3395,6 @@ mvb_object_coords
 ; * Zoom-In *
 	DS.W mvb_object_points_number*3
 
-; ** Formen des Objekts **
 ; ** Form 1 **
 	CNOP 0,2
 mvb_object_shape1_coords
@@ -3600,7 +3601,6 @@ hst_text
 	DC.B "RESISTANCE 1995#2025 AND BEYOND...     "
 
 	DC.B FALSE
-
 hst_stop_text
 	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
 		DC.B " "

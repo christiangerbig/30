@@ -1,9 +1,3 @@
-; Programm:	30
-; Autor:	Christian Gerbig
-; Datum:	08.10.2024
-; Version:	1.7 beta
-
-
 ; Requirements
 ; CPU:		68020+
 ; Fast-Memory:	-
@@ -17,63 +11,62 @@
 ; - First release
 
 ; V.1.1 beta
-; - CWAIT für VP2 korrigiert, damit der Farbverlauf des Schachbretts für die
-;	erste Zeile noch innerhalb der horizontalen Austastlücke erfolgt.
-; - VP1 nutzt jetzt COLOR28-31
-;	VP3 nutzt jetzt COLOR16-23 für P1 und COLOR24-28 für PF2
-; - Die Farben für VP1/PF1 und VP3/PF2 werden nicht mehr vom Copper separat
-;	initialisiert, da die Farbverläufe für VP1 und VP3 sowieso zeilenweise
-;	initialisiert werden. Insgesamt werden nur noch 240 Farben in der verti-
-;	kalen Austastlücke initialisiert.
-; - Vektor-Bälle: Einblenden und Überblenden zu anderen Farben mit Intervall
-;	und Änderung der Z-Koorinaten
-; - Nutzung des PT 8xy-Befehls für die Fader-Routinen
+; - CWAIT for VP2 corrected so that the color gradient of the checkerboard for
+;   the first row is still within the horizontal blanking interval.
+;   VP1 now uses COLOR28-31
+;   VP3 now uses COLOR16-23 for P1 and COLOR24-28 for PF2
+; - The colors for VP1/PF1 and VP3/PF2 are no longer initialized separately
+;   by the Copper, as the color gradients for VP1 and VP3 are initialized
+;   line by line.
+;   In total, only 240 colors are initialized in the vertical blanking interval.
+; - Vector balls: Fade in and fade to other colors with interval and changing
+;   the z coordinates
+; - Use of the PT 8xy command for the fader routines
 
 ; V.1.2 beta
-; - Maze's Modul integriert
-; - Fader-Cross: Bugfix, es wurde die falsche Puffer-Farbtabelle angesprochen.
-; - vp2_pf1 anstatt vp2_pf2
-; - Neue Fx-Befehle: 880/890
-; - Morphing wird jetzt über den Befehl 890 vom Modul ausgelöst. Delay-Counter
-;	ist überflüssig.
-; - Sprite-Fader-In: Timing geändert
+; - Maze's module integrated
+; - Fader-Cross: Bugfix, the wrong buffer color table was addressed.
+; - vp2_pf1 instead of vp2_pf2
+; - New fx commands: 880/890
+; - Morphing is now triggered by the module via command 890. Delay counter
+;   is superfluous.
+; - Sprite-Fader-In: Timing changed
 
 ; V.1.3 beta
-; - Laufschrift setzt jetzt später ein
-; - Das Schachbrett steht erst still und wird dabb später animiert
-; - Neuer Fx-Befehl: 8a0
+; - Scrolling text now starts later
+; - The chessboard stands still at first and is animated later
+; - New Fx command: 8a0
 
 ; V.1.4 beta
-; - FX-Befele überarbeitet
+; - Fx command revised
 ; - 880 Enable Skip-Commands
-; - 89n Set-Chessboars-Speed: Schachbrett steht erst still und bewegt sich,
-;   wenn sich die Musik ändert. Es wird langsamer, wenn die Musik langsamer
-;   wird
+; - 89n Set-Chessboars-Speed: Chessboard first stands still and then moves,
+;   when the music changes. It slows down when the music slows down.
 
 ; V.1.5 beta
-; - Crossfader: Überblenden verlangsamt
-; - Mit Grass' Tempel + Sonnenaufgangs-Grafiken
-; - Credits hinzugefügt
-; - Farbverlauf des Scrolltexts geändert
+; - Crossfader: Crossfade slows down
+; - With Grass' temple + sunrise graphics
+; - Credits added
+; - Color gradient of the scroll text changed
 
 ; V.1.6 beta
-; - Mit komplett überarbeitendem Font
-; - Scrolltext geändert
+; - With completely reworked font
+; - Scroll text changed
 
 ; V.1.7 beta
-; - Mit Grass´Ballgrafiken und Farbverläufen
-; - Schattenfarbe geändert
-; - Crossfader: Intervall geändert
+; - With Grass'Ball graphics and color gradients
+; - Shadow color changed
+; - Crossfader: Interval changed
 
 ; V.1.8 beta
-; - Hintergrundfarbe angepasst
-; - Bugfix Font: Punkt + Doppelpunkt angeglichen
+; - Background color adjusted
+; - Bugfix font: dot + colon adjusted
+; - 4pLaY's text added ?
 
 
-
-; PT 8xy-Befehl
+; PT 8xy command
 ; 810	Start-Fade-Bars-In
-; 820	Start-Fade-Image-In (Tempel)
+; 820	Start-Fade-Image-In (temple)
 ; 830	Start-Fade-Chessboard-In
 ; 840	Start-Fade-Sprites-In
 ; 850	Start-Fade-Balls-In
@@ -83,7 +76,7 @@
 ; 89n	Set-Chessboars-Speed
 ; 8a0	Trigger-Morphing
 
-; Ausführungszeit 68020: 240 Rasterzeilen
+; Execution time 68020: 240 raster lines
 
 
 	SECTION code_and_variables,CODE
@@ -198,20 +191,20 @@ pf_colors_number		EQU pf1_colors_number+pf2_colors_number
 pf_depth			EQU pf1_depth3+pf2_depth3
 
 pf_extra_number			EQU 8
-; **** Viewport 1 ****
-; ** Playfield 1 **
+; Viewport 1 
+; Playfield 1 
 extra_pf1_x_size		EQU 384
 extra_pf1_y_size		EQU 26
 extra_pf1_depth			EQU 2
 extra_pf2_x_size		EQU 384
 extra_pf2_y_size		EQU 26
 extra_pf2_depth			EQU 2
-; **** Viewport 2 ****
-; ** Playfield 1 **
+; Viewport 2 
+; Playfield 1 
 extra_pf3_x_size		EQU 320
 extra_pf3_y_size		EQU 182
 extra_pf3_depth			EQU 4
-; ** Playfield 2 **
+; Playfield 2 
 extra_pf4_x_size		EQU 320
 extra_pf4_y_size		EQU 182
 extra_pf4_depth			EQU 3
@@ -221,11 +214,11 @@ extra_pf5_depth			EQU 3
 extra_pf6_x_size		EQU 320
 extra_pf6_y_size		EQU 182
 extra_pf6_depth			EQU 3
-; **** Viewport 3 ****
+; Viewport 3 
 extra_pf7_x_size		EQU 960
 extra_pf7_y_size		EQU 1
 extra_pf7_depth			EQU 2
-; ** Playfield 2 **
+; Playfield 2 
 extra_pf8_x_size		EQU 320
 extra_pf8_y_size		EQU 48
 extra_pf8_depth			EQU 2
@@ -283,7 +276,7 @@ display_window_vstop		EQU VSTOP_256_LINES
 
 spr_pixel_per_datafetch		EQU 64 ;4x
 
-; **** Viewport 1 ****
+; Viewport 1 
 vp1_pixel_per_line		EQU 320
 vp1_visible_pixels_number	EQU 320
 vp1_visible_lines_number	EQU 26
@@ -298,7 +291,7 @@ vp1_pf_depth			EQU vp1_pf1_depth
 vp1_pf1_colors_number		EQU 4
 vp1_pf_colors_number		EQU vp1_pf1_colors_number
 
-; **** Viewport 2 ****
+; Viewport 2 
 vp2_pixel_per_line		EQU 320
 vp2_visible_pixels_number	EQU 320
 vp2_visible_lines_number	EQU 182
@@ -315,7 +308,7 @@ vp2_pf1_colors_number		EQU 16
 vp2_pf2_colors_number		EQU 8
 vp2_pf_colors_number		EQU vp2_pf1_colors_number+vp2_pf2_colors_number
 
-; **** Viewport 3 ****
+; Viewport 3 
 vp3_pixel_per_line		EQU 320
 vp3_visible_pixels_number	EQU 320
 vp3_visible_lines_number	EQU 48
@@ -333,35 +326,35 @@ vp3_pf2_colors_number		EQU 4
 vp3_pf_colors_number		EQU vp3_pf1_colors_number+vp3_pf2_colors_number
 
 
-; **** Viewport 1 ****
-; ** Playfield 1 **
+; Viewport 1 
+; Playfield 1 
 extra_pf1_plane_width		EQU extra_pf1_x_size/8
 extra_pf2_plane_width		EQU extra_pf2_x_size/8
-; **** Viewport 2 ****
-; ** Playfield1 **
+; Viewport 2 
+; Playfield1 
 extra_pf3_plane_width		EQU extra_pf3_x_size/8
-; ** Playfield2 **
+; Playfield2 
 extra_pf4_plane_width		EQU extra_pf4_x_size/8
 extra_pf5_plane_width		EQU extra_pf5_x_size/8
 extra_pf6_plane_width		EQU extra_pf6_x_size/8
-; **** Viewport 3 ****
+; Viewport 3 
 extra_pf7_plane_width		EQU extra_pf7_x_size/8
-; ** Playfield2 **
+; Playfield2 
 extra_pf8_plane_width		EQU extra_pf8_x_size/8
 
-; **** Viewport 1 ****
+; Viewport 1 
 vp1_data_fetch_width		EQU vp1_pixel_per_line/8
 vp1_pf1_plane_moduli		EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+extra_pf1_plane_width-vp1_data_fetch_width
-; **** Viewport 2 ****
+; Viewport 2 
 vp2_data_fetch_width		EQU vp2_pixel_per_line/8
 vp2_pf1_plane_moduli		EQU (extra_pf3_plane_width*(extra_pf3_depth-1))+extra_pf3_plane_width-vp2_data_fetch_width
 vp2_pf2_plane_moduli		EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_plane_width-vp2_data_fetch_width
-; **** Viewport 3 ****
+; Viewport 3 
 vp3_data_fetch_width		EQU vp3_pixel_per_line/8
 vp3_pf1_plane_moduli		EQU vp3_data_fetch_width*8
 vp3_pf2_plane_moduli		EQU (extra_pf8_plane_width*(extra_pf8_depth-1))+extra_pf8_plane_width-vp3_data_fetch_width
 
-; **** View ****
+; View 
 diwstrt_bits			EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)|(display_window_hstart&$ff)
 diwstop_bits			EQU ((display_window_vstop&$ff)*DIWSTOPF_V0)|(display_window_hstop&$ff)
 bplcon0_bits			EQU BPLCON0F_ECSENA|((pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((pf_depth&$07)*BPLCON0F_BPU0)
@@ -373,7 +366,7 @@ fmode_bits			EQU FMODEF_SPR32|FMODEF_SPAGEM|FMODEF_SSCAN2
 color00_bits			EQU $040921
 color00_high_bits		EQU $002
 color00_low_bits		EQU $491
-; **** Viewport 1 ****
+; Viewport 1 
 vp1_ddfstrt_bits		EQU DDFSTART_320_PIXEL
 vp1_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
 vp1_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
@@ -386,7 +379,7 @@ vp1_bplcon3_bits4		EQU vp1_bplcon3_bits3|BPLCON3F_LOCT
 vp1_bplcon4_bits		EQU bplcon4_bits|(BPLCON4F_BPLAM0*252)
 vp1_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp1_color00_bits		EQU color00_bits
-; **** Viewport 2 ****
+; Viewport 2 
 vp2_ddfstrt_bits		EQU DDFSTART_320_PIXEL
 vp2_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
 vp2_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
@@ -397,7 +390,7 @@ vp2_bplcon3_bits2		EQU vp2_bplcon3_bits1|BPLCON3F_LOCT
 vp2_bplcon4_bits		EQU bplcon4_bits
 vp2_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp2_color00_bits		EQU color00_bits
-; **** Viewport 3 ****
+; Viewport 3 
 vp3_ddfstrt_bits		EQU DDFSTART_320_PIXEL
 vp3_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
 vp3_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
@@ -411,26 +404,26 @@ vp3_bplcon4_bits		EQU bplcon4_bits|(BPLCON4F_BPLAM0*240)
 vp3_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp3_color00_bits		EQU color00_bits
 
-; **** Viewport 1 ****
+; Viewport 1 
 cl2_vp1_hstart1			EQU $00
 cl2_vp1_vstart1			EQU MINROW
 cl2_vp1_hstart2			EQU $00
 cl2_vp1_vstart2			EQU MINROW
-; **** Viewport 2 ****
+; Viewport 2 
 cl2_vp2_hstart			EQU HSTOP_320_PIXEL-(4*CMOVE_SLOT_PERIOD)
 cl2_vp2_vstart			EQU vp1_VSTOP-1
-; **** Viewport 3 ****
+; Viewport 3 
 cl2_vp3_hstart1			EQU HSTOP_320_PIXEL-(9*CMOVE_SLOT_PERIOD)
 cl2_vp3_vstart1			EQU vp2_VSTOP-1
 cl2_vp3_hstart2			EQU $00
 cl2_vp3_vstart2			EQU vp2_VSTOP
-; **** Copper-Interrupt ****
+; Copper-Interrupt 
 cl2_hstart			EQU $00
 cl2_vstart			EQU beam_position&$ff
 
 sine_table_length		EQU 512
 
-; **** Background-Image 1 ****
+; Background-Image 1 
 bg1_image_x_size		EQU 256
 bg1_image_plane_width		EQU bg1_image_x_size/8
 bg1_image_y_size		EQU 208
@@ -438,23 +431,23 @@ bg1_image_depth			EQU 4
 bg1_image_x_position		EQU 16
 bg1_image_y_position		EQU MINROW
 
-; **** Background-Image 2 ****
+; Background-Image 2 
 bg2_image_x_size		EQU 320
 bg2_image_plane_width		EQU bg2_image_x_size/8
 bg2_image_y_size		EQU 182
 bg2_image_depth			EQU 4
 
-; **** Ball-Image ****
+; Ball-Image 
 mvb_image_x_size		EQU 16
 mvb_image_width			EQU mvb_image_x_size/8
 mvb_image_y_size		EQU 11
 mvb_image_depth			EQU 3
 mvb_image_objects_number	EQU 4
 
-; **** PT-Replay ****
-pt_fade_out_delay		EQU 1	; Tick
+; PT-Replay 
+pt_fade_out_delay		EQU 1	; tick
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 hst_image_x_size		EQU 320
 hst_image_plane_width		EQU hst_image_x_size/8
 hst_image_depth			EQU 2
@@ -479,14 +472,14 @@ hst_text_characters_number	EQU hst_horiz_scroll_window_x_size/hst_text_character
 hst_text_x_position		EQU 32
 hst_text_y_position		EQU 0
 
-; **** Bounce-VU-Meter ****
+; Bounce-VU-Meter 
 bvm_bar_height			EQU 6
 bvm_bars_number			EQU 4
 bvm_max_amplitude		EQU vp1_visible_lines_number-bvm_bar_height
 bvm_y_centre			EQU vp1_visible_lines_number-bvm_bar_height
 bvm_y_angle_speed		EQU 8
 
-; **** Morph-Vector-Balls ****
+; Morph-Vector-Balls 
 mvb_balls_number		EQU 30
 
 mvb_rotation_d			EQU 256
@@ -516,7 +509,7 @@ mvb_clear_blit_y_size		EQU extra_pf4_y_size*(extra_pf4_depth-2)
 mvb_copy_blit_x_size		EQU mvb_image_x_size+16
 mvb_copy_blit_y_size		EQU mvb_image_y_size*mvb_image_depth
 
-; **** Chessboard ****
+; Chessboard 
 cb_destination_x_size		EQU vp3_visible_pixels_number
 cb_destination_y_size		EQU vp3_visible_lines_number
 cb_destination_plane_width_step	EQU 8
@@ -534,80 +527,80 @@ cb_stripes_y_angle_speed2	EQU 3
 cb_stripes_number		EQU 8
 cb_stripe_height		EQU 16
 
-; **** Bar-Fader ****
+; Bar-Fader 
 bf_rgb8_start_color		EQU 16
 bf_rgb8_color_table_offset	EQU 0
 bf_rgb8_colors_number		EQU spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
 
-; **** Bar-Fader-In ****
+; Bar-Fader-In 
 bfi_rgb8_fader_speed_max	EQU 6
 bfi_rgb8_fader_radius		EQU bfi_rgb8_fader_speed_max
 bfi_rgb8_fader_center		EQU bfi_rgb8_fader_speed_max+1
 bfi_rgb8_fader_angle_speed	EQU 3
 
-; **** Bar-Fader-Out ****
+; Bar-Fader-Out 
 bfo_rgb8_fader_speed_max	EQU 6
 bfo_rgb8_fader_radius		EQU bfo_rgb8_fader_speed_max
 bfo_rgb8_fader_center		EQU bfo_rgb8_fader_speed_max+1
 bfo_rgb8_fader_angle_speed	EQU 3
 
-; **** Image-Fader ****
+; Image-Fader 
 if_rgb8_start_color		EQU 1
 if_rgb8_color_table_offset	EQU 1
 if_rgb8_colors_number		EQU vp2_pf1_colors_number-1
 
-; **** Image-Fader-In ****
+; Image-Fader-In 
 ifi_rgb8_fader_speed_max	EQU 8
 ifi_rgb8_fader_radius		EQU ifi_rgb8_fader_speed_max
 ifi_rgb8_fader_center		EQU ifi_rgb8_fader_speed_max+1
 ifi_rgb8_fader_angle_speed	EQU 4
 
-; **** Image-Fader-Out ****
+; Image-Fader-Out 
 ifo_rgb8_fader_speed_max	EQU 8
 ifo_rgb8_fader_radius		EQU ifo_rgb8_fader_speed_max
 ifo_rgb8_fader_center		EQU ifo_rgb8_fader_speed_max+1
 ifo_rgb8_fader_angle_speed	EQU 3
 
-; **** Chessboard-Fader ****
+; Chessboard-Fader 
 cf_rgb8_color_table_offset	EQU 0
 cf_rgb8_colors_number		EQU vp3_visible_lines_number*2
 
-; **** Chessboard-Fader-In ****
+; Chessboard-Fader-In 
 cfi_rgb8_fader_speed_max	EQU 10
 cfi_rgb8_fader_radius		EQU cfi_rgb8_fader_speed_max
 cfi_rgb8_fader_center		EQU cfi_rgb8_fader_speed_max+1
 cfi_rgb8_fader_angle_speed	EQU 6
 
-; **** Chessboard-Fader-Out ****
+; Chessboard-Fader-Out 
 cfo_rgb8_fader_speed_max	EQU 10
 cfo_rgb8_fader_radius		EQU cfo_rgb8_fader_speed_max
 cfo_rgb8_fader_center		EQU cfo_rgb8_fader_speed_max+1
 cfo_rgb8_fader_angle_speed	EQU 4
 
-; **** Sprite-Fader ****
+; Sprite-Fader 
 sprf_rgb8_start_color		EQU 1
 sprf_rgb8_color_table_offset	EQU 1
 sprf_rgb8_colors_number		EQU spr_colors_number-1
 
-; **** Sprite-Fader-In ****
+; Sprite-Fader-In 
 sprfi_rgb8_fader_speed_max	EQU 1
 sprfi_rgb8_fader_radius		EQU sprfi_rgb8_fader_speed_max
 sprfi_rgb8_fader_center		EQU sprfi_rgb8_fader_speed_max+1
 sprfi_rgb8_fader_angle_speed	EQU 1
 
-; **** Sprite-Fader-Out ****
+; Sprite-Fader-Out 
 sprfo_rgb8_fader_speed_max	EQU 8
 sprfo_rgb8_fader_radius		EQU sprfo_rgb8_fader_speed_max
 sprfo_rgb8_fader_center		EQU sprfo_rgb8_fader_speed_max+1
 sprfo_rgb8_fader_angle_speed	EQU 4
 
-; **** Fade-Balls-In ****
+; Fade-Balls-In 
 fbi_delay			EQU 10
 
-; **** Fade-Balls-Out ****
+; Fade-Balls-Out 
 fbo_delay			EQU 5
 
-; **** Colors-Fader-Cross ****
+; Colors-Fader-Cross 
 cfc_rgb8_start_color		EQU 17
 cfc_rgb8_color_table_offset	EQU 1
 cfc_rgb8_colors_number		EQU vp2_pf2_colors_number-1
@@ -772,17 +765,17 @@ cl2_extension5_size		RS.B 0
 
 cl2_begin			RS.B 0
 
-; **** Viewport 1 ****
+; Viewport 1 
 cl2_extension1_entry		RS.B cl2_extension1_size
 cl2_WAIT1			RS.L 1
 cl2_bplcon0_1			RS.L 1
 cl2_extension2_entry 		RS.B cl2_extension2_size*vp1_visible_lines_number
-; **** Viewport 2 ****
+; Viewport 2 
 cl2_extension3_entry		RS.B cl2_extension3_size
-; **** Viewport 3 ****
+; Viewport 3 
 cl2_extension4_entry		RS.B cl2_extension4_size
 cl2_extension5_entry		RS.B cl2_extension5_size*vp3_visible_lines_number
-; **** Copper-Interrupt ****
+; Copper-Interrupt 
 cl1_WAIT			RS.L 1
 cl1_INTREQ			RS.L 1
 
@@ -791,7 +784,7 @@ cl2_end				RS.L 1
 copperlist2_size		RS.B 0
 
 
-; ** Konstanten für die größe der Copperlisten **
+; Konstanten für die größe der Copperlisten 
 cl1_size1			EQU 0
 cl1_size2			EQU 0
 cl1_size3			EQU copperlist1_size
@@ -800,7 +793,7 @@ cl2_size2			EQU copperlist2_size
 cl2_size3			EQU copperlist2_size
 
 
-; ** Sprite0 Zusatzstruktur **
+; sprite0 additional structure 
 	RSRESET
 
 spr0_extension1			RS.B 0
@@ -810,7 +803,7 @@ spr0_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr0_extension1_size		RS.B 0
 
-; ** Sprite0 Hauptstruktur **
+; sprite0 main structure 
 	RSRESET
 
 spr0_begin			RS.B 0
@@ -821,7 +814,7 @@ spr0_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite0_size			RS.B 0
 
-; ** Sprite1 Zusatzstruktur **
+; sprite1 additional structure 
 	RSRESET
 
 spr1_extension1			RS.B 0
@@ -831,7 +824,7 @@ spr1_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr1_extension1_size		RS.B 0
 
-; ** Sprite1 Hauptstruktur **
+; sprite1 main structure 
 	RSRESET
 
 spr1_begin			RS.B 0
@@ -842,7 +835,7 @@ spr1_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite1_size			RS.B 0
 
-; ** Sprite2 Zusatzstruktur **
+; sprite2 additional structure 
 	RSRESET
 
 spr2_extension1			RS.B 0
@@ -852,7 +845,7 @@ spr2_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr2_extension1_size		RS.B 0
 
-; ** Sprite2 Hauptstruktur **
+; sprite2 main structure 
 	RSRESET
 
 spr2_begin			RS.B 0
@@ -863,7 +856,7 @@ spr2_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite2_size			RS.B 0
 
-; ** Sprite3 Zusatzstruktur **
+; sprite3 additional structure 
 	RSRESET
 
 spr3_extension1			RS.B 0
@@ -873,7 +866,7 @@ spr3_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr3_extension1_size		RS.B 0
 
-; ** Sprite3 Hauptstruktur **
+; sprite3 main structure 
 	RSRESET
 
 spr3_begin			RS.B 0
@@ -884,7 +877,7 @@ spr3_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite3_size			RS.B 0
 
-; ** Sprite4 Zusatzstruktur **
+; sprite4 additional structure 
 	RSRESET
 
 spr4_extension1			RS.B 0
@@ -894,7 +887,7 @@ spr4_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr4_extension1_size		RS.B 0
 
-; ** Sprite4 Hauptstruktur **
+; sprite4 main structure 
 	RSRESET
 
 spr4_begin			RS.B 0
@@ -905,7 +898,7 @@ spr4_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite4_size			RS.B 0
 
-; ** Sprite5 Zusatzstruktur **
+; sprite5 additional structure 
 	RSRESET
 
 spr5_extension1			RS.B 0
@@ -915,7 +908,7 @@ spr5_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr5_extension1_size		RS.B 0
 
-; ** Sprite5 Hauptstruktur **
+; sprite5 main structure 
 	RSRESET
 
 spr5_begin			RS.B 0
@@ -926,7 +919,7 @@ spr5_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite5_size			RS.B 0
 
-; ** Sprite6 Zusatzstruktur **
+; sprite6 additional structure 
 	RSRESET
 
 spr6_extension1			RS.B 0
@@ -936,7 +929,7 @@ spr6_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr6_extension1_size		RS.B 0
 
-; ** Sprite6 Hauptstruktur **
+; sprite6 main structure 
 	RSRESET
 
 spr6_begin			RS.B 0
@@ -947,7 +940,7 @@ spr6_end			RS.L 1*(spr_pixel_per_datafetch/16)
 
 sprite6_size			RS.B 0
 
-; ** Sprite7 Zusatzstruktur **
+; sprite7 additional structure 
 	RSRESET
 
 spr7_extension1			RS.B 0
@@ -957,7 +950,7 @@ spr7_ext1_planedata		RS.L (spr_pixel_per_datafetch/16)*bg1_image_y_size
 
 spr7_extension1_size		RS.B 0
 
-; ** Sprite7 Hauptstruktur **
+; sprite7 main structure 
 	RSRESET
 
 spr7_begin			RS.B 0
@@ -969,7 +962,6 @@ spr7_end			RS.L 1*(spr_pixel_per_datafetch/16)
 sprite7_size			RS.B 0
 
 
-; ** Konstanten für die Größe der Spritestrukturen **
 spr0_x_size1			EQU spr_x_size1
 spr0_y_size1			EQU 0
 spr1_x_size1			EQU spr_x_size1
@@ -1005,7 +997,7 @@ spr7_x_size2			EQU spr_x_size2
 spr7_y_size2			EQU sprite7_size/(spr_x_size2/8)
 
 
-; ** Extra-Memory **
+; Extra-Memory 
 	RSRESET
 
 em_bitmap_table			RS.B cb_source_x_size*cb_destination_y_size
@@ -1020,10 +1012,11 @@ extra_memory_size		RS.B 0
 
 save_a7				RS.L 1
 
-; **** PT-Replay ****
+; PT-Replay 
 	IFD PROTRACKER_VERSION_2.3A 
 		INCLUDE "music-tracker/pt2-variables-offsets.i"
 	ENDC
+
 	IFD PROTRACKER_VERSION_3.0B
 		INCLUDE "music-tracker/pt3-variables-offsets.i"
 	ENDC
@@ -1031,17 +1024,17 @@ save_a7				RS.L 1
 pt_effects_handler_active	RS.W 1
 pt_skip_commands_enabled	RS.W 1
 
-; **** Viewport 1 ****
+; Viewport 1 
 	RS_ALIGN_LONGWORD
 vp1_pf1_construction2		RS.L 1
 vp1_pf1_display			RS.L 1
 
-; **** Viewport 2 ****
+; Viewport 2 
 vp2_pf2_construction1		RS.L 1
 vp2_pf2_construction2		RS.L 1
 vp2_pf2_display			RS.L 1
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 hst_image			RS.L 1
 hst_enabled			RS.W 1
 hst_text_table_start		RS.W 1
@@ -1049,7 +1042,7 @@ hst_text_BLTCON0_bits		RS.W 1
 hst_character_toggle_image	RS.W 1
 hst_horiz_scroll_speed		RS.W 1
 
-; **** Morph-Vector-Balls ****
+; Morph-Vector-Balls 
 mvb_rotation_x_angle		RS.W 1
 mvb_rotation_y_angle		RS.W 1
 mvb_rotation_z_angle		RS.W 1
@@ -1057,70 +1050,70 @@ mvb_rotation_z_angle		RS.W 1
 mvb_morph_active		RS.W 1
 mvb_morph_shapes_table_start	RS.W 1
 
-; **** Chessboard ****
+; Chessboard 
 cb_stripes_y_angle		RS.W 1
 cb_stripes_y_angle_speed	RS.W 1
 
-; **** Bar-Fader ****
+; Bar-Fader 
 bf_rgb8_colors_counter		RS.W 1
 bf_rgb8_copy_colors_active	RS.W 1
 
-; **** Bar-Fader-In ****
+; Bar-Fader-In 
 bfi_rgb8_active			RS.W 1
 bfi_rgb8_fader_angle		RS.W 1
 
-; **** Bar-Fader-Out ****
+; Bar-Fader-Out 
 bfo_rgb8_active			RS.W 1
 bfo_rgb8_fader_angle		RS.W 1
 
-; **** Image-Fader ****
+; Image-Fader 
 if_rgb8_colors_counter		RS.W 1
 if_rgb8_copy_colors_active	RS.W 1
 
-; **** Image-Fader-In ****
+; Image-Fader-In 
 ifi_rgb8_active			RS.W 1
 ifi_rgb8_fader_angle		RS.W 1
 
-; **** Image-Fader-Out ****
+; Image-Fader-Out 
 ifo_rgb8_active			RS.W 1
 ifo_rgb8_fader_angle		RS.W 1
 
-; **** Chessboard-Fader ****
+; Chessboard-Fader 
 cf_rgb8_colors_counter		RS.W 1
 
-; **** Chessboard-Fader-In ****
+; Chessboard-Fader-In 
 cfi_rgb8_active			RS.W 1
 cfi_rgb8_fader_angle		RS.W 1
 
-; **** Chessboard-Fader-Out ****
+; Chessboard-Fader-Out 
 cfo_rgb8_active			RS.W 1
 cfo_rgb8_fader_angle		RS.W 1
 
-; **** Sprite-Fader ****
+; Sprite-Fader 
 sprf_rgb8_colors_counter	RS.W 1
 sprf_rgb8_copy_colors_active	RS.W 1
 
-; **** Sprite-Fader-In ****
+; Sprite-Fader-In 
 sprfi_rgb8_active		RS.W 1
 sprfi_rgb8_fader_angle		RS.W 1
 
-; **** Sprite-Fader-Out ****
+; Sprite-Fader-Out 
 sprfo_rgb8_active		RS.W 1
 sprfo_rgb8_fader_angle		RS.W 1
 
-; **** Fade-Balls ****
+; Fade-Balls 
 fb_mask				RS.W 1
 vb_copy_blit_mask		RS.W 1
 
-; **** Fade-Balls-In ****
+; Fade-Balls-In 
 fbi_active			RS.W 1
 fbi_delay_counter		RS.W 1
 
-; **** Fade-Balls-Out ****
+; Fade-Balls-Out 
 fbo_active			RS.W 1
 fbo_delay_counter		RS.W 1
 
-; **** Colors-Fader-Cross ****
+; Colors-Fader-Cross 
 cfc_rgb8_active			RS.W 1
 cfc_rgb8_fader_angle		RS.W 1
 cfc_rgb8_fader_delay_counter	RS.W 1
@@ -1128,20 +1121,20 @@ cfc_rgb8_color_table_start	RS.W 1
 cfc_rgb8_colors_counter		RS.W 1
 cfc_rgb8_copy_colors_active	RS.W 1
 
-; **** Main ****
+; Main 
 stop_fx_active			RS.W 1
 quit_active			RS.W 1
 
 variables_size			RS.B 0
 
 
-; **** PT-Replay ****
+; PT-Replay 
 	INCLUDE "music-tracker/pt-song.i"
 
 	INCLUDE "music-tracker/pt-temp-channel.i"
 
 
-; **** Bounce-VU-Meter ****
+; Bounce-VU-Meter 
 	RSRESET
 
 audio_channel_info		RS.B 0
@@ -1152,7 +1145,7 @@ aci_amplitude			RS.W 1
 audio_channel_info_size		RS.B 0
 
 
-; **** Morph-Vector-Balls ****
+; Morph-Vector-Balls 
 	RSRESET
 
 mvb_morph_shape			RS.B 0
@@ -1167,19 +1160,20 @@ mvb_morph_shape_size		RS.B 0
 	CNOP 0,4
 init_main_variables
 
-; **** Viewport 1 ****
+; Viewport 1 
 	move.l	extra_pf1(a3),vp1_pf1_construction2(a3)
 	move.l	extra_pf2(a3),vp1_pf1_display(a3)
 
-; **** Viewport 2 ****
+; Viewport 2 
 	move.l	extra_pf4(a3),vp2_pf2_construction1(a3)
 	move.l	extra_pf5(a3),vp2_pf2_construction2(a3)
 	move.l	extra_pf6(a3),vp2_pf2_display(a3)
 
-; **** PT-Replay ****
+; PT-Replay 
 	IFD PROTRACKER_VERSION_2.3A 
 		PT2_INIT_VARIABLES
 	ENDC
+
 	IFD PROTRACKER_VERSION_3.0B
 		PT3_INIT_VARIABLES
 	ENDC
@@ -1189,7 +1183,7 @@ init_main_variables
 	moveq	#FALSE,d1
 	move.w	d1,pt_skip_commands_enabled(a3)
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 	lea	hst_image_data,a0
 	move.l	a0,hst_image(a3)
 	move.w	d1,hst_enabled(a3)
@@ -1199,7 +1193,7 @@ init_main_variables
 	moveq	#hst_horiz_scroll_speed1,d2
 	move.w	d2,hst_horiz_scroll_speed(a3)
 
-; **** Morph-Vector-Balls *****
+; Morph-Vector-Balls
 	move.w	d0,mvb_rotation_x_angle(a3)
 	move.w	d0,mvb_rotation_y_angle(a3)
 	move.w	d0,mvb_rotation_z_angle(a3)
@@ -1209,74 +1203,75 @@ init_main_variables
 	ELSE
 		move.w	d1,mvb_morph_active(a3)
 	ENDC
+
 	move.w	d0,mvb_morph_shapes_table_start(a3)
 
-; **** Chessboard ****
+; Chessboard 
 	move.w	d0,cb_stripes_y_angle(a3)
 	move.w	#cb_stripes_y_angle_speed1,cb_stripes_y_angle_speed(a3)
 
-; **** Bar-Fader ****
+; Bar-Fader 
 	move.w	d0,bf_rgb8_colors_counter(a3)
 	move.w	d1,bf_rgb8_copy_colors_active(a3)
 
-; **** Bar-Fader-In ****
+; Bar-Fader-In 
 	move.w	d1,bfi_rgb8_active(a3)
 	MOVEF.W sine_table_length/4,d2
-	move.w	d2,bfi_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,bfi_rgb8_fader_angle(a3) ; 90°
 
-; **** Bar-Fader-Out ****
+; Bar-Fader-Out 
 	move.w	d1,bfo_rgb8_active(a3)
-	move.w	d2,bfo_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,bfo_rgb8_fader_angle(a3) ; 90°
 
-; **** Image-Fader ****
+; Image-Fader 
 	move.w	d0,if_rgb8_colors_counter(a3)
 	move.w	d1,if_rgb8_copy_colors_active(a3)
 
-; **** Image-Fader-In ****
+; Image-Fader-In 
 	move.w	d1,ifi_rgb8_active(a3)
-	move.w	d2,ifi_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,ifi_rgb8_fader_angle(a3) ; 90°
 
-; **** Image-Fader-Out ****
+; Image-Fader-Out 
 	move.w	d1,ifo_rgb8_active(a3)
-	move.w	d2,ifo_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,ifo_rgb8_fader_angle(a3) ; 90°
 
-; **** Chessboard-Fader ****
+; Chessboard-Fader 
 	move.w	d0,cf_rgb8_colors_counter(a3)
 
-; **** Chessboard-Fader-In ****
+; Chessboard-Fader-In 
 	move.w	d1,cfi_rgb8_active(a3)
-	move.w	d2,cfi_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,cfi_rgb8_fader_angle(a3) ; 90°
 
-; **** Chessboard-Fader-Out ****
+; Chessboard-Fader-Out 
 	move.w	d1,cfo_rgb8_active(a3)
-	move.w	d2,cfo_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,cfo_rgb8_fader_angle(a3) ; 90°
 
-; **** Sprite-Fader ****
+; Sprite-Fader 
 	move.w	d0,sprf_rgb8_colors_counter(a3)
 	move.w	d1,sprf_rgb8_copy_colors_active(a3)
 
-; **** Sprite-Fader-In ****
+; Sprite-Fader-In 
 	move.w	d1,sprfi_rgb8_active(a3)
 	MOVEF.W sine_table_length/4,d2
-	move.w	d2,sprfi_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,sprfi_rgb8_fader_angle(a3) ; 90°
 
-; **** Sprite-Fader-Out ****
+; Sprite-Fader-Out 
 	move.w	d1,sprfo_rgb8_active(a3)
-	move.w	d2,sprfo_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,sprfo_rgb8_fader_angle(a3) ; 90°
 
-; **** Fade-Balls ****
+; Fade-Balls 
 	move.w	#$8888,fb_mask(a3)
 	move.w	d0,vb_copy_blit_mask(a3)
 
-; **** Fade-Balls-In ****
+; Fade-Balls-In 
 	move.w	d1,fbi_active(a3)
 	move.w	d1,fbi_delay_counter(a3)
 
-; **** Fade-Balls-Out ****
+; Fade-Balls-Out 
 	move.w	d1,fbo_active(a3)
 	move.w	d1,fbo_delay_counter(a3)
 
-; **** Colors-Fader-Cross ****
+; Colors-Fader-Cross 
 	IFEQ cfc_rgb8_prefade_enabled
 		move.w	d0,cfc_rgb8_active(a3)
 		move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
@@ -1286,11 +1281,11 @@ init_main_variables
 		move.w	d0,cfc_rgb8_colors_counter(a3)
 		move.w	d1,cfc_rgb8_copy_colors_active(a3)
 	ENDC
-	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90°
 	move.w	d1,cfc_rgb8_fader_delay_counter(a3)
 	move.w	d0,cfc_rgb8_color_table_start(a3)
 
-; **** Main ****
+; Main 
 	move.w	d1,stop_fx_active(a3)
 	move.w	d1,quit_active(a3)
 	rts
@@ -1326,7 +1321,7 @@ init_main
 	bsr	init_first_copperlist
 	bra	init_second_copperlist
 
-; **** PT-Replay ****
+; PT-Replay 
 	PT_DETECT_SYS_FREQUENCY
 
 	PT_INIT_REGISTERS
@@ -1339,20 +1334,20 @@ init_main
 		PT_INIT_FINETUNE_TABLE_STARTS
 	ENDC
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 	INIT_CHARACTERS_OFFSETS.W hst
 
 	INIT_CHARACTERS_X_POSITIONS hst,LORES
 
 	INIT_CHARACTERS_IMAGES hst
 
-; **** Bouncing-VU-Meter ****
+; Bouncing-VU-Meter 
 	CNOP 0,4
 bvm_init_audio_channels_info
 	lea	bvm_audio_channel1_info(pc),a0
-	move.w	#sine_table_length/4,(a0)+ ; Y-Winkel 90 Grad = maximaler Ausschlag
+	move.w	#sine_table_length/4,(a0)+ ; y angle 90° = max amplitude
 	moveq	#0,d1
-	move.w	d1,(a0);Amplitude = 0
+	move.w	d1,(a0)			; amplitude = 0
 	lea	bvm_audio_channel2_info(pc),a0
 	move.w	d0,(a0)+
 	move.w	d1,(a0)
@@ -1367,49 +1362,49 @@ bvm_init_audio_channels_info
 	CNOP 0,4
 bvm_init_rgb8_color_table
 	move.l	#color00_bits,d1
-	lea	bvm_rgb8_color_gradients(pc),a0 ; Quelle Farbverlauf
-	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Ziel
-	moveq	#bvm_bars_number-1,d7	; Anzahl der Abschnitte
+	lea	bvm_rgb8_color_gradients(pc),a0 ; source
+	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; target
+	moveq	#bvm_bars_number-1,d7
 bvm_init_rgb8_color_table_loop1
-	moveq	#(bvm_bar_height/2)-1,d6 ; Anzahl der Zeilen
+	moveq	#(bvm_bar_height/2)-1,d6
 bvm_init_rgb8_color_table_loop2
-	move.l	(a0)+,d0		; RGB8-Farbwert
+	move.l	(a0)+,d0		; RGB8 value
 	move.l	d1,(a1)+;COLOR00
-	moveq	#(spr_colors_number-1)-1,d5 ; Anzahl der Farbwerte pro Palettenabschnitt
+	moveq	#(spr_colors_number-1)-1,d5 ; number of color values per palette
 bvm_init_rgb8_color_table_loop3
-	move.l	d0,(a1)+;Farbwert eintragen
+	move.l	d0,(a1)+;color value eintragen
 	dbf	d5,bvm_init_rgb8_color_table_loop3
 	dbf	d6,bvm_init_rgb8_color_table_loop2
 	dbf	d7,bvm_init_rgb8_color_table_loop1
 	rts
 
-; **** Background-Image-2 ****
+; Background-Image-2 
 	COPY_IMAGE_TO_BITPLANE bg2,,,extra_pf3
 
-; **** Morph-Vector-Balls ****
+; Morph-Vector-Balls 
 	CNOP 0,4
 mvb_init_object_coords
-	lea	mvb_object_coords_offsets(pc),a0 ; Zeiger auf Offset-Tabelle
-	moveq	#0,d0			; Startwert
+	lea	mvb_object_coords_offsets(pc),a0
+	moveq	#0,d0			; start value
 	moveq	#mvb_object_points_number-1,d7
 mvb_init_object_coords_loop
-	move.w	d0,(a0)+		; Startwert
-	addq.w	#3,d0			; nächste XYZ-Koordinate
+	move.w	d0,(a0)+		; start value
+	addq.w	#3,d0			; next xyz coodinate
 	dbf	d7,mvb_init_object_coords_loop
 	rts
 
 	CNOP 0,4
 mvb_init_morph_shapes
-	lea	mvb_morph_shapes_table(pc),a0 ; Tabelle mit Zeigern auf Objektdaten
+	lea	mvb_morph_shapes_table(pc),a0
 	lea	mvb_object_shape1_coords(pc),a1
-	move.l	a1,(a0)+		; Zeiger auf Form-Tabelle
+	move.l	a1,(a0)+		; pointer shape table
 	lea	mvb_object_shape2_coords(pc),a1
 	IFEQ mvb_morph_loop_enabled
-		move.l	a1,(a0)		; Zeiger auf Form-Tabelle
+		move.l	a1,(a0)		; pointer shape table
 	ELSE
-		move.l	a1,(a0)+	; Zeiger auf Form-Tabelle
+		move.l	a1,(a0)+	; pointer shape table
 		lea	mvb_object_shape3_coords(pc),a1
-		move.l	a1,(a0)		; Zeiger auf Form-Tabelle
+		move.l	a1,(a0)		; pointer shape table
 	ENDC
 	rts
 
@@ -1422,58 +1417,58 @@ mvb_init_start_shape
 		rts
 	ENDC
 
-; **** Chessboard ****
+; Chessboard 
 	CNOP 0,4
 cb_init_chessboard_image
-	movem.w cb_fill_pattern(pc),d0-d3 ; Füllmuster High&Low 1. Wort, High&Low 2. Wort
+	movem.w cb_fill_pattern(pc),d0-d3 ; fill pattern high&low first word, high&low second word
 	move.l	extra_pf7(a3),a0
-	move.l	(a0)+,a1		; Bitplane0
-	move.l	(a0),a2			; Bitplane1
-	moveq	#(cb_source_x_size/32)-1,d7 ; Anzahl der Wiederholungen des Musters
+	move.l	(a0)+,a1		; bitplane1
+	move.l	(a0),a2			; bitplane2
+	moveq	#(cb_source_x_size/32)-1,d7
 cb_init_chessboard_image_loop
-	move.w	d0,(a1)+		; High 1. Wort
-	move.w	d1,(a2)+		; High 2. Wort
-	move.w	d2,(a1)+		; Low 1. Wort
-	move.w	d3,(a2)+		; Low 2. Wort
+	move.w	d0,(a1)+		; high first word
+	move.w	d1,(a2)+		; high second word
+	move.w	d2,(a1)+		; low first word
+	move.w	d3,(a2)+		; low second word
 	dbf	d7,cb_init_chessboard_image_loop
 	rts
 
 	CNOP 0,4
 cb_init_bitmap_table
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_bitmap_table,a0	; Zeiger auf Bitmap-Tabelle
-	move.w	#cb_source_x_size,a1	; Breite des QuellPlayfieldes in Pixeln
+	ADDF.L	em_bitmap_table,a0
+	move.w	#cb_source_x_size,a1
 	move.l	a1,d3
-	moveq	#(cb_destination_x_size)/16,d4 ; Breite des Zielbildes in Pixeln
+	moveq	#(cb_destination_x_size)/16,d4
 	swap	d3			; *2^16
 	lsl.w	#4,d4
-	MOVEF.W cb_destination_y_size-1,d7 ; Anzahl der Zeilen in Bitmap-Tabelle
+	MOVEF.W cb_destination_y_size-1,d7
 cb_init_bitmap_table_loop1
-	move.l	d3,d2			; Breite des Quellbildes untere 32 Bit
-	moveq	#0,d6			; Breite des Quellbildes obere 32 Bit
-	divu.l	d4,d6:d2		; F=Breite des Quellbildes/Breite der Zielbildes
+	move.l	d3,d2			; width source image lower 32 bits
+	moveq	#0,d6			; width source image higher 32 bits
+	divu.l	d4,d6:d2		; F=width source/width destination
 	moveq	#0,d1
-	move.w	d4,d6			; Breite des Zielbilds
-	subq.w	#1,d6			; wegen dbf
+	move.w	d4,d6			; width target
+	subq.w	#1,d6			; loop until false
 cb_init_bitmap_table_loop2
 	move.l	d1,d0			; F
-	swap	d0			; /2^16 = Bitmapposition
-	add.l	d2,d1			; F erhöhen (p*F)
-	addq.b	#1,(a0,d0.w)		; Pixel in Tabelle setzen
+	swap	d0			; /2^16 = bitmap position
+	add.l	d2,d1			; decrease F (p*F)
+	addq.b	#1,(a0,d0.w)		; set pixel in bitmap table
 	dbf	d6,cb_init_bitmap_table_loop2
-	add.l	a1,a0			; nächste Zeile in Bitmap-Tabelle
-	addq.l	#cb_destination_plane_width_step,d4 ; Breite des Zielbilds erhöhen
+	add.l	a1,a0			; next line in bitmap table
+	addq.l	#cb_destination_plane_width_step,d4 ; decrease width target
 	dbf	d7,cb_init_bitmap_table_loop1
 	rts
 
 	CNOP 0,4
 cb_init_color_tables
-	lea	cb_color_gradient1(pc),a0 ; Quelle1
-	lea	cb_color_gradient2(pc),a1 ; Quelle2
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; Ziel
+	lea	cb_color_gradient1(pc),a0 ; source1
+	lea	cb_color_gradient2(pc),a1 ; source2
+	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; target
 	moveq	#vp3_visible_lines_number-1,d7
 cb_init_color_tables_loop1
-	move.l	(a0)+,(a2)+		; Farbwerte verschachteln
+	move.l	(a0)+,(a2)+		; nest color values
 	move.l	(a1)+,(a2)+
 	dbf	d7,cb_init_color_tables_loop1
 
@@ -1585,34 +1580,34 @@ cl1_vp2_pf1_set_plane_ptrs
 	move.l	cl1_display(a3),a0
 	ADDF.L	cl1_extension1_entry+cl1_ext1_BPL3PTH+WORD_SIZE,a0
 	move.l	extra_pf3(a3),a1
-	addq.w	#LONGWORD_SIZE,a1	; Zeiger auf zweite Bitplane
-	moveq	#(vp2_pf1_depth-1)-1,d7	; Anzahl der Bitplanes
+	addq.w	#LONGWORD_SIZE,a1	; pointer bitplane2
+	moveq	#(vp2_pf1_depth-1)-1,d7
 cl1_vp2_pf1_set_plane_ptrs_loop
-	move.w	(a1)+,(a0)		; High-Wert
-	addq.w	#2*LONGWORD_SIZE,a0	; nächter Bitplanezeiger
-	move.w	(a1)+,LONGWORD_SIZE-(2*LONGWORD_SIZE)(a0) ; Low-Wert
+	move.w	(a1)+,(a0)		; high
+	addq.w	#2*LONGWORD_SIZE,a0	; next bitplane pointer
+	move.w	(a1)+,LONGWORD_SIZE-(2*LONGWORD_SIZE)(a0) ; low
 	dbf	d7,cl1_vp2_pf1_set_plane_ptrs_loop
 	rts
 
 	CNOP 0,4
 init_second_copperlist
 	move.l	cl2_construction2(a3),a0
-; **** Viewport 1 ****
+; Viewport 1 
 	bsr	cl2_vp1_init_playfield_props
 	bsr	cl2_vp1_init_plane_ptrs
 	COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
 	COP_MOVEQ vp1_bplcon0_bits,BPLCON0
 	bsr	cl2_vp1_init_color_gradient
-; **** Viewport 2 ****
+; Viewport 2 
 	COP_WAIT cl2_vp2_HSTART,cl2_vp2_VSTART
 	bsr	cl2_vp2_init_playfield_props
 	bsr	cl2_vp2_init_plane_ptrs
-; **** Viewport 3 ****
+; Viewport 3 
 	COP_WAIT cl2_vp3_hstart1,cl2_vp3_vstart1
 	bsr	cl2_vp3_init_playfield_props
 	bsr	cl2_vp3_init_plane_ptrs
 	bsr	cl2_vp3_init_color_gradient
-; **** Copper-Interrupt ****
+; Copper-Interrupt 
 	bsr	cl2_init_copper_interrupt
 	COP_LISTEND
 	bsr	cl2_vp1_pf1_set_plane_ptrs
@@ -1626,47 +1621,47 @@ init_second_copperlist
 	bsr	set_vp1_playfield1
 	bra	set_vp2_playfield2
 
-; **** Viewport 1 ****
+; Viewport 1 
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp1
 
 	CNOP 0,4
 cl2_vp1_init_plane_ptrs
 	MOVEF.W BPL1PTH,d0
-	moveq	#(vp1_pf1_depth*2)-1,d7	; Anzahl der Bitplanes
+	moveq	#(vp1_pf1_depth*2)-1,d7
 cl2_vp1_init_plane_ptrs_loop
 	move.w	d0,(a0)			; BPLxPTH/L
-	addq.w	#WORD_SIZE,d0		; nächstes Register
-	addq.w	#LONGWORD_SIZE,a0	; nächster Eintrag in CL
+	addq.w	#WORD_SIZE,d0		; next register
+	addq.w	#LONGWORD_SIZE,a0	; next bitplane pointer
 	dbf	d7,cl2_vp1_init_plane_ptrs_loop
 	rts
 
 	CNOP 0,4
 cl2_vp1_init_color_gradient
-	move.l	#(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; WAIT-Befehl
-	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; High-Werte
+	move.l	#(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; WAIT command
+	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; color high values
 	move.l	#(COLOR29<<16)|color00_high_bits,d2
 	move.l	#(COLOR30<<16)|color00_high_bits,d3
-	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ; Low-RGB-Werte
+	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ; color low values
 	move.l	#(COLOR29<<16)|color00_low_bits,d5
 	moveq	#1,d6
-	ror.l	#8,d6			; Additionswert
+	ror.l	#8,d6			; next line in cl
 	move.l	#(COLOR30<<16)|color00_low_bits,a1
 	move.l	#(BPLCON4<<16)|vp1_bplcon4_bits,a2
 	MOVEF.W vp1_visible_lines_number-1,d7
 cl2_vp1_init_color_gradient_loop
 	move.l	d0,(a0)+		; WAIT x,y
-	move.l	d1,(a0)+		; BPLCON3 High-Werte
+	move.l	d1,(a0)+		; BPLCON3 color high values
 	move.l	d2,(a0)+		; COLOR29
 	move.l	d3,(a0)+		; COLOR30
-	move.l	d4,(a0)+		; BPLCON3 Low-Werte
+	move.l	d4,(a0)+		; BPLCON3 color low values
 	move.l	d5,(a0)+		; COLOR39
 	move.l	a1,(a0)+		; COLOR30
-	add.l	d6,d0			; nächste Zeile
+	add.l	d6,d0			; next line in cl
 	move.l	a2,(a0)+		; BPLCON4
 	dbf	d7,cl2_vp1_init_color_gradient_loop
 	rts
 
-; **** Viewport 2 ****
+; Viewport 2 
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp2
 
 	CNOP 0,4
@@ -1682,7 +1677,7 @@ cl2_vp2_init_plane_ptrs
 	COP_MOVEQ vp2_bplcon0_bits,BPLCON0
 	rts
 
-; **** Viewport 3 ****
+; Viewport 3 
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp3
 
 	CNOP 0,4
@@ -1702,48 +1697,48 @@ cl2_vp3_init_plane_ptrs
 
 	CNOP 0,4
 cl2_vp3_init_color_gradient
-	move.l	#(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; WAIT-Befehl
-	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ; High-Werte
+	move.l	#(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; WAIT command
+	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ; color high values
 	move.l	#(COLOR25<<16)|color00_high_bits,d2
 	move.l	#(COLOR26<<16)|color00_high_bits,d3
-	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; Low-Werte
-	move.l	#(((CL_Y_WRAP<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; WAIT-Befehl
+	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; color low values
+	move.l	#(((CL_Y_WRAP<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; WAIT command
 	moveq	#1,d6
-	ror.l	#8,d6			; Additionswert nächste Zeile
+	ror.l	#8,d6			; next line in cl
 	move.l	#(COLOR25<<16)|color00_low_bits,a1
 	move.l	#(COLOR26<<16)|color00_low_bits,a2
 	moveq	#vp3_visible_lines_number-1,d7
 cl2_vp3_init_color_gradient_loop
 	move.l	d0,(a0)+		; WAIT x,y
-	move.l	d1,(a0)+		; High-Werte
+	move.l	d1,(a0)+		; BPLCON3 color high values
 	move.l	d2,(a0)+		; COLOR25
 	move.l	d3,(a0)+		; COLOR26
-	move.l	d4,(a0)+		; Low-Werte
+	move.l	d4,(a0)+		; BPLCON3 color low values
 	move.l	a1,(a0)+		; COLOR25
 	move.l	a2,(a0)+		; COLOR26
 	COP_MOVEQ 0,NOOP
-	cmp.l	d5,d0			; Rasterzeile $ff erreicht ?
+	cmp.l	d5,d0			; Rasterline $ff reached ?
 	bne.s	cl2_vp3_init_color_gradient_skip
 	subq.w	#LONGWORD_SIZE,a0
-	COP_WAIT CL_X_WRAP,CL_Y_WRAP	; Copperliste patchen
+	COP_WAIT CL_X_WRAP,CL_Y_WRAP	; patch cl
 cl2_vp3_init_color_gradient_skip
-	add.l	d6,d0			; nächste Zeile in CL
+	add.l	d6,d0			; next line in cl
 	dbf	d7,cl2_vp3_init_color_gradient_loop
 	rts
 
 	COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART
 
-; **** Viewport 1 ****
+; Viewport 1 
 	CNOP 0,4
 cl2_vp1_pf1_set_plane_ptrs
 	move.l	cl2_display(a3),a0 
 	ADDF.W	cl2_extension1_entry+cl2_ext1_BPL1PTH+WORD_SIZE,a0
-	move.l	vp1_pf1_display(a3),a1 	; Zeiger auf erste Plane
-	moveq	#vp1_pf1_depth-1,d7	; Anzahl der Bitplanes
+	move.l	vp1_pf1_display(a3),a1 	; bitplane1
+	moveq	#vp1_pf1_depth-1,d7
 cl2_vp1_pf1_set_plane_ptrs_loop
-	move.w	(a1)+,(a0)		; High-Wert
-	addq.w	#QUADWORD_SIZE,a0	; nächter Bitplanezeiger
-	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; Low-Wert
+	move.w	(a1)+,(a0)		; high value
+	addq.w	#QUADWORD_SIZE,a0	; next bitplane pointer
+	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; low value
 	dbf	d7,cl2_vp1_pf1_set_plane_ptrs_loop
 	rts
 
@@ -1754,15 +1749,15 @@ cl2_vp1_set_fill_gradient
 	move.l	cl2_construction2(a3),a1
 	ADDF.W	cl2_extension2_entry+cl2_ext2_COLOR29_high8+WORD_SIZE,a1
 	move.w	#cl2_extension2_size,a2
-	lea	(a1,a2.l*2),a1		; Zwei Rasterzeilen überspringen
+	lea	(a1,a2.l*2),a1		; skip two raster lines
 	MOVEF.W (vp1_visible_lines_number-4)-1,d7
 cl2_vp1_set_fill_gradient_loop
 	move.l	(a0)+,d0
 	move.l	d0,d2
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a1)			; High-Werte
+	move.w	d0,(a1)			; high value
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ; Low-Werte
+	move.w	d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ; low value
 	add.l	a2,a1
 	dbf	d7,cl2_vp1_set_fill_gradient_loop
 	rts
@@ -1779,37 +1774,37 @@ cl2_vp1_set_outline_gradient_loop
 	move.l	(a0)+,d0
 	move.l	d0,d2
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a1)			; High-Werte
+	move.w	d0,(a1)			; high value
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ; Low-Werte
+	move.w	d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ; low value
 	add.l	a2,a1
 	dbf	d7,cl2_vp1_set_outline_gradient_loop
 	rts
 
-; **** Viewport 2 ****
+; Viewport 2 
 	CNOP 0,4
 cl2_vp2_pf1_set_plane_ptrs
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension3_entry+cl2_ext3_BPL1PTH+WORD_SIZE,a0
-	move.l	extra_pf3(a3),a1	; Zeiger auf erste Bitplane
-	moveq	#(vp2_pf1_depth-3)-1,d7	; Anzahl der Bitplanes
+	move.l	extra_pf3(a3),a1
+	moveq	#(vp2_pf1_depth-3)-1,d7
 cl2_vp2_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	addq.w	#QUADWORD_SIZE,a0	; nächter Bitplanezeiger
+	addq.w	#QUADWORD_SIZE,a0	; next bitplane pointer
 	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; BPLxPTL
 	dbf	d7,cl2_vp2_pf1_set_plane_ptrs_loop
 	rts
 
-; **** Viewport 3 ****
+; Viewport 3 
 	CNOP 0,4
 cl2_vp3_pf1_set_plane_ptrs
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension4_entry+cl2_ext4_BPL1PTH+WORD_SIZE,a0
-	move.l	extra_pf4(a3),a1	; Zeiger auf erste Bitplane
-	moveq	#vp3_pf1_depth-1,d7	; Anzahl der Bitplanes
+	move.l	extra_pf4(a3),a1
+	moveq	#vp3_pf1_depth-1,d7
 cl2_vp3_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	2*QUADWORD_SIZE,a0	; nächter Playfieldzeiger
+	ADDF.W	2*QUADWORD_SIZE,a0	; next bitplane pointer
 	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf1_set_plane_ptrs_loop
 	rts
@@ -1818,11 +1813,11 @@ cl2_vp3_pf1_set_plane_ptrs_loop
 cl2_vp3_pf2_set_plane_ptrs
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension4_entry+cl2_ext4_BPL2PTH+WORD_SIZE,a0
-	move.l	extra_pf8(a3),a1	; Zeiger auf erste Plane
-	moveq	#vp3_pf2_depth-1,d7	; Anzahl der Bitplanes
+	move.l	extra_pf8(a3),a1	; pointer bitplane1
+	moveq	#vp3_pf2_depth-1,d7
 cl2_vp3_pf2_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	2*QUADWORD_SIZE,a0	; nächter Playfieldzeiger
+	ADDF.W	2*QUADWORD_SIZE,a0	; next bitplane pointer
 	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf2_set_plane_ptrs_loop
 	rts
@@ -1848,58 +1843,58 @@ no_sync_routines
 cfc_rgb8_init_start_colors
 		bsr	cfc_rgb8_copy_color_table
 		bsr	rgb8_colors_fader_cross
-		tst.w	cfc_rgb8_copy_colors_active(a3) ; Kopieren der Farbwerte beendet?
+		tst.w	cfc_rgb8_copy_colors_active(a3)
 		beq.s	cfc_rgb8_init_start_colors
-		move.w	#-1,cfc_rgb8_copy_colors_active(a3) ; Verzögerungszähler desktivieren
+		move.w	#FALSE,cfc_rgb8_copy_colors_active(a3) ; deactivate delay counter
 		rts
 	ENDC
 
 	CNOP 0,4
 cb_scale_image
 	movem.l a4-a5,-(a7)
-	moveq	#0,d4			; 1. X-Koord in Zielbild
+	moveq	#0,d4			; first x coordinate target
 	move.l	extra_memory(a3),a0
 	ADDF.L	em_bitmap_table,a0
 	move.l	extra_pf7(a3),a1	
-	move.l	(a1),a1			; Zeiger auf Quellbild
+	move.l	(a1),a1			; pointer source image
 	move.l	extra_pf8(a3),a2
-	move.l	(a2),a2         	; Zeiger auf Zielbild
-	move.w	#cb_x_max,a4		; X-Max in Zielbild
+	move.l	(a2),a2         	; pointer target image
+	move.w	#cb_x_max,a4		; x max target image
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
 	moveq	#cb_destination_y_size-1,d7
 cb_scale_image_loop1
-	moveq	#0,d2			; 1. X-Koord in Quellbild
-	move.w	d4,d3			; X-Koord in Zielbild
+	moveq	#0,d2			; first x coordinate source image
+	move.w	d4,d3			; x coordinate target image
 	MOVEF.W cb_source_x_size-1,d6
 cb_scale_image_loop2
-	tst.b	(a0)+			; Spalte setzen ?
+	tst.b	(a0)+			; set pixel ?
 	beq.s	cb_scale_image_skip4
-	move.w	d3,d1			; X-Koord in Zielbild
+	move.w	d3,d1			; x coordinate target image
 	bmi.s	cb_scale_image_skip3
-	cmp.w	a4,d1			; X >= X-Max ?
+	cmp.w	a4,d1			; x >= max ?
 	bge.s	cb_scale_image_skip3
-	move.w	d2,d0			; X-Koord in Quellbild
-	lsr.w	#3,d0			; X-Offset in Quellbild
-	not.b	d2			; Shiftwert für Quellbyte ermitteln
-	lsr.w	#3,d1			; X-Offset in Zielbild
-	not.b	d3			; Shiftwert für Zielbyte ermitteln
-	btst	d2,(a1,d0.w)		; Pixel in Quellbyte gesetzt ?
+	move.w	d2,d0			; x coordinate source
+	lsr.w	#3,d0			; x offset source
+	not.b	d2			; shift value source byte
+	lsr.w	#3,d1			; x offset target
+	not.b	d3			; shift value target byte
+	btst	d2,(a1,d0.w)		; pixel set in source byte ?
 	beq.s	cb_scale_image_skip1
-	bset	d3,(a2,d1.w)		; Pixel setzen
+	bset	d3,(a2,d1.w)		; set pixel destination byte
 cb_scale_image_skip1
-	btst	d2,(extra_pf7_plane_width,a1,d0.w) ; Pixel in Quellbyte gesetzt ?
+	btst	d2,(extra_pf7_plane_width,a1,d0.w) ; pixel set in source byte ?
 	beq.s	cb_scale_image_skip2
-	bset	d3,extra_pf8_plane_width(a2,d1.w) ; Pixel setzen
+	bset	d3,extra_pf8_plane_width(a2,d1.w) ; set pixel destination byte
 cb_scale_image_skip2
-	not.b	d3			; Bitnummer wieder in X-Koord Zielbild umwandeln
-	not.b	d2			; Bitnummer wieder in X-Koord Quellbild umwandeln
+	not.b	d3			; convert bit number to x coordinate target
+	not.b	d2			; convert bit number to x coordinate source
 cb_scale_image_skip3
-	addq.w	#1,d3			; nächstes Pixel in Zielbild
+	addq.w	#1,d3			; next pixel in target
 cb_scale_image_skip4
-	addq.w	#1,d2			; nächstes Pixel in Quellbild
+	addq.w	#1,d2			; next pixel in source
 	dbf	d6,cb_scale_image_loop2
-	add.l	a5,a2			; nächste Zeile in Zielbild
-	subq.w	#cb_destination_x_size_step,d4 ; X-Pos in Zielbild reduzieren
+	add.l	a5,a2			; next line in target
+	subq.w	#cb_destination_x_size_step,d4 ; decrease x position in target
 	dbf	d7,cb_scale_image_loop1
 	movem.l (a7)+,a4-a5
 	rts
@@ -2005,7 +2000,7 @@ set_vp3_playfield1
 	move.l	cl2_display(a3),a0
 	ADDF.W	cl2_extension4_entry+cl2_ext4_BPL1PTH+WORD_SIZE,a0
 	move.l	vp2_pf2_display(a3),a1
-	moveq	#vp3_pf1_depth-1,d7	; Anzahl der Planes
+	moveq	#vp3_pf1_depth-1,d7
 set_vp3_playfield1_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	ADDF.W	2*QUADWORD_SIZE,a0
@@ -2026,7 +2021,7 @@ horiz_scrolltext
 	move.w	#(hst_text_character_y_size*hst_text_character_depth*64)+(hst_text_character_x_size/16),d4 ; BLTSIZE
 	move.w	#hst_text_character_x_restart,d5
 	lea	hst_characters_x_positions(pc),a0
-	lea	hst_characters_image_ptrs(pc),a1 ; Zeiger auf Adressen der Chars-Images
+	lea	hst_characters_image_ptrs(pc),a1
 	lea	BLTAPT-DMACONR(a6),a2
 	lea	BLTDPT-DMACONR(a6),a4
 	lea	BLTSIZE-DMACONR(a6),a5
@@ -2034,21 +2029,21 @@ horiz_scrolltext
 	moveq	#hst_text_characters_number-1,d7
 horiz_scrolltext_loop
 	moveq	#0,d0
-	move.w	(a0),d0			; X-Position
+	move.w	(a0),d0			; x
 	move.w	d0,d2	
-	lsr.w	#3,d0			; X/8
-	add.l	d3,d0			; X-Offset
+	lsr.w	#3,d0			; x/8
+	add.l	d3,d0			; x offset
 	WAITBLIT
-	move.l	(a1)+,(a2)		; Char-Image
-	move.l	d0,(a4)			; Playfield
-	move.w	d4,(a5)			; Blitter starten
+	move.l	(a1)+,(a2)		; character image
+	move.l	d0,(a4)			; playfield
+	move.w	d4,(a5)			; start blit
 	sub.w	hst_horiz_scroll_speed(a3),d2
 	bpl.s	horiz_scrolltext_skip
 	move.l	a0,-(a7)
 	bsr.s   hst_get_new_character_image
 	move.l	(a7)+,a0
-	move.l	d0,-4(a1)		; Bild für Character
-	add.w	d5,d2			; X-Pos. Neustart
+	move.l	d0,-4(a1)		; new character image
+	add.w	d5,d2			; restart x position
 horiz_scrolltext_skip
 	move.w	d2,(a0)+
 	dbf	d7,horiz_scrolltext_loop
@@ -2060,18 +2055,18 @@ horiz_scrolltext_quit
 horiz_scrolltext_init
 	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
-	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ; Minterm D=A
+	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D=A
 	moveq	#-1,d0
-	move.l	d0,BLTAFWM-DMACONR(a6)	; keine Ausmaskierung
-	move.l	#((hst_image_plane_width-hst_text_character_width)<<16)|(extra_pf1_plane_width-hst_text_character_width),BLTAMOD-DMACONR(a6) ; A-Mod + D-Mod
+	move.l	d0,BLTAFWM-DMACONR(a6)	; no masking
+	move.l	#((hst_image_plane_width-hst_text_character_width)<<16)|(extra_pf1_plane_width-hst_text_character_width),BLTAMOD-DMACONR(a6) ; A&D-moduli
 	rts
 
 	CNOP 0,4
 hst_get_text_softscroll
 	moveq	#hst_text_character_x_size-1,d0
-	and.w	(a0),d0			; X-Pos
-	ror.w	#4,d0			; Bits in richtige Position bringen
-	or.w	#BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC,d0 ; Minterm D=A
+	and.w	(a0),d0			; x
+	ror.w	#4,d0			; adjust shift bits
+	or.w	#BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC,d0 ; minterm D=A
 	move.w	d0,hst_text_bltcon0_bits(a3) 
 	rts
 
@@ -2079,36 +2074,31 @@ hst_get_text_softscroll
 
 	CNOP 0,4
 hst_check_control_codes
-; Input
-; d0.b	... ASCII-Code
-; Result
-; d0.l	... Rückgabewert: Return-Code
+; input
+; d0.b	... ASCII code
+; Rrsult
+; d0.l	... return value: return code
 	cmp.b	#ASCII_CTRL_S,d0
 	beq.s	hst_stop_scrolltext
 	rts
 	CNOP 0,4
 hst_stop_scrolltext
-	move.w	#FALSE,hst_enabled(a3)	; Text stoppen
-	tst.w	quit_active(a3)		; Soll Intro beendet werden?
+	move.w	#FALSE,hst_enabled(a3)	; stop scrolltext
+	tst.w	quit_active(a3)		; quit intro ?
 	bne.s	hst_stop_scrolltext_quit
 	clr.w	pt_music_fader_active(a3)
-
 	clr.w	fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
-
-	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	clr.w	sprfo_rgb8_active(a3)
+	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	clr.w	sprf_rgb8_copy_colors_active(a3)
-
-	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	clr.w	ifo_rgb8_active(a3)
+	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	clr.w	if_rgb8_copy_colors_active(a3)
-
 	clr.w	cfo_rgb8_active(a3)
-
-	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	clr.w	bfo_rgb8_active(a3)
+	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	clr.w	bf_rgb8_copy_colors_active(a3)
 hst_stop_scrolltext_quit
 	moveq	#RETURN_OK,d0
@@ -2123,11 +2113,11 @@ hst_horiz_scroll
 	ADDF.W	(hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),a0
 	WAITBLIT
 	move.w	hst_text_bltcon0_bits(a3),BLTCON0-DMACONR(a6)
-	move.l	a0,BLTAPT-DMACONR(a6)	; Quelle
-	addq.w	#WORD_SIZE,a0		; 16 Pixel überspringen
-	move.l	a0,BLTDPT-DMACONR(a6)	; Ziel
-	move.l	#((extra_pf1_plane_width-hst_horiz_scroll_window_width)<<16)+(extra_pf1_plane_width-hst_horiz_scroll_window_width),BLTAMOD-DMACONR(a6) ; A-Mod + D-Mod
-	move.w	#(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth*64)+(hst_horiz_scroll_window_x_size/16),BLTSIZE-DMACONR(a6) ; Blitter starten
+	move.l	a0,BLTAPT-DMACONR(a6)	; source
+	addq.w	#WORD_SIZE,a0		; skip 16 pixel
+	move.l	a0,BLTDPT-DMACONR(a6)	; target
+	move.l	#((extra_pf1_plane_width-hst_horiz_scroll_window_width)<<16)+(extra_pf1_plane_width-hst_horiz_scroll_window_width),BLTAMOD-DMACONR(a6) ; A&D moduli
+	move.w	#(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth*64)+(hst_horiz_scroll_window_x_size/16),BLTSIZE-DMACONR(a6) ; start blit
 hst_horiz_scroll_quit
 	rts
 
@@ -2151,27 +2141,27 @@ bvm_get_channels_amplitudes
 
 
 ; Input
-; d2.w	... Maximale Amplitude
-; d3.w	... Y-Winkel 90 Grad
-; a0	... Temporäre Struktur des Audiokanals
-; a1	... Zeiger auf Amplitudenwert des Kanals
+; d2.w	... max amplitude
+; d3.w	... y angle 90°
+; a0	... temporary audio channel structure
+; a1	... audio channel info structure
 ; Result
-; d0.l	... Kein Rückgabewert
+; d0.l	... no return value
 	CNOP 0,4
 bvm_get_channel_amplitude
-	tst.b	n_notetrigger(a0)	; Neue Note angespielt ?
+	tst.b	n_notetrigger(a0)	; new note played ?
 	bne.s	bvm_get_channel_amplitude_quit
 	moveq	#0,d0
-	move.b	n_volume(a0),d0		; Aktuelle Lautstärke
+	move.b	n_volume(a0),d0		; current volume
 	move.w	#FALSE,n_notetrigger(a0)
 	MULUF.W bvm_max_amplitude,d0,d1
 	lsr.w	#6,d0
-	cmp.w	d2,d0			; Amplitude <= maximale Amplitude ?
+	cmp.w	d2,d0			; amplitude <= max amplitude ?
 	ble.s	bvm_get_channel_amplitude_skip
-	move.w	d2,d0			; Maximale Amplitude
+	move.w	d2,d0			; max amplitude
 bvm_get_channel_amplitude_skip
-	move.w	d3,(a1)+                ; Winkel
-	move.w	d0,(a1)			; Amplitudenwert
+	move.w	d3,(a1)+                ; angle
+	move.w	d0,(a1)			; amplitude value
 bvm_get_channel_amplitude_quit
 	rts
 
@@ -2183,8 +2173,8 @@ bvm_clear_second_copperlist
 	move.w	#cl2_extension2_size,a1
 	moveq	#vp1_visible_lines_number-1,d7
 bvm_clear_second_copperlist_loop
-	move.b	d0,(a0)			; BPLCON4-Low
-	add.l	a1,a0			; nächste Rasterzeile
+	move.b	d0,(a0)			; BPLCON4 low
+	add.l	a1,a0			; next raster line in cl
 	dbf	d7,bvm_clear_second_copperlist_loop
 	rts
 
@@ -2201,25 +2191,25 @@ bvm_set_bars
 	move.w	#cl2_extension2_size,a6
 	moveq	#bvm_bars_number-1,d7
 bvm_set_bars_loop1
-	move.w	(a1)+,d3		; Y-Winkel
+	move.w	(a1)+,d3		; y angle
 	move.w	2(a0,d3.w*4),d0		; sin(w)
-	addq.w	#bvm_y_angle_speed,d3	; nächster Y-Winkel
+	addq.w	#bvm_y_angle_speed,d3	; next y angle
 	muls.w	(a1)+,d0		; y'=(yr*sin(w))/2^15
-	MULUF.L 2,d0
+	MULUF.L 2,d0,d1
 	swap	d0
-	cmp.w	d5,d3			; 180 Grad erreicht ?
+	cmp.w	d5,d3			; 180° reached ?
 	ble.s	bvm_set_bars_skip
-	lsr.w	-2(a1)			; Amplitude/2
+	lsr.w	-2(a1)			; amplitude/2
 bvm_set_bars_skip
-	and.w	d5,d3			; Überlauf bei 180 Grad
+	and.w	d5,d3			; overflow at 180°
 	move.w	d3,-4(a1)	
-	add.w	a3,d0			; y' + Y-Mittelpunkt
+	add.w	a3,d0			; y' + y centre
 	MULUF.W cl2_extension2_size/LONGWORD_SIZE,d0,d1
-	lea	(a5,d0.w*4),a2		; Y-Offset in CL
+	lea	(a5,d0.w*4),a2		; y offset in cl
 	moveq	#bvm_bar_height-1,d6
 bvm_set_bars_loop2
-	move.b	(a4)+,(a2)		; BPLCON4-Low
-	add.l	a6,a2			; nächste Rasterzeile in CL
+	move.b	(a4)+,(a2)		; BPLCON4 low
+	add.l	a6,a2			; next raster line in cl
 	dbf	d6,bvm_set_bars_loop2
 	dbf	d7,bvm_set_bars_loop1
 	movem.l (a7)+,a3-a6
@@ -2255,12 +2245,12 @@ mvb_clear_playfield1_2
 	move.l	d0,a6
 	move.l	vp2_pf2_construction1(a3),a7
 	move.l	(a7),a7
-	ADDF.L	extra_pf4_plane_width*extra_pf4_y_size*extra_pf4_depth,a7 ; Ende der Bitplanes
+	ADDF.L	extra_pf4_plane_width*extra_pf4_y_size*extra_pf4_depth,a7 ; end of bitplanes
 	move.l	d0,a3
-	moveq	#5-1,d7			; Anzahl der Durchläufe
+	moveq	#5-1,d7
 mvb_clear_playfield1_2_loop
 	REPT ((extra_pf4_plane_width*extra_pf4_y_size*(extra_pf4_depth-1))/56)/5
-		movem.l d0-d6/a0-a6,-(a7) ; 56 Bytes löschen
+		movem.l d0-d6/a0-a6,-(a7) ; clear 56 bytes
 	ENDR
 	dbf	d7,mvb_clear_playfield1_2_loop
 	move.l	variables+save_a7(pc),a7
@@ -2280,72 +2270,72 @@ mvb_rotation
 	ELSE
 		MOVEF.W sine_table_length,d3
 	ENDC
-	add.w	a4,d0			; + 90 Grad
-	swap	d4			; Bits 16-31: sin(a)
+	add.w	a4,d0			; + 90°
+	swap	d4			; bits 16-31: sin(a)
 	IFEQ sine_table_length-512
-		and.w	d3,d0		; Übertrag entfernen
+		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360 Grad erreicht ?
+		cmp.w	d3,d0		; 360° reached ?
 		blt.s	mvb_rotation_skip1
-		sub.w	d3,d0		; Neustart
+		sub.w	d3,d0		; restart
 mvb_rotation_skip1
 	ENDC
-	move.w	2(a2,d0.w*4),d4		; Bits 0-15: cos(a)
-	addq.w	#mvb_rotation_x_angle_speed,d1 ; nächster X-Winkel
+	move.w	2(a2,d0.w*4),d4		; bits 0-15: cos(a)
+	addq.w	#mvb_rotation_x_angle_speed,d1 ; next x angle
 	IFEQ sine_table_length-512
-		and.w	d3,d1		; Übertrag entfernen
+		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360 Grad erreicht ?
+		cmp.w	d3,d1		; 360° reached ?
 		blt.s	mvb_rotation_skip2
-		sub.w	d3,d1		; Neustart
+		sub.w	d3,d1		; restart
 mvb_rotation_skip2
 	ENDC
 	move.w	d1,mvb_rotation_x_angle(a3) 
 	move.w	mvb_rotation_y_angle(a3),d1
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d5		; sin(b)
-	add.w	a4,d0			; + 90 Grad
-	swap	d5			; Bits 16-31: sin(b)
+	add.w	a4,d0			; + 90°
+	swap	d5			; bits 16-31: sin(b)
 	IFEQ sine_table_length-512
-		and.w	d3,d0		; Übertrag entfernen
+		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360 Grad erreicht ?
+		cmp.w	d3,d0		; 360° reached ?
 		blt.s	mvb_rotation_skip3
-		sub.w	d3,d0		; Neustart
+		sub.w	d3,d0		; restart
 mvb_rotation_skip3
 	ENDC
-	move.w	2(a2,d0.w*4),d5		; Bits 0-15: cos(b)
-	addq.w	#mvb_rotation_y_angle_speed,d1 ; nächster Y-Winkel
+	move.w	2(a2,d0.w*4),d5		; bits 0-15: cos(b)
+	addq.w	#mvb_rotation_y_angle_speed,d1 ; next y angle
 	IFEQ sine_table_length-512
-		and.w	d3,d1		; Übertrag entfernen
+		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360 Grad erreicht ?
+		cmp.w	d3,d1		; 360° reached ?
 		blt.s	mvb_rotation_skip4
-		sub.w	d3,d1		; Neustart
+		sub.w	d3,d1		; restart
 mvb_rotation_skip4
 	ENDC
 	move.w	d1,mvb_rotation_y_angle(a3) 
 	move.w	mvb_rotation_z_angle(a3),d1
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d6		; sin(c)
-	add.w	a4,d0			; + 90 Grad
-	swap	d6			; Bits 16-31: sin(c)
+	add.w	a4,d0			; + 90°
+	swap	d6			; bits 16-31: sin(c)
 	IFEQ sine_table_length-512
-		and.w	d3,d0		; Übertrag entfernen
+		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360 Grad erreicht ?
+		cmp.w	d3,d0		; 360° reached ?
 		blt.s	mvb_rotation_skip5
-		sub.w	d3,d0		; Neustart
+		sub.w	d3,d0		; restart
 mvb_rotation_skip5
 	ENDC
-	move.w	2(a2,d0.w*4),d6		; Bits 0-15: cos(c)
-	addq.w	#mvb_rotation_z_angle_speed,d1 ; nächster Z-Winkel
+	move.w	2(a2,d0.w*4),d6		; bits 0-15: cos(c)
+	addq.w	#mvb_rotation_z_angle_speed,d1 ; next z angle
 	IFEQ sine_table_length-512
-		and.w	d3,d1		; Übertrag entfernen
+		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360 Grad erreicht ?
+		cmp.w	d3,d1		; 360° reached ?
 		blt.s	mvb_rotation_skip6
-		sub.w	d3,d1		; Neustart
+		sub.w	d3,d1		; restart
 mvb_rotation_skip6
 	ENDC
 	move.w	d1,mvb_rotation_z_angle(a3) 
@@ -2356,29 +2346,29 @@ mvb_rotation_skip6
 	move.w	#mvb_rotation_y_center,a6
 	moveq	#mvb_object_points_number-1,d7
 mvb_rotation_loop
-	move.w	(a0)+,d0		; X
+	move.w	(a0)+,d0		; x
 	move.l	d7,a2	
-	move.w	(a0)+,d1		; Y
-	move.w	(a0)+,d2		; Z
+	move.w	(a0)+,d1		; y
+	move.w	(a0)+,d2		; z
 	ROTATE_X_AXIS
 	ROTATE_Y_AXIS
 	ROTATE_Z_AXIS
-; ** Zentralprojektion und Translation **
-	move.w	d2,d3			; Z retten
+; Zentralprojektion und Translation 
+	move.w	d2,d3			; z
 	ext.l	d0
 	add.w	a4,d3			; z+d
-	MULUF.L mvb_rotation_d,d0,d7 	; X-Projektion
+	MULUF.L mvb_rotation_d,d0,d7 	; x projection
 	ext.l	d1
 	divs.w	d3,d0			; x'=(x*d)/(z+d)
-	MULUF.L mvb_rotation_d,d1,d7 	; Y-Projektion
-	add.w	a5,d0			; x' + X-Mittelpunkt
-	move.w	d0,(a1)+		; X-Pos.
+	MULUF.L mvb_rotation_d,d1,d7 	; y projection
+	add.w	a5,d0			; x' + x centre
+	move.w	d0,(a1)+		; x position
 	divs.w	d3,d1			; y'=(y*d)/(z+d)
-	add.w	a6,d1			; y' + Y-Mittelpunkt
-	move.w	d1,(a1)+		; Y-Pos.
-	asr.w	#3,d2			; Z/8
-	move.l	a2,d7			; Schleifenzähler
-	move.w	d2,(a1)+		; Z-Pos.
+	add.w	a6,d1			; y' + y centre
+	move.w	d1,(a1)+		; y position
+	asr.w	#3,d2			; z/8
+	move.l	a2,d7			; loop counter
+	move.w	d2,(a1)+		; z position
 	dbf	d7,mvb_rotation_loop
 	movem.l (a7)+,a4-a6
 	rts
@@ -2388,34 +2378,34 @@ mvb_morph_object
 	tst.w	mvb_morph_active(a3)
 	bne.s	mvb_morph_object_quit
 	move.w	mvb_morph_shapes_table_start(a3),d1
-	moveq	#0,d2			; Koordinatenzähler
+	moveq	#0,d2			; coordinates counter
 	lea	mvb_object_coords(pc),a0
 	lea	mvb_morph_shapes_table(pc),a1
-	move.l	(a1,d1.w*4),a1		; Zeiger auf Tabelle
+	move.l	(a1,d1.w*4),a1		; shape data
 	MOVEF.W mvb_object_points_number*3-1,d7
 mvb_morph_object_loop
-	move.w	(a0),d0			; aktuelle Koordinate
-	cmp.w	(a1)+,d0		; mit Ziel-Koordinate vergleichen
+	move.w	(a0),d0			; current coordinate
+	cmp.w	(a1)+,d0		; compare with target coordinate
 	beq.s	mvb_morph_object_skip3
 	bgt.s	mvb_morph_object_skip1
-	addq.w	#mvb_morph_speed,d0	; aktuelle Koordinate erhöhen
+	addq.w	#mvb_morph_speed,d0	; increase current coordinate
 	bra.s	mvb_morph_object_skip2
 	CNOP 0,4
 mvb_morph_object_skip1
-	subq.w	#mvb_morph_speed,d0	; aktuelle Koordinate verringern
+	subq.w	#mvb_morph_speed,d0	; decrease current coordinate
 mvb_morph_object_skip2
 	move.w	d0,(a0)
-	addq.w	#1,d2			; Koordinatenzähler erhöhen
+	addq.w	#1,d2			; increase coordinates counter
 mvb_morph_object_skip3
-	addq.w	#WORD_SIZE,a0		; Nächste Koordinate
+	addq.w	#WORD_SIZE,a0		; next coordinate
 	dbf	d7,mvb_morph_object_loop
-	tst.w	d2			; Morphing beendet ?
+	tst.w	d2			; marphing finished ?
 	bne.s	mvb_morph_object_quit
-	addq.w	#1,d1			; nächster Eintrag in Objekttablelle
-	cmp.w	#mvb_morph_shapes_number,d1 ; Ende der Tabelle ?
+	addq.w	#1,d1			; next entry
+	cmp.w	#mvb_morph_shapes_number,d1 ; end of table ?
 	IFEQ mvb_morph_loop_enabled
 		bne.s	mvb_morph_object_skip4
-		moveq	#0,d1		; Neustart
+		moveq	#0,d1		; restart
 mvb_morph_object_skip4
 	ELSE
 		beq.s	mvb_morph_object_skip5
@@ -2428,50 +2418,50 @@ mvb_morph_object_quit
 
 	CNOP 0,4
 mvb_quicksort_coords
-	moveq	#-2,d2			; Maske, um Bit 0 zu löschen
+	moveq	#-2,d2			; mask clear bit 0
 	lea	mvb_object_coords_offsets(pc),a0
 	move.l	a0,a1
-	lea	(mvb_object_points_number-1)*2(a0),a2 ; Letzter Eintrag
+	lea	(mvb_object_points_number-1)*2(a0),a2 ; last entry
 	move.l	a2,a5
 	lea	mvb_rotation_xyz_coords(pc),a6
 mvb_quicks
-	move.l	a5,d0			; Zeiger auf letzten Eintrag
-	add.l	a0,d0			; Erster Eintrag + letzter Eintrag
+	move.l	a5,d0			; pointer first entry
+	add.l	a0,d0			; + last entry
 	lsr.l	#1,d0
-	and.b	d2,d0			; Nur gerade Werte
-	move.l	d0,a4			; Mitte der Tabelle
-	move.w	(a4),d1			; XYZ-Offset
-	move.w	4(a6,d1.w*2),d0		; Z-Wert
+	and.b	d2,d0			; only even address
+	move.l	d0,a4			; middle of table
+	move.w	(a4),d1			; xyz offset
+	move.w	4(a6,d1.w*2),d0		; z
 mvb_quick
-	move.w	(a1)+,d1		; XYZ-Offset
-	cmp.w	4(a6,d1.w*2),d0		; 1. Z-Wert < mittlerer Z-Wert ?
-	blt.s	mvb_quick		; Ja -> weiter
-	addq.w	#2,a2			; nächstes XYZ-Offset
-	subq.w	#2,a1			; Zeiger zurücksetzen
+	move.w	(a1)+,d1		; xyz offset
+	cmp.w	4(a6,d1.w*2),d0		; first z < middle z ?
+	blt.s	mvb_quick
+	addq.w	#WORD_SIZE,a2		; next xyz offset
+	subq.w	#WORD_SIZE,a1		; set back pointer
 mvb_quick2
-	move.w	-(a2),d1		; XYZ-Offset
-	cmp.w	4(a6,d1.w*2),d0		; vorletzter Z-Wert > mittlerer Z-Wert
-	bgt.s	mvb_quick2		; Ja -> weiter
+	move.w	-(a2),d1		; xyz offset
+	cmp.w	4(a6,d1.w*2),d0		; previous z > middle z
+	bgt.s	mvb_quick2
 mvb_quick3
-	cmp.l	a2,a1			; Zeiger auf Ende der Tab > Zeiger auf Anfang der Tab. ?
-	bgt.s	mvb_quick4		; Ja -> verzweige
-	move.w	(a2),d1			; letztes Offset
-	move.w	(a1),(a2)		; erstes Offset -> letztes Offset
-	subq.w	#2,a2			; vorletztes Offset
-	move.w	d1,(a1)+		; letztes Offset -> erstes Offset
+	cmp.l	a2,a1			; pointer table end > pointer tabble beginning ?
+	bgt.s	mvb_quick4
+	move.w	(a2),d1			; last offset
+	move.w	(a1),(a2)		; first offset -> last offset
+	subq.w	#WORD_SIZE,a2		; penultimate offset
+	move.w	d1,(a1)+		; last offset -> first offset
 mvb_quick4
-	cmp.l	a2,a1			; Zeiger auf Anfang <= Zeiger auf Ende der Tab. ?
-	ble.s	mvb_quick		; Ja -> verzweige
-	cmp.l	a2,a0			; Zeiger auf Anfang >= Zeiger auf Ende der Tab. ?
-	bge.s	mvb_quick5		; Ja -> verzweige
+	cmp.l	a2,a1			; pointer table start <= pointer table end ?
+	ble.s	mvb_quick
+	cmp.l	a2,a0			; pointer tablwe start >= pointer table end ?
+	bge.s	mvb_quick5
 	move.l	a5,-(a7)
-	move.l	a2,a5			; Zeiger auf Ende der Tabelle
+	move.l	a2,a5			; pointer table end
 	move.l	a0,a1
 	bsr.s	mvb_quicks
 	move.l	(a7)+,a5
 mvb_quick5
-	cmp.l	a5,a1			; Zeiger auf Anfang >= Zeiger auf Ende der Tab. ?
-	bge.s	mvb_quick6		; Ja -> verzweige
+	cmp.l	a5,a1			; pointer table start >= pointer table end ?
+	bge.s	mvb_quick6
 	move.l	a0,-(a7)
 	move.l	a1,a0
 	move.l	a5,a2
@@ -2493,18 +2483,18 @@ set_vector_balls
 	lea	mvb_rotation_xyz_coords(pc),a1
 	move.w	#mvb_z_plane1,a2
 	move.w	#mvb_z_plane2,a3
-	lea	mvb_image_data,a5	; Grafik
-	lea	mvb_image_mask,a7	; Maske
+	lea	mvb_image_data,a5
+	lea	mvb_image_mask,a7
 	MOVEF.W mvb_balls_number-1,d7
 set_vector_balls_loop
-	move.w	(a0)+,d0		; Startwert für XY-Koordinate
+	move.w	(a0)+,d0		; start value xy coordinate
 	moveq	#0,d5
-	movem.w (a1,d0.w*2),d0-d2	; XYZ lesen
-	cmp.w	a2,d2			; 1. Z-Plane ?
+	movem.w (a1,d0.w*2),d0-d2	; x,y,z
+	cmp.w	a2,d2			; first z plane ?
 	blt.s	set_vector_balls_skip3
-	cmp.w	a3,d2			; 2. Z-Plane ?
+	cmp.w	a3,d2			; second z plane ?
 	blt.s	set_vector_balls_skip2
-	cmp.w	#mvb_z_plane3,d2	; 3. Z-Plane ?
+	cmp.w	#mvb_z_plane3,d2	; third z plane ?
 	blt.s	set_vector_balls_skip1
 	ADDF.W	mvb_image_width,d5
 set_vector_balls_skip1
@@ -2513,23 +2503,23 @@ set_vector_balls_skip2
 	ADDF.W	mvb_image_width,d5
 set_vector_balls_skip3
 	MULUF.W (extra_pf4_plane_width*extra_pf4_depth)/2,d1,d2
-	ror.l	#4,d0			; Shift-Bits in richtige Position bringen
+	ror.l	#4,d0			; adjust shift bits
 	move.l	d5,d6
-	add.w	d0,d1			; + Y-Offset
-	add.l	a5,d5			; Grafiken
-	MULUF.L 2,d1			; XY-Offset
-	swap	d0			; Shift-Bits
-	add.l	d4,d1			; + Bildadresse
-	add.l	a7,d6			; Masken
+	add.w	d0,d1			; + y offset
+	add.l	a5,d5			; image
+	MULUF.L 2,d1,d2			; xy offset
+	swap	d0			; shift bits
+	add.l	d4,d1			; + playfield
+	add.l	a7,d6			; masks
 	WAITBLIT
 	move.w	d0,BLTCON1-DMACONR(a6)
-	or.w	d3,d0			; restliche Bits von BLTCON0
+	or.w	d3,d0			; remaining BLTCON0 bits
 	move.w	d0,BLTCON0-DMACONR(a6)
-	move.l	d1,BLTCPT-DMACONR(a6)	; Bitplanes lesen
-	move.l	d5,BLTBPT-DMACONR(a6)	; Grafiken
-	move.l	d6,BLTAPT-DMACONR(a6)	; Masken
-	move.l	d1,BLTDPT-DMACONR(a6)	; Bitplanes schreiben
-	move.w	a4,BLTSIZE-DMACONR(a6)	; Blitter starten
+	move.l	d1,BLTCPT-DMACONR(a6)	; playfield read
+	move.l	d5,BLTBPT-DMACONR(a6)	; image
+	move.l	d6,BLTAPT-DMACONR(a6)	; mask
+	move.l	d1,BLTDPT-DMACONR(a6)	; playfield write
+	move.w	a4,BLTSIZE-DMACONR(a6)
 	dbf	d7,set_vector_balls_loop
 	move.w	#DMAF_BLITHOG,DMACON-DMACONR(a6)
 	move.l	variables+save_a7(pc),a7
@@ -2539,49 +2529,49 @@ set_vector_balls_skip3
 set_vector_balls_init
 	move.w	#DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
-	move.w	vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6) ; Ausmaskierung
+	move.w	vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6)
 	moveq	#0,d0
 	move.w	d0,BLTALWM-DMACONR(a6)
-	move.l	#((extra_pf4_plane_width-(mvb_image_width+2))<<16)+((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2)),BLTCMOD-DMACONR(a6) ; C+B-Moduli
-	move.l	#(((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2))<<16)+(extra_pf4_plane_width-(mvb_image_width+2)),BLTAMOD-DMACONR(a6) ; A+D-Moduli
+	move.l	#((extra_pf4_plane_width-(mvb_image_width+2))<<16)+((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2)),BLTCMOD-DMACONR(a6) ; C&B moduli
+	move.l	#(((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2))<<16)+(extra_pf4_plane_width-(mvb_image_width+2)),BLTAMOD-DMACONR(a6) ; A&D moduli
 	rts
 
 	CNOP 0,4
 cb_get_stripes_y_coords
 	move.w	cb_stripes_y_angle(a3),d2
 	move.w	d2,d0
-	MOVEF.W (sine_table_length/4)-1,d4 ; Überlauf
-	sub.w	cb_stripes_y_angle_speed(a3),d0 ; nächster Y-Winkel
-	and.w	d4,d0			; Überlauf entfernen
+	MOVEF.W (sine_table_length/4)-1,d4 ; overflow
+	sub.w	cb_stripes_y_angle_speed(a3),d0 ; next y angle
+	and.w	d4,d0			; remove overflow
 	move.w	d0,cb_stripes_y_angle(a3) 
 	moveq	#cb_stripes_y_center,d3
 	lea	sine_table(pc),a0
 	lea	cb_stripes_y_coords(pc),a1
-	moveq	#(cb_stripes_number*cb_stripe_height)-1,d7 ; Anzahl der Zeilen
+	moveq	#(cb_stripes_number*cb_stripe_height)-1,d7 ; number of lines
 cb_get_stripes_y_coords_loop
 	move.l	(a0,d2.w*4),d0	; sin(w)
 	MULUF.L cb_stripes_y_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
-	add.w	d3,d0			; y' + Y-Mittelpunkt
+	add.w	d3,d0			; y' + y centre
 	move.w	d0,(a1)+
-	addq.w	#cb_stripes_y_step,d2 	; nächster Y-Winkel
-	and.w	d4,d2			; Überlauf entfernen
+	addq.w	#cb_stripes_y_step,d2 	; next y angle
+	and.w	d4,d2			; remove overflow
 	dbf	d7,cb_get_stripes_y_coords_loop
 	rts
 
 	CNOP 0,4
 cb_make_color_offsets
-	moveq	#$00000001,d1		; Farboffset des ersten und zweiten Streifens
+	moveq	#$00000001,d1		; bits 0-15: color offset first stripe, bits 16-31: color offset second stripe
 	lea	cb_stripes_y_coords(pc),a0
 	lea	cb_color_offsets_table(pc),a1
 	moveq	#cb_stripes_number-1,d7
 cb_make_color_offsets_loop1
 	moveq	#cb_stripe_height-1,d6
 cb_make_color_offsets_loop2
-	move.w	(a0)+,d0		; Y-Offset
-	move.l	d1,(a1,d0.w*4)		; Farboffset
+	move.w	(a0)+,d0		; y offset
+	move.l	d1,(a1,d0.w*4)		; color offset
 	dbf	d6,cb_make_color_offsets_loop2
-	swap	d1			; Farboffsets vertauschen
+	swap	d1			; swap color offsets
 	dbf	d7,cb_make_color_offsets_loop1
 	rts
 
@@ -2597,22 +2587,22 @@ cb_move_chessboard
 	move.w	#cl2_extension5_size,a4
 	moveq	#vp3_visible_lines_number-1,d7
 cb_move_chessboard_loop
-	move.w	(a0)+,d0		; Farboffset
-	move.l	(a1,d0.w*4),d0		; RGB8-Farbwert
+	move.w	(a0)+,d0		; color offset
+	move.l	(a1,d0.w*4),d0		; RGB8 value
 	move.l	d0,d2	
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a2)			; COLOR29 High-Bits
+	move.w	d0,(a2)			; COLOR29 high bits
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl2_ext5_COLOR25_low8-cl2_ext5_COLOR25_high8(a2) ; COLOR01 Low-Bits
-	add.l	a4,a2			; nächste Zeile
-	move.w	(a0)+,d0		; Farboffset
-	move.l	(a1,d0.w*4),d0		; RGB8-Farbwert
+	move.w	d2,cl2_ext5_COLOR25_low8-cl2_ext5_COLOR25_high8(a2) ; COLOR01 low bits
+	add.l	a4,a2			; next line
+	move.w	(a0)+,d0		; color offset
+	move.l	(a1,d0.w*4),d0		; RGB8 value
 	move.l	d0,d2	
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 High-Bits
+	move.w	d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 high bits
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 Low-Bits
-	addq.w	#2*LONGWORD_SIZE,a1	; Nächster Farbwert in Farbtabelle
+	move.w	d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 low bits
+	addq.w	#2*LONGWORD_SIZE,a1	; next color value
 	dbf	d7,cb_move_chessboard_loop
 	move.l	(a7)+,a4
 	rts
@@ -2625,26 +2615,26 @@ rgb8_bar_fader_in
 	bne.s	rgb8_bar_fader_in_quit
 	move.w	bfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	bfi_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	bfi_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_bar_fader_in_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_bar_fader_in_skip
 	move.w	d0,bfi_rgb8_fader_angle(a3) 
-	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L bfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfi_rgb8_fader_center,d0
-	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0			
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,bf_rgb8_colors_counter(a3)
@@ -2661,26 +2651,26 @@ rgb8_bar_fader_out
 	bne.s	rgb8_bar_fader_out_quit
 	move.w	bfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	bfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	bfo_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_bar_fader_out_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_bar_fader_out_skip
 	move.w	d0,bfo_rgb8_fader_angle(a3) 
-	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L bfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfo_rgb8_fader_center,d0
-	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	bfo_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	bfo_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,bf_rgb8_colors_counter(a3)
@@ -2692,7 +2682,7 @@ rgb8_bar_fader_out_quit
 
 	COPY_RGB8_COLORS_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
 
-; ** Tempel einfaden **
+; Tempel einfaden 
 	CNOP 0,4
 rgb8_image_fader_in
 	movem.l a4-a6,-(a7)
@@ -2700,26 +2690,26 @@ rgb8_image_fader_in
 	bne.s	rgb8_image_fader_in_quit
 	move.w	ifi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	ifi_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0 ; Y-Winkel <= 180 Grad ?
+	ADDF.W	ifi_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0 ; angle <= 180° ?
 	ble.s	rgb8_image_fader_in_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_image_fader_in_skip
 	move.w	d0,ifi_rgb8_fader_angle(a3) 
-	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L ifi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifi_rgb8_fader_center,d0
-	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	ifi_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	ifi_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,if_rgb8_colors_counter(a3)
@@ -2729,7 +2719,7 @@ rgb8_image_fader_in_quit
 	movem.l (a7)+,a4-a6
 	rts
 
-; ** Tempel ausfaden **
+; Tempel ausfaden 
 	CNOP 0,4
 rgb8_image_fader_out
 	movem.l a4-a6,-(a7)
@@ -2737,26 +2727,26 @@ rgb8_image_fader_out
 	bne.s	rgb8_image_fader_out_quit
 	move.w	ifo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	ifo_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	ifo_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_image_fader_out_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_image_fader_out_skip
 	move.w	d0,ifo_rgb8_fader_angle(a3) 
-	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
 	MULUF.L ifo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifo_rgb8_fader_center,d0
-	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	ifo_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	ifo_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr.s	if_rgb8_fader_loop
 	move.w	d6,if_rgb8_colors_counter(a3)
@@ -2777,27 +2767,27 @@ rgb8_chessboard_fader_in
 	bne.s	rgb8_chessboard_fader_in_quit
 	move.w	cfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfi_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	cfi_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_chessboard_fader_in_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_chessboard_fader_in_skip
 	move.w	d0,cfi_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	cfi_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0	; Puffer für Farbwerte
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; color values buffer
+	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cf_rgb8_colors_counter(a3)
@@ -2814,27 +2804,27 @@ rgb8_chessboard_fader_out
 	bne.s	rgb8_chessboard_fader_out_quit
 	move.w	cfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	cfo_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_chessboard_fader_out_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_chessboard_fader_out_skip
 	move.w	d0,cfo_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	cfo_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0	; Puffer für Farbwerte
-	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; color values buffer
+	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cf_rgb8_colors_counter(a3)
@@ -2852,25 +2842,25 @@ rgb8_sprite_fader_in
 	move.w	sprfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	sprfi_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_sprite_fader_in_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_sprite_fader_in_skip
 	move.w	d0,sprfi_rgb8_fader_angle(a3) 
-	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L sprfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfi_rgb8_fader_center,d0
-	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	sprfi_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	sprfi_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W sprf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,sprf_rgb8_colors_counter(a3)
@@ -2887,20 +2877,20 @@ rgb8_sprite_fader_out
 	bne.s	rgb8_sprite_fader_out_quit
 	move.w	sprfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	sprfo_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Y-Winkel <= 180 Grad ?
+	ADDF.W	sprfo_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_sprite_fader_out_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_sprite_fader_out_skip
 	move.w	d0,sprfo_rgb8_fader_angle(a3) 
-	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB-Zähler
+	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L sprfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfo_rgb8_fader_center,d0
-	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	sprfo_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
+	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	sprfo_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
 	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
 	swap	d0
 	clr.w	d0
@@ -2925,17 +2915,17 @@ fade_balls_in
 	subq.w	#1,fbi_delay_counter(a3)
 	bne.s	fade_balls_in_quit
 	move.w	#fbi_delay,fbi_delay_counter(a3)
-	move.w	vb_copy_blit_mask(a3),d0 ; Aktuelle Maske
-	move.w	fb_mask(a3),d1		; 2. Maske
-	eor.w	d1,d0			; Masken miteinander verknüpfen
+	move.w	vb_copy_blit_mask(a3),d0 ; current mask
+	move.w	fb_mask(a3),d1		; second mask
+	eor.w	d1,d0			; merge masks
 	move.w	d0,vb_copy_blit_mask(a3)
-	cmp.w	#-1,d0			; Maske fertig ?
+	cmp.w	#-1,d0			; final mask ?
 	bne.s	fade_balls_in_skip
 	move.w	#FALSE,fbi_active(a3)
 	bra.s	fade_balls_in_quit
 	CNOP 0,4
 fade_balls_in_skip
-	lsr.w	#1,d1			; 2. Maske verschieben
+	lsr.w	#1,d1			; shift second mask
 	move.w	d1,fb_mask(a3)	
 fade_balls_in_quit
 	rts
@@ -2947,16 +2937,16 @@ fade_balls_out
 	subq.w	#1,fbo_delay_counter(a3)
 	bne.s	fade_balls_out_quit
 	move.w	#fbo_delay,fbo_delay_counter(a3)
-	move.w	vb_copy_blit_mask(a3),d0 ; Aktuelle Maske
-	move.w	fb_mask(a3),d1		; 2. Maske
-	eor.w	d1,d0			; Masken verknüpfen
-	move.w	d0,vb_copy_blit_mask(a3) ; Maske fertig ?
+	move.w	vb_copy_blit_mask(a3),d0 ; current mask
+	move.w	fb_mask(a3),d1		; second mask
+	eor.w	d1,d0			; merge masks
+	move.w	d0,vb_copy_blit_mask(a3) ; final mask ?
 	bne.s	fade_balls_out_skip
 	move.w	#FALSE,fbo_active(a3)
 	bra.s	fade_balls_out_quit
 	CNOP 0,4
 fade_balls_out_skip
-	lsr.w	#1,d1			; 2. Maske verschieben
+	lsr.w	#1,d1			; shift second mask
 	move.w	d1,fb_mask(a3)	
 fade_balls_out_quit
 	rts
@@ -2968,29 +2958,29 @@ rgb8_colors_fader_cross
 	bne.s	rgb8_colors_fader_cross_quit
 	move.w	cfc_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfc_rgb8_fader_angle_speed,d0 ; nächster Winkel
-	cmp.w	#sine_table_length/2,d0	; Winkel <= 180 Grad ?
+	ADDF.W	cfc_rgb8_fader_angle_speed,d0 ; next angle
+	cmp.w	#sine_table_length/2,d0	; angle <= 180° ?
 	ble.s	rgb8_colors_fader_cross_skip
-	MOVEF.W sine_table_length/2,d0	; 180 Grad
+	MOVEF.W sine_table_length/2,d0	; 180°
 rgb8_colors_fader_cross_skip
 	move.w	d0,cfc_rgb8_fader_angle(a3) 
-	MOVEF.W cfc_rgb8_colors_number*3,d6 ; Zähler
+	MOVEF.W cfc_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cfc_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	cfc_rgb8_fader_center,d0
-	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
-	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; Sollwerte
+	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
+	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
 	move.w	cfc_rgb8_color_table_start(a3),d1
 	MULUF.W LONGWORD_SIZE,d1	; *32
 	lea	(a1,d1.w*8),a1
-	move.w	d0,a5			; Additions-/Subtraktionswert für Blau
+	move.w	d0,a5			; addition/substraction blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; Additions-/Subtraktionswert für Rot
+	move.l	d0,a2			; addition/substraction red
 	lsr.l	#8,d0
-	move.l	d0,a4			; Additions-/Subtraktionswert für Grün
+	move.l	d0,a4			; addition/substraction green
 	MOVEF.W cfc_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cfc_rgb8_colors_counter(a3)
@@ -3009,9 +2999,9 @@ cfc_rgb8_copy_color_table
 	bne.s	cfc_rgb8_copy_color_table_quit
 	move.w	#RB_NIBBLES_MASK,d3
 	IFGT cfc_rgb8_colors_number-32
-		moveq	#cfc_rgb8_start_color<<3,d4 ; Color-Bank Farbregisterzähler
+		moveq	#cfc_rgb8_start_color<<3,d4 ; color registers counter
 	ENDC
-	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; Puffer für Farbwerte
+	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	move.l	cl1_display(a3),a1 
 	ADDF.W	cl1_COLOR17_high1+WORD_SIZE,a1
 	IFNE cl1_size1
@@ -3024,47 +3014,47 @@ cfc_rgb8_copy_color_table
 	ENDC
 	MOVEF.W cfc_rgb8_colors_number-1,d7
 cfc_rgb8_copy_color_table_loop
-	move.l	(a0)+,d0		; RGB8-Farbwert
+	move.l	(a0)+,d0		; RGB8 value
 	move.l	d0,d2	
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a1)			; COLORxx High-Bits
+	move.w	d0,(a1)			; COLORxx high bits
 	IFNE cl1_size1
-		move.w	d0,(a2)		; COLORxx High-Bits
+		move.w	d0,(a2)		; COLORxx high bits
 	ENDC
 	IFNE cl1_size2
-		move.w	d0,(a4)		; COLORxx High-Bits
+		move.w	d0,(a4)		; COLORxx high bits
 	ENDC
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a1) ; Low-Bits COLORxx
-	addq.w	#LONGWORD_SIZE,a1	; nächstes Farbregister
+	move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a1) ; low bits COLORxx
+	addq.w	#LONGWORD_SIZE,a1	; next color register
 	IFNE cl1_size1
-		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a2) ; Low-Bits COLORxx
-		addq.w	#LONGWORD_SIZE,a2 ; nächstes Farbregister
+		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a2) ; low bits COLORxx
+		addq.w	#LONGWORD_SIZE,a2 ; next color register
 	ENDC
 	IFNE cl1_size2
-		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a4) ; Low-Bits COLORxx
-		addq.w	#LONGWORD_SIZE,a4 ; nächstes Farbregister
+		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a4) ; low bits COLORxx
+		addq.w	#LONGWORD_SIZE,a4 ; next color register
 	ENDC
 	IFGT cfc_rgb8_colors_number-32
-		addq.b	#1<<3,d4	; Farbregister-Zähler erhöhen
+		addq.b	#1<<3,d4	; increase color registers counter
 		bne.s	cfc_rgb8_copy_color_table_skip
-		addq.w	#LONGWORD_SIZE,a1 ; CMOVE überspringen
+		addq.w	#LONGWORD_SIZE,a1 ; skip CMOVE
 		IFNE cl1_size1
-			addq.w	#LONGWORD_SIZE,a2 ; CMOVE überspringen
+			addq.w	#LONGWORD_SIZE,a2 ; skip CMOVE
 		ENDC
 		IFNE cl1_size2
-			addq.w	#LONGWORD_SIZE,a4 ; CMOVE überspringen
+			addq.w	#LONGWORD_SIZE,a4 ; skip CMOVE
 		ENDC
 cfc_rgb8_copy_color_table_skip
 	ENDC
 	dbf	d7,cfc_rgb8_copy_color_table_loop
-	tst.w	cfc_rgb8_colors_counter(a3) ; Fading beendet ?
+	tst.w	cfc_rgb8_colors_counter(a3) ; fading finished ?
 	bne.s	cfc_rgb8_copy_color_table_quit
 	move.w	#FALSE,cfc_rgb8_copy_colors_active(a3)
 	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_delay_counter(a3)
 	move.w	cfc_rgb8_color_table_start(a3),d0
-	addq.w	#1,d0			; nächste Farbtabelle
-	and.w	#cfc_rgb8_color_tables_number-1,d0 ; Überlauf entfernen
+	addq.w	#1,d0			; next color table
+	and.w	#cfc_rgb8_color_tables_number-1,d0 ; remove overflow
 	move.w	d0,cfc_rgb8_color_table_start(a3)
 cfc_rgb8_copy_color_table_quit
 	IFNE cl1_size2
@@ -3082,7 +3072,7 @@ control_counters
 	move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
 	clr.w	cfc_rgb8_copy_colors_active(a3)
 	clr.w	cfc_rgb8_active(a3)
-	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90 Grad
+	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90°
 control_counters_skip1
 	move.w	d0,cfc_rgb8_fader_delay_counter(a3) 
 control_counters_skip2
@@ -3090,7 +3080,7 @@ control_counters_skip2
 
 	CNOP 0,4
 mouse_handler
-	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; Linke Maustaste gedrückt ?
+	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; left mouse button clicked ?
 	beq.s	mh_exit_demo
 	rts
 	CNOP 0,4
@@ -3098,9 +3088,9 @@ mh_exit_demo
 	move.w	#FALSE,pt_effects_handler_active(a3)
 	tst.w	hst_enabled(a3)
 	bne.s	mh_exit_demo_skip1
-	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; Doppelte Geschwindigkeit für Laufschrift
-	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; Scrolltext beenden
-	clr.w	quit_active(a3)	; Intro nach Text-Stopp beenden
+	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
+	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; pointer end of text
+	clr.w	quit_active(a3)	; quit intro after text stop
 	bra	mh_exit_demo_quit
 	CNOP 0,4
 mh_exit_demo_skip1
@@ -3157,7 +3147,7 @@ ciab_ta_int_server
 VERTB_int_server
 	ENDC
 
-; **** PT-Replay ****
+; PT-Replay 
 	IFEQ pt_music_fader_enabled
 		bsr.s	pt_music_fader
 		bra.s	pt_PlayMusic
@@ -3274,11 +3264,11 @@ NMI_int_server
 	INCLUDE "sys-structures.i"
 
 
-; **** View ****
+; View 
 	CNOP 0,4
 pf1_rgb8_color_table
 	DC.L color00_bits
-; **** Viewport 2 ****
+; Viewport 2 
 	CNOP 0,4
 vp2_pf1_rgb8_color_table
 	REPT vp2_visible_lines_number
@@ -3289,12 +3279,12 @@ vp2_pf2_rgb8_color_table
 	REPT vp2_pf2_colors_number*2
 		DC.L color00_bits
 	ENDR
-; **** Viewport 3 ****
+; Viewport 3 
 	CNOP 0,4
 vp3_pf1_rgb8_color_table
 	DC.L color00_bits
 	REPT vp3_pf1_colors_number-1
-		DC.L $202020		; Schatten der Bälle
+		DC.L $202020		; balls shadow
 	ENDR
 
 	CNOP 0,4
@@ -3311,7 +3301,7 @@ spr_ptrs_display
 sine_table
 	INCLUDE "sine-table-512x32.i"
 
-; **** PT-Replay ****
+; PT-Replay 
 	INCLUDE "music-tracker/pt-invert-table.i"
 
 	INCLUDE "music-tracker/pt-vibrato-tremolo-table.i"
@@ -3330,7 +3320,7 @@ sine_table
 
 	INCLUDE "music-tracker/pt-finetune-starts-table.i"
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 	CNOP 0,4
 hst_fill_gradient
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/24-Colorgradient.ct"
@@ -3340,7 +3330,7 @@ hst_outline_gradient
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient.ct"
 
 hst_ascii
-	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+>< "
+	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+><",ASCII_CTRL_O," "
 hst_ascii_end
 	EVEN
 
@@ -3356,7 +3346,7 @@ hst_characters_x_positions
 hst_characters_image_ptrs
 	DS.L hst_text_characters_number
 
-; **** Bounce-VU-Meter ****
+; Bounce-VU-Meter 
 	CNOP 0,4
 bvm_rgb8_color_gradients
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x3-Colorgradient.ct"
@@ -3368,10 +3358,10 @@ bvm_rgb8_color_table
 	ENDR
 
 bvm_bplam_table
-	DC.B $33,$44,$55,$55,$44,$33 	; Bar1
-	DC.B $66,$77,$88,$88,$77,$66	; Bar2
-	DC.B $99,$aa,$bb,$bb,$aa,$99	; Bar3
-	DC.B $cc,$dd,$ee,$ee,$dd,$cc	; Bar4
+	DC.B $33,$44,$55,$55,$44,$33 	; bar1
+	DC.B $66,$77,$88,$88,$77,$66	; bar2
+	DC.B $99,$aa,$bb,$bb,$aa,$99	; bar3
+	DC.B $cc,$dd,$ee,$ee,$dd,$cc	; bar4
 
 	CNOP 0,2
 bvm_audio_channel1_info
@@ -3389,16 +3379,16 @@ bvm_audio_channel3_info
 bvm_audio_channel4_info
 	DS.B audio_channel_info_size
 
-; **** Morp-Vector-Balls ****
+; Morp-Vector-Balls 
 	CNOP 0,2
 mvb_object_coords
-; * Zoom-In *
+; Zoom-In
 	DS.W mvb_object_points_number*3
 
-; ** Form 1 **
+; Form 1 
 	CNOP 0,2
 mvb_object_shape1_coords
-; * "R" *
+; "R"
 	DC.W -(69*8),-(32*8),25*8	; P0
 	DC.W -(69*8),-(19*8),25*8	; P1
 	DC.W -(69*8),-(6*8),25*8	; P2
@@ -3412,7 +3402,7 @@ mvb_object_shape1_coords
 	DC.W -(44*8),-(13*8),25*8	; P8
 	DC.W -(44*8),6*8,25*8		; P9
 	DC.W -(44*8),19*8,25*8		; P10
-; * "S" *
+; "S"
 	DC.W -(19*8),-(25*8),25*8	; P11
 	DC.W -(19*8),-(13*8),25*8	; P12
 	DC.W -(19*8),19*8,25*8		; P13
@@ -3424,7 +3414,7 @@ mvb_object_shape1_coords
 	DC.W 6*8,-(32*8),25*8		; P16
 	DC.W 6*8,0,25*8			; P18
 	DC.W 6*8,13*8,25*8		; P19
-; * "E" *
+; "E"
 	DC.W 32*8,-(32*8),25*8		; P20
 	DC.W 32*8,-(19*8),25*8		; P19
 	DC.W 32*8,-(6*8),25*8		; P22
@@ -3438,10 +3428,10 @@ mvb_object_shape1_coords
 	DC.W 57*8,-(32*8),25*8		; P25
 	DC.W 57*8,19*8,25*8		; P29
 
-; ** Form 2 **
+; Form 2 
 	CNOP 0,2
 mvb_object_shape2_coords
-; * "3" *
+; "3"
 	DC.W -(44*8),-(44*8),25*8	; P0
 	DC.W -(38*8),-(6*8),25*8	; P1
 	DC.W -(44*8),32*8,25*8		; P2
@@ -3457,7 +3447,7 @@ mvb_object_shape2_coords
 	DC.W -(13*8),6*8,25*8		; P10
 	DC.W -(13*8),19*8,25*8		; P11
 	DC.W -(19*8),32*8,25*8		; P12
-; * "0" *
+; "0"
 	DC.W 13*8,-(44*8),25*8		; P13
 	DC.W 6*8,-(32*8),25*8		; P13
 	DC.W 6*8,-(19*8),25*8		; P15
@@ -3477,13 +3467,14 @@ mvb_object_shape2_coords
 	DC.W 44*8,19*8,25*8		; P26
 	DC.W 38*8,32*8,25*8		; P25
 
-	DC.W 38*8,32*8,25*8		; P29 überzählig
+	DC.W 38*8,32*8,25*8		; P29 (left over)
 
 	IFNE mvb_morph_loop_enabled
-; ** Form 3 **
+
+; Form 3
 		CNOP 0,2
 mvb_object_shape3_coords
-; * Zoom-Out *
+; Zoom-Out
 		DS.W mvb_object_points_number*3
 	ENDC
 
@@ -3500,7 +3491,7 @@ mvb_rotation_xyz_coords
 mvb_morph_shapes_table
 	DS.B mvb_morph_shape_size*mvb_morph_shapes_number
 
-; **** Chessboard ****
+; Chessboard 
 	CNOP 0,4
 cb_color_gradient1
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/48-ColorgradientA.ct"
@@ -3521,7 +3512,7 @@ cb_stripes_y_coords
 cb_color_offsets_table
 	DS.W cb_stripe_height*cb_stripes_number*2
 
-; **** Bar-Fader ****
+; Bar-Fader 
 	CNOP 0,4
 bfi_rgb8_color_table
 	DS.L spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
@@ -3538,7 +3529,7 @@ bf_rgb8_color_cache
 		DC.L color00_bits
 	ENDR
 
-; **** Image-Fader ****
+; Image-Fader 
 	CNOP 0,4
 ifi_rgb8_color_table
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/320x182x16-Temple.ct"m
@@ -3549,7 +3540,7 @@ ifo_rgb8_color_table
 		DC.L color00_bits
 	ENDR
 
-; **** Chessboard-Fader ****
+; Chessboard-Fader 
 	CNOP 0,4
 cfi_rgb8_color_table
 	REPT vp3_visible_lines_number*2
@@ -3562,7 +3553,7 @@ cfo_rgb8_color_table
 		DC.L color00_bits
 	ENDR
 
-; **** Sprite-Fader ****
+; Sprite-Fader
 	CNOP 0,4
 sprfi_rgb8_color_table
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/256x208x16-Desert-Sunset.ct"
@@ -3573,7 +3564,7 @@ sprfo_rgb8_color_table
 		DC.L color00_bits
 	ENDR
 
-; **** Color-Fader-Cross ****
+; Color-Fader-Cross 
 	CNOP 0,4
 cfc_rgb8_color_table
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/4x16x11x8-BallsDarkBlue.ct"
@@ -3590,7 +3581,7 @@ cfc_rgb8_color_table
 
 	INCLUDE "error-texts.i"
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 hst_text
 	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
 		DC.B " "
@@ -3609,11 +3600,14 @@ hst_stop_text
 	EVEN
 
 
-	DC.B "$VER: RSE-30 1.7 beta (8.10.24)",0
+	DC.B "$VER: "
+	DC.B "RSE-30 1.7 beta "
+	DC.B "(8.10.24) "
+	DC.B "© 2024 by Resistance",0
 	EVEN
 
 
-; ## Audiodaten nachladen ##
+; audio data
 
 	IFEQ pt_split_module_enabled
 pt_auddata SECTION pt_audio,DATA
@@ -3626,21 +3620,21 @@ pt_auddata SECTION pt_audio,DATA_C
 	ENDC
 
 
-; ## Grafikdaten nachladen ##
+; graphics data
 
-; **** Background-Image1 ****
+; Background-Image1 
 bg1_image_data SECTION bg1_gfx,DATA
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/256x208x16-Desert-Sunset.rawblit"
 
-; **** Background-Image2 ****
+; Background-Image2 
 bg2_image_data SECTION bg2_gfx,DATA
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/320x182x16-Temple.rawblit"
 
-; **** Horiz-Scrolltext ****
+; Horiz-Scrolltext 
 hst_image_data SECTION hst_gfx,DATA_C
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/fonts/32x26x4-Font.rawblit"
 
-; **** Morph-Vector-Balls ****
+; Morph-Vector-Balls 
 mvb_image_data SECTION mvb_gfx1,DATA_C
 	INCBIN "Daten:Asm-Sources.AGA/projects/30/graphics/4x16x11x8-Balls.rawblit"
 

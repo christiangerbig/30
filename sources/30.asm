@@ -265,7 +265,7 @@ ciab_ta_continuous_enabled	EQU FALSE
 	ENDC
 ciab_tb_continuous_enabled	EQU FALSE
 
-beam_position			EQU $133 ; Wegen Music-Fader
+beam_position			EQU $133 ; music fader takes more execution time
 
 MINROW				EQU VSTART_256_LINES
 
@@ -274,7 +274,7 @@ display_window_vstart		EQU MINROW
 display_window_hstop		EQU HSTOP_320_PIXEL
 display_window_vstop		EQU VSTOP_256_LINES
 
-spr_pixel_per_datafetch		EQU 64 ;4x
+spr_pixel_per_datafetch		EQU 64	; 4x
 
 ; Viewport 1 
 vp1_pixel_per_line		EQU 320
@@ -1385,10 +1385,10 @@ bvm_init_rgb8_color_table_loop3
 	CNOP 0,4
 mvb_init_object_coords
 	lea	mvb_object_coords_offsets(pc),a0
-	moveq	#0,d0			; start value
+	moveq	#0,d0			; start osset
 	moveq	#mvb_object_points_number-1,d7
 mvb_init_object_coords_loop
-	move.w	d0,(a0)+		; start value
+	move.w	d0,(a0)+		; offset xyz coordinate
 	addq.w	#3,d0			; next xyz coodinate
 	dbf	d7,mvb_init_object_coords_loop
 	rts
@@ -1580,12 +1580,12 @@ cl1_vp2_pf1_set_plane_ptrs
 	move.l	cl1_display(a3),a0
 	ADDF.L	cl1_extension1_entry+cl1_ext1_BPL3PTH+WORD_SIZE,a0
 	move.l	extra_pf3(a3),a1
-	addq.w	#LONGWORD_SIZE,a1	; pointer bitplane2
+	addq.w	#LONGWORD_SIZE,a1	; bitplane2
 	moveq	#(vp2_pf1_depth-1)-1,d7
 cl1_vp2_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; high
-	addq.w	#2*LONGWORD_SIZE,a0	; next bitplane pointer
-	move.w	(a1)+,LONGWORD_SIZE-(2*LONGWORD_SIZE)(a0) ; low
+	addq.w	#QUADWORD_SIZE,a0	; next bitplane pointer
+	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE)(a0) ; low
 	dbf	d7,cl1_vp2_pf1_set_plane_ptrs_loop
 	rts
 
@@ -1717,7 +1717,7 @@ cl2_vp3_init_color_gradient_loop
 	move.l	a1,(a0)+		; COLOR25
 	move.l	a2,(a0)+		; COLOR26
 	COP_MOVEQ 0,NOOP
-	cmp.l	d5,d0			; Rasterline $ff reached ?
+	cmp.l	d5,d0			; raster line $ff reached ?
 	bne.s	cl2_vp3_init_color_gradient_skip
 	subq.w	#LONGWORD_SIZE,a0
 	COP_WAIT CL_X_WRAP,CL_Y_WRAP	; patch cl
@@ -1804,8 +1804,8 @@ cl2_vp3_pf1_set_plane_ptrs
 	moveq	#vp3_pf1_depth-1,d7
 cl2_vp3_pf1_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	2*QUADWORD_SIZE,a0	; next bitplane pointer
-	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
+	ADDF.W	QUADWORD_SIZE*2,a0	; next bitplane pointer
+	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf1_set_plane_ptrs_loop
 	rts
 
@@ -1817,8 +1817,8 @@ cl2_vp3_pf2_set_plane_ptrs
 	moveq	#vp3_pf2_depth-1,d7
 cl2_vp3_pf2_set_plane_ptrs_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	2*QUADWORD_SIZE,a0	; next bitplane pointer
-	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
+	ADDF.W	QUADWORD_SIZE*2,a0	; next bitplane pointer
+	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
 	dbf	d7,cl2_vp3_pf2_set_plane_ptrs_loop
 	rts
 
@@ -1886,15 +1886,15 @@ cb_scale_image_skip1
 	beq.s	cb_scale_image_skip2
 	bset	d3,extra_pf8_plane_width(a2,d1.w) ; set pixel destination byte
 cb_scale_image_skip2
-	not.b	d3			; convert bit number to x coordinate target
-	not.b	d2			; convert bit number to x coordinate source
+	not.b	d3			; convert bit number back to x coordinate target
+	not.b	d2			; convert bit number back to x coordinate source
 cb_scale_image_skip3
 	addq.w	#1,d3			; next pixel in target
 cb_scale_image_skip4
 	addq.w	#1,d2			; next pixel in source
 	dbf	d6,cb_scale_image_loop2
 	add.l	a5,a2			; next line in target
-	subq.w	#cb_destination_x_size_step,d4 ; decrease x position in target
+	subq.w	#cb_destination_x_size_step,d4 ; decrease x position target
 	dbf	d7,cb_scale_image_loop1
 	movem.l (a7)+,a4-a5
 	rts
@@ -2003,8 +2003,8 @@ set_vp3_playfield1
 	moveq	#vp3_pf1_depth-1,d7
 set_vp3_playfield1_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
-	ADDF.W	2*QUADWORD_SIZE,a0
-	move.w	(a1)+,LONGWORD_SIZE-(2*QUADWORD_SIZE)(a0) ; BPLxPTL
+	ADDF.W	QUADWORD_SIZE*2,a0
+	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
 	dbf	d7,set_vp3_playfield1_loop
 	rts
 
@@ -2223,7 +2223,7 @@ mvb_clear_playfield1_1
 	move.l	(a0),BLTDPT-DMACONR(a6)
 	moveq	#0,d0
 	move.w	d0,BLTDMOD-DMACONR(a6)
-	move.w	#(mvb_clear_blit_y_size*64)+(mvb_clear_blit_x_size/16),BLTSIZE-DMACONR(a6) ; Blitter starten
+	move.w	#(mvb_clear_blit_y_size*64)+(mvb_clear_blit_x_size/16),BLTSIZE-DMACONR(a6) ; start blit
 	rts
 
 	CNOP 0,4
@@ -2384,8 +2384,8 @@ mvb_morph_object
 	move.l	(a1,d1.w*4),a1		; shape data
 	MOVEF.W mvb_object_points_number*3-1,d7
 mvb_morph_object_loop
-	move.w	(a0),d0			; current coordinate
-	cmp.w	(a1)+,d0		; compare with target coordinate
+	move.w	(a0),d0
+	cmp.w	(a1)+,d0		; compare current coordinate with target coordinate
 	beq.s	mvb_morph_object_skip3
 	bgt.s	mvb_morph_object_skip1
 	addq.w	#mvb_morph_speed,d0	; increase current coordinate
@@ -2418,7 +2418,7 @@ mvb_morph_object_quit
 
 	CNOP 0,4
 mvb_quicksort_coords
-	moveq	#-2,d2			; mask clear bit 0
+	moveq	#-2,d2			; mask for clear bit 0
 	lea	mvb_object_coords_offsets(pc),a0
 	move.l	a0,a1
 	lea	(mvb_object_points_number-1)*2(a0),a2 ; last entry
@@ -2519,7 +2519,7 @@ set_vector_balls_skip3
 	move.l	d5,BLTBPT-DMACONR(a6)	; image
 	move.l	d6,BLTAPT-DMACONR(a6)	; mask
 	move.l	d1,BLTDPT-DMACONR(a6)	; playfield write
-	move.w	a4,BLTSIZE-DMACONR(a6)
+	move.w	a4,BLTSIZE-DMACONR(a6)	; start blit
 	dbf	d7,set_vector_balls_loop
 	move.w	#DMAF_BLITHOG,DMACON-DMACONR(a6)
 	move.l	variables+save_a7(pc),a7
@@ -2549,7 +2549,7 @@ cb_get_stripes_y_coords
 	lea	cb_stripes_y_coords(pc),a1
 	moveq	#(cb_stripes_number*cb_stripe_height)-1,d7 ; number of lines
 cb_get_stripes_y_coords_loop
-	move.l	(a0,d2.w*4),d0	; sin(w)
+	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cb_stripes_y_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	add.w	d3,d0			; y' + y centre
@@ -2602,7 +2602,7 @@ cb_move_chessboard_loop
 	move.w	d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 high bits
 	RGB8_TO_RGB4_LOW d2,d1,d3
 	move.w	d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; COLOR02 low bits
-	addq.w	#2*LONGWORD_SIZE,a1	; next color value
+	addq.w	#QUADWORD_SIZE,a1	; next color value
 	dbf	d7,cb_move_chessboard_loop
 	move.l	(a7)+,a4
 	rts
@@ -2623,7 +2623,7 @@ rgb8_bar_fader_in_skip
 	move.w	d0,bfi_rgb8_fader_angle(a3) 
 	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
-	move.l	(a0,d2.w*4),d0	;sin(w)
+	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L bfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfi_rgb8_fader_center,d0
@@ -2919,7 +2919,7 @@ fade_balls_in
 	move.w	fb_mask(a3),d1		; second mask
 	eor.w	d1,d0			; merge masks
 	move.w	d0,vb_copy_blit_mask(a3)
-	cmp.w	#-1,d0			; final mask ?
+	cmp.w	#-1,d0			; mask end value ?
 	bne.s	fade_balls_in_skip
 	move.w	#FALSE,fbi_active(a3)
 	bra.s	fade_balls_in_quit
@@ -2940,7 +2940,7 @@ fade_balls_out
 	move.w	vb_copy_blit_mask(a3),d0 ; current mask
 	move.w	fb_mask(a3),d1		; second mask
 	eor.w	d1,d0			; merge masks
-	move.w	d0,vb_copy_blit_mask(a3) ; final mask ?
+	move.w	d0,vb_copy_blit_mask(a3) ; mask end value ?
 	bne.s	fade_balls_out_skip
 	move.w	#FALSE,fbo_active(a3)
 	bra.s	fade_balls_out_quit
@@ -3090,7 +3090,7 @@ mh_exit_demo
 	bne.s	mh_exit_demo_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
 	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; pointer end of text
-	clr.w	quit_active(a3)	; quit intro after text stop
+	clr.w	quit_active(a3)		; quit intro after text stop
 	bra	mh_exit_demo_quit
 	CNOP 0,4
 mh_exit_demo_skip1

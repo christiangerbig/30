@@ -1845,7 +1845,7 @@ cfc_rgb8_init_start_colors
 		bsr	rgb8_colors_fader_cross
 		tst.w	cfc_rgb8_copy_colors_active(a3)
 		beq.s	cfc_rgb8_init_start_colors
-		move.w	#FALSE,cfc_rgb8_copy_colors_active(a3) ; deactivate delay counter
+		move.w	#FALSE,cfc_rgb8_copy_colors_active(a3)
 		rts
 	ENDC
 
@@ -2629,12 +2629,12 @@ rgb8_bar_fader_in_skip
 	ADDF.W	bfi_rgb8_fader_center,d0
 	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0			
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,bf_rgb8_colors_counter(a3)
@@ -2665,12 +2665,12 @@ rgb8_bar_fader_out_skip
 	ADDF.W	bfo_rgb8_fader_center,d0
 	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	lea	bfo_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W bf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,bf_rgb8_colors_counter(a3)
@@ -2682,7 +2682,7 @@ rgb8_bar_fader_out_quit
 
 	COPY_RGB8_COLORS_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
 
-; Tempel einfaden 
+; fade in temple
 	CNOP 0,4
 rgb8_image_fader_in
 	movem.l a4-a6,-(a7)
@@ -2704,12 +2704,12 @@ rgb8_image_fader_in_skip
 	ADDF.W	ifi_rgb8_fader_center,d0
 	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	lea	ifi_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,if_rgb8_colors_counter(a3)
@@ -2719,7 +2719,7 @@ rgb8_image_fader_in_quit
 	movem.l (a7)+,a4-a6
 	rts
 
-; Tempel ausfaden 
+; fade out temple
 	CNOP 0,4
 rgb8_image_fader_out
 	movem.l a4-a6,-(a7)
@@ -2741,12 +2741,12 @@ rgb8_image_fader_out_skip
 	ADDF.W	ifo_rgb8_fader_center,d0
 	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	lea	ifo_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W if_rgb8_colors_number-1,d7
 	bsr.s	if_rgb8_fader_loop
 	move.w	d6,if_rgb8_colors_counter(a3)
@@ -2782,12 +2782,12 @@ rgb8_chessboard_fader_in_skip
 	move.l	extra_memory(a3),a0
 	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; color values buffer
 	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cf_rgb8_colors_counter(a3)
@@ -2819,12 +2819,12 @@ rgb8_chessboard_fader_out_skip
 	move.l	extra_memory(a3),a0
 	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; color values buffer
 	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W cf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cf_rgb8_colors_counter(a3)
@@ -2855,12 +2855,12 @@ rgb8_sprite_fader_in_skip
 	ADDF.W	sprfi_rgb8_fader_center,d0
 	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; color values buffer
 	lea	sprfi_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination values
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W sprf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,sprf_rgb8_colors_counter(a3)
@@ -2975,12 +2975,12 @@ rgb8_colors_fader_cross_skip
 	move.w	cfc_rgb8_color_table_start(a3),d1
 	MULUF.W LONGWORD_SIZE,d1	; *32
 	lea	(a1,d1.w*8),a1
-	move.w	d0,a5			; addition/substraction blue
+	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
-	move.l	d0,a2			; addition/substraction red
+	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
-	move.l	d0,a4			; addition/substraction green
+	move.l	d0,a4			; increase/decrease green
 	MOVEF.W cfc_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
 	move.w	d6,cfc_rgb8_colors_counter(a3)

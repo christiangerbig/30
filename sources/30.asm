@@ -76,7 +76,7 @@
 ; 89n	Set-Chessboars-Speed
 ; 8a0	Trigger-Morphing
 
-; Execution time 68020: 240 raster lines
+; execution time 68020: 240 raster lines
 
 
 	SECTION code_and_variables,CODE
@@ -265,7 +265,7 @@ ciab_ta_continuous_enabled	EQU FALSE
 	ENDC
 ciab_tb_continuous_enabled	EQU FALSE
 
-beam_position			EQU $133 ; music fader takes more execution time
+beam_position			EQU $133
 
 MINROW				EQU VSTART_256_LINES
 

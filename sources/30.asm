@@ -137,6 +137,7 @@ pt_ciatiming_enabled		EQU TRUE
 pt_finetune_enabled		EQU FALSE
 pt_metronome_enabled		EQU FALSE
 pt_mute_enabled			EQU FALSE
+pt_track_notes_played_enabled	EQU TRUE
 pt_track_volumes_enabled	EQU TRUE
 pt_track_periods_enabled	EQU FALSE
 pt_music_fader_enabled		EQU TRUE
@@ -2151,8 +2152,7 @@ bvm_get_channels_amplitudes
 bvm_get_channel_amplitude
 	tst.b	n_notetrigger(a0)	; new note played ?
 	bne.s	bvm_get_channel_amplitude_quit
-	moveq	#0,d0
-	move.b	n_volume(a0),d0		; current volume
+	move.w	n_currentvolume(a0),d0
 	move.w	#FALSE,n_notetrigger(a0)
 	MULUF.W bvm_max_amplitude,d0,d1
 	lsr.w	#6,d0

@@ -2184,7 +2184,7 @@ bvm_set_bars
 	MOVEF.W (sine_table_length/2)-1,d5
 	lea	sine_table(pc),a0	
 	lea	bvm_audio_channel1_info(pc),a1
-	lea	bvm_bplam_table(pc),a4
+	lea	bvm_sprm_table(pc),a4
 	move.l	cl2_construction2(a3),a5 
 	ADDF.W	cl2_extension2_entry+cl2_ext2_BPLCON4+WORD_SIZE+BYTE_SIZE,a5
 	move.w	#bvm_y_centre,a3
@@ -3357,7 +3357,7 @@ bvm_rgb8_color_table
 		DC.L color00_bits
 	ENDR
 
-bvm_bplam_table
+bvm_sprm_table
 	DC.B $33,$44,$55,$55,$44,$33 	; bar1
 	DC.B $66,$77,$88,$88,$77,$66	; bar2
 	DC.B $99,$aa,$bb,$bb,$aa,$99	; bar3

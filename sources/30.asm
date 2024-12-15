@@ -60,8 +60,13 @@
 
 ; V.1.8 beta
 ; - Background color adjusted
-; - Bugfix font: dot + colon adjusted
-; - 4pLaY's text added ?
+; - Bugfix font: "'" + "G", "Q","O",".","#" adjusted
+; - 4pLaY's text added
+
+; (V.1.0
+; - adf-Version
+; - with screen fader
+; - WB start considered)
 
 
 ; PT 8xy command
@@ -3330,7 +3335,7 @@ hst_outline_gradient
 	INCLUDE "Daten:Asm-Sources.AGA/projects/30/colortables/26-Colorgradient.ct"
 
 hst_ascii
-	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+><",ASCII_CTRL_O," "
+	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+<>",ASCII_CTRL_O," "
 hst_ascii_end
 	EVEN
 
@@ -3587,9 +3592,59 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "RESISTANCE CELEBRATES THE 30TH ANNIVERSARY!     CODING # DISSIDENT     GRAPHICS # GRASS     MUSIC # MA2E           "
+	DC.B "WE ARE CELEBRATING 30 YEARS OF DEMOS FUN AND SHARED ACHIEVEMENTS TOGETHER IN RESISTANCE"
 
-	DC.B "RESISTANCE 1995#2025 AND BEYOND...     "
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "FROM THE VERY FIRST STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "WE HAVE ALL CONTRIBUTED TO MAKING THIS GROUP WHAT IT IS TODAY"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "IT'S NOT JUST THE ACCOMPLISHMENTS BUT THE MEMORIES THE FRIENDSHIPS AND THE SPIRIT OF COLLABORATION THAT HAVE SHAPED US INTO A GROUP OF STRENGTH AND SUPPORT"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "AS WE REFLECT ON THE DECADES TOGETHER LET'S TAKE PRIDE IN HOW FAR WE HAVE COME BUT ALSO LOOK FORWARD TO THE EXCITING POSSIBILITIES AHEAD"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "THE NEXT CHAPTER IS OURS TO WRITE AND WITH THE SAME PASSION AND DEDICATION THAT GOT US HERE THE BEST IS YET TO COME"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "THANK YOU ALL FOR BEING A PART OF THIS JOURNEY"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "SIGNED 4PLAY"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
+
+	DC.B "CODING BY DISSIDENT       GRAPHICS BY GRASS       MUSIC BY MA2E"
+
+	REPT (hst_text_characters_number/(hst_origin_character_x_size/hst_text_character_x_size))+1
+		DC.B " "
+	ENDR
 
 	DC.B FALSE
 hst_stop_text
@@ -3601,8 +3656,8 @@ hst_stop_text
 
 
 	DC.B "$VER: "
-	DC.B "RSE-30 1.7 beta "
-	DC.B "(8.10.24) "
+	DC.B "RSE-30 1.8 beta "
+	DC.B "(15.12.24) "
 	DC.B "© 2024 by Resistance",0
 	EVEN
 

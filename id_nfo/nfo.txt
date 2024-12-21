@@ -16,7 +16,7 @@
 
                              Type > Intro
                      Release Date > xx/xx/xx
-                      Released At >
+                      Released At > ???
                     Minimum Req's > AGA 020 PAL w/ setpatch
 
 

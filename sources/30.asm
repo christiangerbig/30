@@ -63,10 +63,13 @@
 ; - Bugfix font: "'" + "G", "Q","O",".","#" adjusted
 ; - 4pLaY's text added
 
-; (V.1.0
-; - adf-Version
+; V.1.0
+; - final version
+; - with adf
 ; - with screen fader
-; - WB start considered)
+; - WB start considered
+; - "Y" and "'" centered in font
+; - all colortables optimized
 
 
 ; PT 8xy command
@@ -134,8 +137,8 @@ requires_060_cpu		EQU FALSE
 requires_fast_memory		EQU FALSE
 requires_multiscan_monitor	EQU FALSE
 
-workbench_start_enabled		EQU FALSE
-screen_fader_enabled		EQU FALSE
+workbench_start_enabled		EQU TRUE
+screen_fader_enabled		EQU TRUE
 text_output_enabled		EQU FALSE
 
 pt_ciatiming_enabled		EQU TRUE
@@ -3656,9 +3659,9 @@ hst_stop_text
 
 
 	DC.B "$VER: "
-	DC.B "RSE-30 1.8 beta "
-	DC.B "(15.12.24) "
-	DC.B "© 2024 by Resistance",0
+	DC.B "RSE-30 1.0  "
+	DC.B "(21.12.24) "
+	DC.B "© 2024/2025 by Resistance",0
 	EVEN
 
 

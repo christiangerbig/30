@@ -68,6 +68,8 @@
 ; - with adf
 ; - with screen fader
 ; - WB start considered
+
+; V.1.1
 ; - "Y" and "'" centered in font
 ; - all colortables optimized
 
@@ -3659,7 +3661,7 @@ hst_stop_text
 
 
 	DC.B "$VER: "
-	DC.B "RSE-30 1.0  "
+	DC.B "RSE-30 1.1  "
 	DC.B "(21.12.24) "
 	DC.B "© 2024/2025 by Resistance",0
 	EVEN

@@ -64,7 +64,6 @@
 ; - 4pLaY's text added
 
 ; V.1.0
-; - final version
 ; - with adf
 ; - with screen fader
 ; - WB start considered
@@ -72,6 +71,10 @@
 ; V.1.1
 ; - "Y" and "'" centered in font
 ; - all colortables optimized
+
+; V.1.2
+; - final version
+; - with Lunix' updated icon
 
 
 ; PT 8xy command
@@ -144,7 +147,6 @@ screen_fader_enabled		EQU TRUE
 text_output_enabled		EQU FALSE
 
 pt_ciatiming_enabled		EQU TRUE
-pt_finetune_enabled		EQU FALSE
 pt_metronome_enabled		EQU FALSE
 pt_mute_enabled			EQU FALSE
 pt_track_notes_played_enabled	EQU TRUE
@@ -1309,9 +1311,7 @@ init_main
 	bsr.s	pt_InitRegisters
 	bsr	pt_InitAudTempStrucs
 	bsr	pt_ExamineSongStruc
-	IFEQ pt_finetune_enabled
-		bsr	pt_InitFtuPeriodTableStarts
-	ENDC
+	bsr	pt_InitFtuPeriodTableStarts
 	bsr	hst_init_characters_offsets
 	bsr	hst_init_characters_x_positions
 	bsr	hst_init_characters_images
@@ -1342,9 +1342,7 @@ init_main
 
 	PT_EXAMINE_SONG_STRUCTURE
 
-	IFEQ pt_finetune_enabled
-		PT_INIT_FINETUNE_TABLE_STARTS
-	ENDC
+	PT_INIT_FINETUNE_TABLE_STARTS
 
 ; Horiz-Scrolltext 
 	INIT_CHARACTERS_OFFSETS.W hst
@@ -3662,8 +3660,8 @@ hst_stop_text
 
 
 	DC.B "$VER: "
-	DC.B "RSE-30 1.1  "
-	DC.B "(21.12.24) "
+	DC.B "RSE-30 1.2  "
+	DC.B "(26.12.24) "
 	DC.B "© 2024/2025 by Resistance",0
 	EVEN
 

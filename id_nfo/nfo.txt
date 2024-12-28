@@ -15,8 +15,8 @@
                             Title > 30
 
                              Type > Intro
-                     Release Date > xx/xx/xx
-                      Released At > ???
+                     Release Date > 17/05/25
+                      Released At > Decrunch 2025
                     Minimum Req's > AGA 020 PAL w/ setpatch
 
 

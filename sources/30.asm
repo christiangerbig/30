@@ -73,8 +73,12 @@
 ; - all colortables optimized
 
 ; V.1.2
-; - final version
 ; - with Lunix' updated icon
+
+; V.1.3
+; - final version
+; - with updated includes
+; - with updated nfo file
 
 
 ; PT 8xy command
@@ -3660,8 +3664,8 @@ hst_stop_text
 
 
 	DC.B "$VER: "
-	DC.B "RSE-30 1.2  "
-	DC.B "(26.12.24) "
+	DC.B "RSE-30 1.3  "
+	DC.B "(28.12.24) "
 	DC.B "© 2024/2025 by Resistance",0
 	EVEN
 

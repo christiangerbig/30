@@ -2672,7 +2672,7 @@ rgb8_bar_fader_out_skip
 	move.w	d0,bfo_rgb8_fader_angle(a3) 
 	MOVEF.W bf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
-	move.l	(a0,d2.w*4),d0	;sin(w)
+	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L bfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfo_rgb8_fader_center,d0

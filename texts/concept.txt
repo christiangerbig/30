@@ -38,3 +38,5 @@ Copper initialisiert BP1/2/3/4/5 für VP3
 840 Start-Fade-Chessboard-In
 850 Start-Fade-Balls-In
 850 Start-Scrolltext
+
+Xenium 2025: Intro_Resistance_30.zip mit nfo und Screenshot

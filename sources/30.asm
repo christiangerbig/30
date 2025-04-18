@@ -3665,8 +3665,8 @@ hst_stop_text
 
 	DC.B "$VER: "
 	DC.B "RSE-30 1.3  "
-	DC.B "(28.12.24) "
-	DC.B "© 2024/2025 by Resistance",0
+	DC.B "(18.4.25) "
+	DC.B "© 2025 by Resistance",0
 	EVEN
 
 

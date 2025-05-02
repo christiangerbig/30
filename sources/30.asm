@@ -1925,7 +1925,7 @@ cb_scale_image
 	move.l	extra_pf7(a3),a1	
 	move.l	(a1),a1			; pointer source image
 	move.l	extra_pf8(a3),a2
-	move.l	(a2),a2        		; pointer target image
+	move.l	(a2),a2       		; pointer target image
 	move.w	#cb_x_max,a4		; target image
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
 	moveq	#cb_destination_y_size-1,d7

@@ -2227,7 +2227,7 @@ bvm_get_channel_amplitude
 	tst.b	n_notetrigger(a0)	; new note played ?
 	bne.s	bvm_get_channel_amplitude_quit
 	move.w	n_currentvolume(a0),d0
-	move.w	#FALSE,n_notetrigger(a0)
+	move.b	#FALSE,n_notetrigger(a0)
 	MULUF.W bvm_max_amplitude,d0,d1
 	lsr.w	#6,d0
 	cmp.w	d2,d0			; amplitude <= max amplitude ?

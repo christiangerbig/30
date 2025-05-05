@@ -2350,7 +2350,7 @@ mvb_rotation
 		MOVEF.W sine_table_length,d3 ; overflow 360 °
 	ENDC
 	add.w	a4,d0			; + 90°
-	swap	d4			; bits 16..31: sin(a)
+	swap	d4			; high word: sin(a)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2359,7 +2359,7 @@ mvb_rotation
 		sub.w	d3,d0
 mvb_rotation_skip1
 	ENDC
-	move.w	2(a2,d0.w*4),d4		; bits 0..15: cos(a)
+	move.w	2(a2,d0.w*4),d4		; low word: cos(a)
 	addq.w	#mvb_rotation_x_angle_speed,d1 ; next x angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2374,7 +2374,7 @@ mvb_rotation_skip2
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d5		; sin(b)
 	add.w	a4,d0			; + 90°
-	swap	d5			; bits 16..31: sin(b)
+	swap	d5			; high word: sin(b)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2383,7 +2383,7 @@ mvb_rotation_skip2
 		sub.w	d3,d0		; restart
 mvb_rotation_skip3
 	ENDC
-	move.w	2(a2,d0.w*4),d5		; bits 0..15: cos(b)
+	move.w	2(a2,d0.w*4),d5		; low word: cos(b)
 	addq.w	#mvb_rotation_y_angle_speed,d1 ; next y angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2398,7 +2398,7 @@ mvb_rotation_skip4
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d6		; sin(c)
 	add.w	a4,d0			; + 90°
-	swap	d6			; bits 16..31: sin(c)
+	swap	d6			; high word: sin(c)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2407,7 +2407,7 @@ mvb_rotation_skip4
 		sub.w	d3,d0		; restart
 mvb_rotation_skip5
 	ENDC
-	move.w	2(a2,d0.w*4),d6		; bits 0..15: cos(c)
+	move.w	2(a2,d0.w*4),d6		; low word: cos(c)
 	addq.w	#mvb_rotation_z_angle_speed,d1 ; next z angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2645,7 +2645,7 @@ cb_get_stripes_y_coords_loop
 
 	CNOP 0,4
 cb_make_color_offsets
-	moveq	#$00000001,d1		; bits 0..15: color offset first stripe, bits 16..31: color offset second stripe
+	moveq	#$00000001,d1		; low word: color offset first stripe, high word: color offset second stripe
 	lea	cb_stripes_y_coords(pc),a0
 	lea	cb_color_offsets_table(pc),a1
 	moveq	#cb_stripes_number-1,d7

@@ -11,7 +11,7 @@
 
 ; V.1.1 beta
 ; - CWAIT for VP2 corrected so that the color gradient of the checkerboard for
-;   the first row is still within the horizontal blanking interval.
+;   the 1st row is still within the horizontal blanking interval.
 ;   VP1 now uses COLOR28-31
 ;   VP3 now uses COLOR16-23 for P1 and COLOR24-28 for PF2
 ; - The colors for VP1/PF1 and VP3/PF2 are no longer initialized separately
@@ -33,13 +33,13 @@
 
 ; V.1.3 beta
 ; - Scrolling text now starts later
-; - The chessboard stands still at first and is animated later
+; - The chessboard stands still at 1st and is animated later
 ; - New Fx command: 8a0
 
 ; V.1.4 beta
 ; - Fx command revised
 ; - 880 Enable Skip-Commands
-; - 89n Set-Chessboars-Speed: Chessboard first stands still and then moves,
+; - 89n Set-Chessboars-Speed: Chessboard 1st stands still and then moves,
 ;   when the music changes. It slows down when the music slows down.
 
 ; V.1.5 beta
@@ -1397,7 +1397,7 @@ bvm_init_audio_channels_info
 bvm_init_rgb8_color_table
 	move.l	#color00_bits,d1
 	lea	bvm_rgb8_color_gradients(pc),a0 ; source
-	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; target
+	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination
 	moveq	#bvm_bars_number-1,d7
 bvm_init_rgb8_color_table_loop1
 	moveq	#(bvm_bar_height/2)-1,d6
@@ -1459,16 +1459,16 @@ mvb_init_start_shape
 ; Chessboard 
 	CNOP 0,4
 cb_init_chessboard_image
-	movem.w cb_fill_pattern(pc),d0-d3 ; fill pattern high&low first word, high&low second word
+	movem.w cb_fill_pattern(pc),d0-d3 ; fill pattern high&low 1st word, high&low 2nd word
 	move.l	extra_pf7(a3),a0
 	move.l	(a0)+,a1		; bitplane 1
 	move.l	(a0),a2			; bitplane 2
 	moveq	#(cb_source_x_size/32)-1,d7
 cb_init_chessboard_image_loop
-	move.w	d0,(a1)+		; high first word
-	move.w	d1,(a2)+		; high second word
-	move.w	d2,(a1)+		; low first word
-	move.w	d3,(a2)+		; low second word
+	move.w	d0,(a1)+		; high 1st word
+	move.w	d1,(a2)+		; high 2nd word
+	move.w	d2,(a1)+		; low 1st word
+	move.w	d3,(a2)+		; low 2nd word
 	dbf	d7,cb_init_chessboard_image_loop
 	rts
 
@@ -1488,7 +1488,7 @@ cb_init_bitmap_table_loop1
 	moveq	#0,d6			; width source image higher 32 bits
 	divu.l	d4,d6:d2		; F=width source/width destination
 	moveq	#0,d1
-	move.w	d4,d6			; width target
+	move.w	d4,d6			; width destination
 	subq.w	#1,d6			; loop until false
 cb_init_bitmap_table_loop2
 	move.l	d1,d0			; F
@@ -1497,7 +1497,7 @@ cb_init_bitmap_table_loop2
 	addq.b	#1,(a0,d0.w)		; set pixel in bitmap table
 	dbf	d6,cb_init_bitmap_table_loop2
 	add.l	a1,a0			; next line in bitmap table
-	addq.l	#cb_destination_plane_width_step,d4 ; decrease width target
+	addq.l	#cb_destination_plane_width_step,d4 ; decrease width destination
 	dbf	d7,cb_init_bitmap_table_loop1
 	rts
 
@@ -1506,7 +1506,7 @@ cb_init_bitmap_table_loop2
 cb_init_color_tables
 	lea	cb_color_gradient1(pc),a0 ; source1
 	lea	cb_color_gradient2(pc),a1 ; source2
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; target
+	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; destination
 	moveq	#vp3_visible_lines_number-1,d7
 cb_init_color_tables_loop1
 	move.l	(a0)+,(a2)+
@@ -1919,32 +1919,32 @@ cfc_rgb8_init_start_colors
 	CNOP 0,4
 cb_scale_image
 	movem.l a4-a5,-(a7)
-	moveq	#0,d4			; 1st x coordinate target image
+	moveq	#0,d4			; 1st x coordinate destination image
 	move.l	extra_memory(a3),a0
 	ADDF.L	em_bitmap_table,a0
 	move.l	extra_pf7(a3),a1	
 	move.l	(a1),a1			; pointer source image
 	move.l	extra_pf8(a3),a2
-	move.l	(a2),a2       		; pointer target image
-	move.w	#cb_x_max,a4		; target image
+	move.l	(a2),a2       		; pointer destination image
+	move.w	#cb_x_max,a4		; destination image
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
 	moveq	#cb_destination_y_size-1,d7
 cb_scale_image_loop1
-	moveq	#0,d2			; first x coordinate source image
-	move.w	d4,d3			; x coordinate target image
+	moveq	#0,d2			; 1st x coordinate source image
+	move.w	d4,d3			; x coordinate destination image
 	MOVEF.W cb_source_x_size-1,d6
 cb_scale_image_loop2
 	tst.b	(a0)+			; set pixel ?
 	beq.s	cb_scale_image_skip4
-	move.w	d3,d1			; x coordinate target image
+	move.w	d3,d1			; x coordinate destination image
 	bmi.s	cb_scale_image_skip3
 	cmp.w	a4,d1			; x >= max ?
 	bge.s	cb_scale_image_skip3
 	move.w	d2,d0			; x coordinate source
 	lsr.w	#3,d0			; x offset source
 	not.b	d2			; shift value source byte
-	lsr.w	#3,d1			; x offset target
-	not.b	d3			; shift value target byte
+	lsr.w	#3,d1			; x offset destination
+	not.b	d3			; shift value destination byte
 	btst	d2,(a1,d0.w)		; pixel set in source byte ?
 	beq.s	cb_scale_image_skip1
 	bset	d3,(a2,d1.w)		; set pixel destination byte
@@ -1953,15 +1953,15 @@ cb_scale_image_skip1
 	beq.s	cb_scale_image_skip2
 	bset	d3,extra_pf8_plane_width(a2,d1.w) ; set pixel destination byte
 cb_scale_image_skip2
-	not.b	d3			; convert bit number back to x coordinate target
+	not.b	d3			; convert bit number back to x coordinate destination
 	not.b	d2			; convert bit number back to x coordinate source
 cb_scale_image_skip3
-	addq.w	#1,d3			; next pixel in target
+	addq.w	#1,d3			; next pixel in destination
 cb_scale_image_skip4
 	addq.w	#1,d2			; next pixel in source
 	dbf	d6,cb_scale_image_loop2
-	add.l	a5,a2			; next line in target
-	subq.w	#cb_destination_x_size_step,d4 ; decrease x position target
+	add.l	a5,a2			; next line in destination
+	subq.w	#cb_destination_x_size_step,d4 ; decrease x position destination
 	dbf	d7,cb_scale_image_loop1
 	movem.l (a7)+,a4-a5
 	rts
@@ -2103,7 +2103,7 @@ horiz_scrolltext_loop
 	moveq	#0,d0
 	move.w	(a0),d0			; x
 	move.w	d0,d2	
-	lsr.w	#3,d0			; x/8
+	lsr.w	#3,d0			; byte offset
 	add.l	d3,d0			; add playfield address
 	WAITBLIT
 	move.l	(a1)+,(a2)		; character image
@@ -2148,7 +2148,7 @@ hst_get_text_softscroll
 
 	CNOP 0,4
 hst_check_control_codes
-; input
+; Input
 ; d0.b	ASCII code
 ; Result
 ; d0.l	return value: return code
@@ -2190,7 +2190,7 @@ hst_horiz_scroll
 	move.w	hst_text_bltcon0_bits(a3),BLTCON0-DMACONR(a6)
 	move.l	a0,BLTAPT-DMACONR(a6)	; source
 	addq.w	#WORD_SIZE,a0		; skip 16 pixel
-	move.l	a0,BLTDPT-DMACONR(a6)	; target
+	move.l	a0,BLTDPT-DMACONR(a6)	; destination
 	move.l	#((extra_pf1_plane_width-hst_horiz_scroll_window_width)<<16)+(extra_pf1_plane_width-hst_horiz_scroll_window_width),BLTAMOD-DMACONR(a6) ; A&D moduli
 	move.w	#(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth*64)+(hst_horiz_scroll_window_x_size/WORD_BITS),BLTSIZE-DMACONR(a6)
 hst_horiz_scroll_quit
@@ -2506,7 +2506,7 @@ mvb_quicksort_coords
 	move.l	a2,a5
 	lea	mvb_rotation_xyz_coords(pc),a6
 mvb_quicks
-	move.l	a5,d0			; pointer first entry
+	move.l	a5,d0			; pointer 1st entry
 	add.l	a0,d0			; + last entry
 	lsr.l	#1,d0
 	and.b	d2,d0			; only even address
@@ -2515,7 +2515,7 @@ mvb_quicks
 	move.w	4(a6,d1.w*2),d0		; z
 mvb_quick
 	move.w	(a1)+,d1		; xyz offset
-	cmp.w	4(a6,d1.w*2),d0		; first z < middle z ?
+	cmp.w	4(a6,d1.w*2),d0		; 1st z < middle z ?
 	blt.s	mvb_quick
 	addq.w	#WORD_SIZE,a2		; next xyz offset
 	subq.w	#WORD_SIZE,a1		; set back pointer
@@ -2527,9 +2527,9 @@ mvb_quick3
 	cmp.l	a2,a1			; pointer table end > pointer tabble beginning ?
 	bgt.s	mvb_quick4
 	move.w	(a2),d1			; last offset
-	move.w	(a1),(a2)		; first offset -> last offset
+	move.w	(a1),(a2)		; 1st offset -> last offset
 	subq.w	#WORD_SIZE,a2		; penultimate offset
-	move.w	d1,(a1)+		; last offset -> first offset
+	move.w	d1,(a1)+		; last offset -> 1st offset
 mvb_quick4
 	cmp.l	a2,a1			; pointer table start <= pointer table end ?
 	ble.s	mvb_quick
@@ -2645,7 +2645,7 @@ cb_get_stripes_y_coords_loop
 
 	CNOP 0,4
 cb_make_color_offsets
-	moveq	#$00000001,d1		; low word: color offset first stripe, high word: color offset second stripe
+	moveq	#$00000001,d1		; low word: color offset 1st stripe, high word: color offset 2nd stripe
 	lea	cb_stripes_y_coords(pc),a0
 	lea	cb_color_offsets_table(pc),a1
 	moveq	#cb_stripes_number-1,d7
@@ -3013,7 +3013,7 @@ fade_balls_in
 	bne.s	fade_balls_in_quit
 	move.w	#fbi_delay,fbi_delay_counter(a3)
 	move.w	vb_copy_blit_mask(a3),d0 ; current mask
-	move.w	fb_mask(a3),d1		; second mask
+	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
 	move.w	d0,vb_copy_blit_mask(a3)
 	cmp.w	#-1,d0			; mask end value ?
@@ -3022,7 +3022,7 @@ fade_balls_in
 	bra.s	fade_balls_in_quit
 	CNOP 0,4
 fade_balls_in_skip
-	lsr.w	#1,d1			; shift second mask
+	lsr.w	#1,d1			; shift 2nd mask
 	move.w	d1,fb_mask(a3)	
 fade_balls_in_quit
 	rts
@@ -3036,7 +3036,7 @@ fade_balls_out
 	bne.s	fade_balls_out_quit
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	vb_copy_blit_mask(a3),d0 ; current mask
-	move.w	fb_mask(a3),d1		; second mask
+	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
 	move.w	d0,vb_copy_blit_mask(a3) ; mask end value ?
 	bne.s	fade_balls_out_skip
@@ -3044,7 +3044,7 @@ fade_balls_out
 	bra.s	fade_balls_out_quit
 	CNOP 0,4
 fade_balls_out_skip
-	lsr.w	#1,d1			; shift second mask
+	lsr.w	#1,d1			; shift 2nd mask
 	move.w	d1,fb_mask(a3)	
 fade_balls_out_quit
 	rts

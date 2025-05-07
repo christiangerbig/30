@@ -1484,8 +1484,8 @@ cb_init_bitmap_table
 	lsl.w	#4,d4
 	MOVEF.W cb_destination_y_size-1,d7
 cb_init_bitmap_table_loop1
-	move.l	d3,d2			; width source image lower 32 bits
-	moveq	#0,d6			; width source image higher 32 bits
+	move.l	d3,d2			; low longword: source width
+	moveq	#0,d6			; high longword: source width
 	divu.l	d4,d6:d2		; F=width source/width destination
 	moveq	#0,d1
 	move.w	d4,d6			; width destination

@@ -11,15 +11,15 @@
 
 ; V.1.1 beta
 ; - CWAIT for VP2 corrected so that the color gradient of the checkerboard for
-;   the 1st row is still within the horizontal blanking interval.
-;   VP1 now uses COLOR28-31
-;   VP3 now uses COLOR16-23 for P1 and COLOR24-28 for PF2
+; the 1st row is still within the horizontal blanking interval.
+; VP1 now uses COLOR28-31
+; VP3 now uses COLOR16-23 for P1 and COLOR24-28 for PF2
 ; - The colors for VP1/PF1 and VP3/PF2 are no longer initialized separately
-;   by the Copper, as the color gradients for VP1 and VP3 are initialized
-;   line by line.
-;   In total, only 240 colors are initialized in the vertical blanking interval.
+; by the Copper, as the color gradients for VP1 and VP3 are initialized
+; line by line.
+; In total, only 240 colors are initialized in the vertical blanking interval.
 ; - Vector balls: Fade in and fade to other colors with interval and changing
-;   the z coordinates
+; the z coordinates
 ; - Use of the PT 8xy command for the fader routines
 
 ; V.1.2 beta
@@ -28,7 +28,7 @@
 ; - vp2_pf1 instead of vp2_pf2
 ; - New fx commands: 880/890
 ; - Morphing is now triggered by the module via command 890. Delay counter
-;   is superfluous.
+; is superfluous.
 ; - Sprite-Fader-In: Timing changed
 
 ; V.1.3 beta
@@ -40,7 +40,7 @@
 ; - Fx command revised
 ; - 880 Enable Skip-Commands
 ; - 89n Set-Chessboars-Speed: Chessboard 1st stands still and then moves,
-;   when the music changes. It slows down when the music slows down.
+; when the music changes. It slows down when the music slows down.
 
 ; V.1.5 beta
 ; - Crossfader: Crossfade slows down
@@ -1434,14 +1434,14 @@ mvb_init_object_coords_loop
 mvb_init_morph_shapes
 	lea	mvb_morph_shapes_table(pc),a0
 	lea	mvb_object_shape1_coords(pc),a1
-	move.l	a1,(a0)+		; pointer shape table
+	move.l	a1,(a0)+		; shape table
 	lea	mvb_object_shape2_coords(pc),a1
 	IFEQ mvb_morph_loop_enabled
-		move.l	a1,(a0)		; pointer shape table
+		move.l	a1,(a0)		; shape table
 	ELSE
-		move.l	a1,(a0)+	; pointer shape table
+		move.l	a1,(a0)+	; shape table
 		lea	mvb_object_shape3_coords(pc),a1
-		move.l	a1,(a0)		; pointer shape table
+		move.l	a1,(a0)		; shape table
 	ENDC
 	rts
 
@@ -1923,9 +1923,9 @@ cb_scale_image
 	move.l	extra_memory(a3),a0
 	ADDF.L	em_bitmap_table,a0
 	move.l	extra_pf7(a3),a1	
-	move.l	(a1),a1			; pointer source image
+	move.l	(a1),a1			; source image
 	move.l	extra_pf8(a3),a2
-	move.l	(a2),a2       		; pointer destination image
+	move.l	(a2),a2       		; destination image
 	move.w	#cb_x_max,a4		; destination image
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
 	moveq	#cb_destination_y_size-1,d7
@@ -2219,8 +2219,8 @@ bvm_get_channels_amplitudes
 ; Input
 ; d2.w	max amplitude
 ; d3.w	y angle 90°
-; a0.l	pointer temporary audio channel structure
-; a1.l	pointer audio channel info structure
+; a0.l	Pointer temporary audio channel structure
+; a1.l	Pointer audio channel info structure
 ; Result
 	CNOP 0,4
 bvm_get_channel_amplitude
@@ -2461,7 +2461,7 @@ mvb_morph_object
 	moveq	#0,d2			; coordinates counter
 	lea	mvb_object_coords(pc),a0
 	lea	mvb_morph_shapes_table(pc),a1
-	move.l	(a1,d1.w*4),a1		; pointer shape table
+	move.l	(a1,d1.w*4),a1		; shape table
 	MOVEF.W mvb_object_points_number*3-1,d7
 mvb_morph_object_loop
 	move.w	(a0),d0                 ; current coordinate
@@ -2506,7 +2506,7 @@ mvb_quicksort_coords
 	move.l	a2,a5
 	lea	mvb_rotation_xyz_coords(pc),a6
 mvb_quicks
-	move.l	a5,d0			; pointer 1st entry
+	move.l	a5,d0			; 1st entry
 	add.l	a0,d0			; + last entry
 	lsr.l	#1,d0
 	and.b	d2,d0			; only even address
@@ -2524,24 +2524,24 @@ mvb_quick2
 	cmp.w	4(a6,d1.w*2),d0		; previous z > middle z ?
 	bgt.s	mvb_quick2
 mvb_quick3
-	cmp.l	a2,a1			; pointer table end > pointer tabble beginning ?
+	cmp.l	a2,a1			; table end > pointer tabble beginning ?
 	bgt.s	mvb_quick4
 	move.w	(a2),d1			; last offset
 	move.w	(a1),(a2)		; 1st offset -> last offset
 	subq.w	#WORD_SIZE,a2		; penultimate offset
 	move.w	d1,(a1)+		; last offset -> 1st offset
 mvb_quick4
-	cmp.l	a2,a1			; pointer table start <= pointer table end ?
+	cmp.l	a2,a1			; table start <= pointer table end ?
 	ble.s	mvb_quick
-	cmp.l	a2,a0			; pointer tablwe start >= pointer table end ?
+	cmp.l	a2,a0			; tablwe start >= pointer table end ?
 	bge.s	mvb_quick5
 	move.l	a5,-(a7)
-	move.l	a2,a5			; pointer table end
+	move.l	a2,a5			; table end
 	move.l	a0,a1
 	bsr.s	mvb_quicks
 	move.l	(a7)+,a5
 mvb_quick5
-	cmp.l	a5,a1			; pointer table start >= pointer table end ?
+	cmp.l	a5,a1			; table start >= pointer table end ?
 	bge.s	mvb_quick6
 	move.l	a0,-(a7)
 	move.l	a1,a0
@@ -2712,8 +2712,8 @@ rgb8_bar_fader_in_skip
 	MULUF.L bfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfi_rgb8_fader_center,d0
-	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	bfi_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0			
 	clr.w	d0
@@ -2749,8 +2749,8 @@ rgb8_bar_fader_out_skip
 	MULUF.L bfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	bfo_rgb8_fader_center,d0
-	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	bfo_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	bvm_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	bfo_rgb8_color_table+(bf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2790,8 +2790,8 @@ rgb8_image_fader_in_skip
 	MULUF.L ifi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifi_rgb8_fader_center,d0
-	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	ifi_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	ifi_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2828,8 +2828,8 @@ rgb8_image_fader_out_skip
 	MULUF.L ifo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifo_rgb8_fader_center,d0
-	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	ifo_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	ifo_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2872,8 +2872,8 @@ rgb8_chessboard_fader_in_skip
 	swap	d0
 	ADDF.W	cfi_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; pointer colors buffer
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
+	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2910,8 +2910,8 @@ rgb8_chessboard_fader_out_skip
 	swap	d0
 	ADDF.W	cfo_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; pointer colors buffer
-	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
+	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2947,8 +2947,8 @@ rgb8_sprite_fader_in_skip
 	MULUF.L sprfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfi_rgb8_fader_center,d0
-	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	sprfi_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	sprfi_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -2984,8 +2984,8 @@ rgb8_sprite_fader_out_skip
 	MULUF.L sprfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfo_rgb8_fader_center,d0
-	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	sprfo_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	sprfo_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
@@ -3069,8 +3069,8 @@ rgb8_colors_fader_cross_skip
 	MULUF.L cfc_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	cfc_rgb8_fader_center,d0
-	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
-	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; pointer destination colors
+	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
+	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	cfc_rgb8_color_table_start(a3),d1
 	MULUF.W LONGWORD_SIZE,d1	; *32
 	lea	(a1,d1.w*8),a1
@@ -3101,7 +3101,7 @@ cfc_rgb8_copy_color_table
 	IFGT cfc_rgb8_colors_number-32
 		moveq	#cfc_rgb8_start_color<<3,d4 ; color registers counter
 	ENDC
-	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; pointer colors buffer
+	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
 	move.l	cl1_display(a3),a1 
 	ADDF.W	cl1_COLOR17_high1+WORD_SIZE,a1
 	IFNE cl1_size1
@@ -3190,7 +3190,7 @@ mh_exit_demo
 	tst.w	hst_enabled(a3)
 	bne.s	mh_exit_demo_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
-	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; pointer end of text
+	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; end of text
 	clr.w	quit_active(a3)		; quit intro after text stop
 	bra	mh_exit_demo_quit
 	CNOP 0,4

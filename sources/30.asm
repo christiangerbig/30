@@ -7,7 +7,7 @@
 ; History / Changes
 
 ; V.1.0 beta
-; - First release
+; - 1st release
 
 ; V.1.1 beta
 ; - CWAIT for VP2 corrected so that the color gradient of the checkerboard for
@@ -3705,7 +3705,7 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "FROM THE VERY FIRST STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
+	DC.B "FROM THE VERY 1st STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
 
 	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "

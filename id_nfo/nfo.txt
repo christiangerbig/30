@@ -15,8 +15,8 @@
                             Title > 30
 
                              Type > Intro
-                     Release Date > 17/05/25
-                      Released At > Decrunch 2025
+                     Release Date > 22/08/25
+                      Released At > Xenium 2025
                     Minimum Req's > AGA 020 PAL w/ setpatch
 
 

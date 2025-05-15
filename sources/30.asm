@@ -496,7 +496,7 @@ hst_horiz_scroll_speed1		EQU 2
 hst_horiz_scroll_speed2		EQU 8
 
 hst_text_char_x_restart		EQU hst_horiz_scroll_window_x_size
-hst_text_characters_number	EQU hst_horiz_scroll_window_x_size/hst_text_char_x_size
+hst_text_chars_number	EQU hst_horiz_scroll_window_x_size/hst_text_char_x_size
 
 hst_text_x_position		EQU 32
 hst_text_y_position		EQU 0
@@ -1332,9 +1332,9 @@ init_main
 	bsr	pt_InitAudTempStrucs
 	bsr	pt_ExamineSongStruc
 	bsr	pt_InitFtuPeriodTableStarts
-	bsr	hst_init_characters_offsets
-	bsr	hst_init_characters_x_positions
-	bsr	hst_init_characters_images
+	bsr	hst_init_chars_offsets
+	bsr	hst_init_chars_x_positions
+	bsr	hst_init_chars_images
 	bsr	bvm_init_audio_channels_info
 	bsr	bvm_init_rgb8_color_table
 	bsr	bg2_copy_image_to_plane
@@ -1367,11 +1367,11 @@ init_main
 
 
 ; Horiz-Scrolltext 
-	INIT_CHARACTERS_OFFSETS.W hst
+	INIT_CHARS_OFFSETS.W hst
 
-	INIT_CHARACTERS_X_POSITIONS hst,LORES
+	INIT_CHARS_X_POSITIONS hst,LORES
 
-	INIT_CHARACTERS_IMAGES hst
+	INIT_CHARS_IMAGES hst
 
 
 ; Bouncing-VU-Meter 
@@ -1465,10 +1465,10 @@ cb_init_chessboard_image
 	move.l	(a0),a2			; bitplane 2
 	moveq	#(cb_source_x_size/32)-1,d7
 cb_init_chessboard_image_loop
-	move.w	d0,(a1)+		; high 1st word
-	move.w	d1,(a2)+		; high 2nd word
-	move.w	d2,(a1)+		; low 1st word
-	move.w	d3,(a2)+		; low 2nd word
+	move.w	d0,(a1)+ 1st word
+	move.w	d1,(a2)+ 2nd word
+	move.w	d2,(a1)+	 1st word
+	move.w	d3,(a2)+	 2nd word
 	dbf	d7,cb_init_chessboard_image_loop
 	rts
 
@@ -1925,7 +1925,7 @@ cb_scale_image
 	move.l	extra_pf7(a3),a1	
 	move.l	(a1),a1			; source image
 	move.l	extra_pf8(a3),a2
-	move.l	(a2),a2       		; destination image
+	move.l	(a2),a2     		; destination image
 	move.w	#cb_x_max,a4		; destination image
 	move.w	#1*extra_pf8_plane_width*extra_pf8_depth,a5
 	moveq	#cb_destination_y_size-1,d7
@@ -2036,7 +2036,7 @@ set_vp1_playfield1_loop
 	move.l	(a1)+,d0
 	add.l	d1,d0
 	move.w	d0,LONGWORD_SIZE(a0)	; BPLxPTL
-	swap	d0			; high
+	swap	d0
 	move.w	d0,(a0)			; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
 	dbf	d7,set_vp1_playfield1_loop
@@ -2092,13 +2092,13 @@ horiz_scrolltext
 	add.l	(a0),d3
 	move.w	#(hst_text_char_y_size*hst_text_char_depth*64)+(hst_text_char_x_size/WORD_BITS),d4 ; BLTSIZE
 	move.w	#hst_text_char_x_restart,d5
-	lea	hst_characters_x_positions(pc),a0
-	lea	hst_characters_image_ptrs(pc),a1
+	lea	hst_chars_x_positions(pc),a0
+	lea	hst_chars_image_ptrs(pc),a1
 	lea	BLTAPT-DMACONR(a6),a2
 	lea	BLTDPT-DMACONR(a6),a4
 	lea	BLTSIZE-DMACONR(a6),a5
 	bsr.s	hst_get_text_softscroll
-	moveq	#hst_text_characters_number-1,d7
+	moveq	#hst_text_chars_number-1,d7
 horiz_scrolltext_loop
 	moveq	#0,d0
 	move.w	(a0),d0			; x
@@ -2127,7 +2127,7 @@ horiz_scrolltext_quit
 horiz_scrolltext_init
 	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
-	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC+ANBC|ABNC+ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D=A
+	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D=A
 	moveq	#-1,d0
 	move.l	d0,BLTAFWM-DMACONR(a6)
 	move.l	#((hst_image_plane_width-hst_text_char_width)<<16)|(extra_pf1_plane_width-hst_text_char_width),BLTAMOD-DMACONR(a6) ; A&D-moduli
@@ -2139,7 +2139,7 @@ hst_get_text_softscroll
 	moveq	#hst_text_char_x_size-1,d0
 	and.w	(a0),d0			; x
 	ror.w	#4,d0			; adjust shift bits
-	or.w	#BC0F_SRCA+BC0F_DEST+ANBNC+ANBC+ABNC+ABC,d0 ; minterm D=A
+	or.w	#BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC,d0 ; minterm D=A
 	move.w	d0,hst_text_bltcon0_bits(a3) 
 	rts
 
@@ -2350,7 +2350,7 @@ mvb_rotation
 		MOVEF.W sine_table_length,d3 ; overflow 360 °
 	ENDC
 	add.w	a4,d0			; + 90°
-	swap	d4			; high word: sin(a)
+	swap	d4 			; high word:  sin(a)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2359,7 +2359,7 @@ mvb_rotation
 		sub.w	d3,d0
 mvb_rotation_skip1
 	ENDC
-	move.w	2(a2,d0.w*4),d4		; low word: cos(a)
+	move.w	2(a2,d0.w*4),d4	 	; low word: cos(a)
 	addq.w	#mvb_rotation_x_angle_speed,d1 ; next x angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2374,7 +2374,7 @@ mvb_rotation_skip2
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d5		; sin(b)
 	add.w	a4,d0			; + 90°
-	swap	d5			; high word: sin(b)
+	swap	d5 			; high word: sin(b)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2383,7 +2383,7 @@ mvb_rotation_skip2
 		sub.w	d3,d0		; restart
 mvb_rotation_skip3
 	ENDC
-	move.w	2(a2,d0.w*4),d5		; low word: cos(b)
+	move.w	2(a2,d0.w*4),d5	 	; low word: cos(b)
 	addq.w	#mvb_rotation_y_angle_speed,d1 ; next y angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2398,7 +2398,7 @@ mvb_rotation_skip4
 	move.w	d1,d0	
 	move.w	2(a2,d0.w*4),d6		; sin(c)
 	add.w	a4,d0			; + 90°
-	swap	d6			; high word: sin(c)
+	swap	d6 			; high word: sin(c)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
@@ -2407,7 +2407,7 @@ mvb_rotation_skip4
 		sub.w	d3,d0		; restart
 mvb_rotation_skip5
 	ENDC
-	move.w	2(a2,d0.w*4),d6		; low word: cos(c)
+	move.w	2(a2,d0.w*4),d6	 	; low word: cos(c)
 	addq.w	#mvb_rotation_z_angle_speed,d1 ; next z angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2557,7 +2557,7 @@ set_vector_balls
 	movem.l a3-a5,-(a7)
 	move.l	a7,save_a7(a3)	
 	bsr	set_vector_balls_init
-	move.w	#BC0F_SRCA+BC0F_SRCB+BC0F_SRCC+BC0F_DEST+NANBC+NABC+ABNC+ABC,d3 ; minterm D=A+B
+	move.w	#BC0F_SRCA|BC0F_SRCB|BC0F_SRCC|BC0F_DEST+NANBC|NABC|ABNC|ABC,d3 ; minterm D=A+B
 	move.w	#(mvb_copy_blit_y_size*64)+(mvb_copy_blit_x_size/WORD_BITS),a4
 	move.l	vp2_pf2_construction2(a3),a0
 	move.l	(a0),d4
@@ -2609,7 +2609,7 @@ set_vector_balls_skip3
 	rts
 	CNOP 0,4
 set_vector_balls_init
-	move.w	#DMAF_BLITHOG+DMAF_SETCLR,DMACON-DMACONR(a6)
+	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
 	move.w	vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6)
 	moveq	#0,d0
@@ -3440,16 +3440,16 @@ hst_ascii_end
 	EVEN
 
 	CNOP 0,2
-hst_characters_offsets
+hst_chars_offsets
 	DS.W hst_ascii_end-hst_ascii
 
 	CNOP 0,2
-hst_characters_x_positions
-	DS.W hst_text_characters_number
+hst_chars_x_positions
+	DS.W hst_text_chars_number
 
 	CNOP 0,4
-hst_characters_image_ptrs
-	DS.L hst_text_characters_number
+hst_chars_image_ptrs
+	DS.L hst_text_chars_number
 
 
 ; Bounce-VU-Meter 
@@ -3695,67 +3695,67 @@ cfc_rgb8_color_table
 
 ; Horiz-Scrolltext 
 hst_text
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "WE ARE CELEBRATING 30 YEARS OF DEMOS FUN AND SHARED ACHIEVEMENTS TOGETHER IN RESISTANCE"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "FROM THE VERY 1st STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "WE HAVE ALL CONTRIBUTED TO MAKING THIS GROUP WHAT IT IS TODAY"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "IT'S NOT JUST THE ACCOMPLISHMENTS BUT THE MEMORIES THE FRIENDSHIPS AND THE SPIRIT OF COLLABORATION THAT HAVE SHAPED US INTO A GROUP OF STRENGTH AND SUPPORT"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "AS WE REFLECT ON THE DECADES TOGETHER LET'S TAKE PRIDE IN HOW FAR WE HAVE COME BUT ALSO LOOK FORWARD TO THE EXCITING POSSIBILITIES AHEAD"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "THE NEXT CHAPTER IS OURS TO WRITE AND WITH THE SAME PASSION AND DEDICATION THAT GOT US HERE THE BEST IS YET TO COME"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "THANK YOU ALL FOR BEING A PART OF THIS JOURNEY"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "SIGNED 4PLAY"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B "CODING BY DISSIDENT       GRAPHICS BY GRASS       MUSIC BY MA2E"
 
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 
 	DC.B FALSE
 hst_stop_text
-	REPT (hst_text_characters_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
+	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "
 	ENDR
 	DC.B ASCII_CTRL_S," "

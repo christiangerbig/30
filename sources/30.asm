@@ -496,7 +496,7 @@ hst_horiz_scroll_speed1		EQU 2
 hst_horiz_scroll_speed2		EQU 8
 
 hst_text_char_x_restart		EQU hst_horiz_scroll_window_x_size
-hst_text_chars_number	EQU hst_horiz_scroll_window_x_size/hst_text_char_x_size
+hst_text_chars_number		EQU hst_horiz_scroll_window_x_size/hst_text_char_x_size
 
 hst_text_x_position		EQU 32
 hst_text_y_position		EQU 0
@@ -2114,7 +2114,7 @@ horiz_scrolltext_loop
 	move.l	a0,-(a7)
 	bsr.s   hst_get_new_char_image
 	move.l	(a7)+,a0
-	move.l	d0,-4(a1)		; new character image
+	move.l	d0,-LONGWORD_SIZE(a1)	; new character image
 	add.w	d5,d2			; restart x position
 horiz_scrolltext_skip
 	move.w	d2,(a0)+

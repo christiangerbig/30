@@ -160,9 +160,11 @@ pt_track_notes_played_enabled	EQU TRUE
 pt_track_volumes_enabled	EQU TRUE
 pt_track_periods_enabled	EQU FALSE
 pt_track_data_enabled		EQU FALSE
+	IFD PROTRACKER_VERSION_3
 pt_metronome_enabled		EQU FALSE
 pt_metrochanbits		EQU pt_metrochan1
 pt_metrospeedbits		EQU pt_metrospeed4th
+	ENDC
 
 ; Morph-Vector-Balls
 mvb_premorph_enabled		EQU TRUE
@@ -264,6 +266,7 @@ audio_memory_size		EQU 1*WORD_SIZE
 disk_memory_size		EQU 0
 
 chip_memory_size		EQU 0
+
 	IFEQ pt_ciatiming_enabled
 ciab_cra_bits			EQU CIACRBF_LOAD
 	ENDC
@@ -1092,8 +1095,9 @@ vp2_pf2_construction2		RS.L 1
 vp2_pf2_display			RS.L 1
 
 ; Horiz-Scrolltext 
+hst_active			RS.W 1
+	RS_ALIGN_LONGWORD
 hst_image			RS.L 1
-hst_enabled			RS.W 1
 hst_text_table_start		RS.W 1
 hst_text_BLTCON0_bits		RS.W 1
 hst_char_toggle_image		RS.W 1
@@ -1106,6 +1110,8 @@ mvb_rotation_z_angle		RS.W 1
 
 mvb_morph_active		RS.W 1
 mvb_morph_shapes_table_start	RS.W 1
+
+mvb_mask			RS.W 1
 
 ; Chessboard 
 cb_stripes_y_angle		RS.W 1
@@ -1160,7 +1166,6 @@ sprfo_rgb8_fader_angle		RS.W 1
 
 ; Fade-Balls 
 fb_mask				RS.W 1
-vb_copy_blit_mask		RS.W 1
 
 ; Fade-Balls-In 
 fbi_active			RS.W 1
@@ -1217,10 +1222,10 @@ init_main_variables
 	moveq	#FALSE,d1
 	move.w	d1,pt_skip_commands_enabled(a3)
 
-; Horiz-Scrolltext 
+; Horiz-Scrolltext
+	move.w	d1,hst_active(a3)
 	lea	hst_image_data,a0
 	move.l	a0,hst_image(a3)
-	move.w	d1,hst_enabled(a3)
 	move.w	d0,hst_text_table_start(a3)
 	move.w	d0,hst_text_bltcon0_bits(a3)
 	move.w	d0,hst_char_toggle_image(a3)
@@ -1237,8 +1242,9 @@ init_main_variables
 	ELSE
 		move.w	d1,mvb_morph_active(a3)
 	ENDC
-
 	move.w	d0,mvb_morph_shapes_table_start(a3)
+
+	move.w	d0,mvb_mask(a3)
 
 ; Chessboard 
 	move.w	d0,cb_stripes_y_angle(a3)
@@ -1295,7 +1301,6 @@ init_main_variables
 
 ; Fade-Balls 
 	move.w	#$8888,fb_mask(a3)
-	move.w	d0,vb_copy_blit_mask(a3)
 
 ; Fade-Balls-In 
 	move.w	d1,fbi_active(a3)
@@ -1406,14 +1411,14 @@ bvm_init_rgb8_color_table_loop2
 	move.l	d1,(a1)+		; COLOR00
 	moveq	#(spr_colors_number-1)-1,d5 ; number of color values per palette
 bvm_init_rgb8_color_table_loop3
-	move.l	d0,(a1)+;color value eintragen
+	move.l	d0,(a1)+		; color
 	dbf	d5,bvm_init_rgb8_color_table_loop3
 	dbf	d6,bvm_init_rgb8_color_table_loop2
 	dbf	d7,bvm_init_rgb8_color_table_loop1
 	rts
 
 
-; Background-Image-2 
+; Background-Image2
 	COPY_IMAGE_TO_BITPLANE bg2,,,extra_pf3
 
 
@@ -1428,7 +1433,6 @@ mvb_init_object_coords_loop
 	addq.w	#3,d0			; next xyz coodinate
 	dbf	d7,mvb_init_object_coords_loop
 	rts
-
 
 	CNOP 0,4
 mvb_init_morph_shapes
@@ -1445,7 +1449,6 @@ mvb_init_morph_shapes
 	ENDC
 	rts
 
-
 	IFEQ mvb_premorph_enabled
 		CNOP 0,4
 mvb_init_start_shape
@@ -1459,16 +1462,16 @@ mvb_init_start_shape
 ; Chessboard 
 	CNOP 0,4
 cb_init_chessboard_image
-	movem.w cb_fill_pattern(pc),d0-d3 ; fill pattern high&low 1st word, high&low 2nd word
+	movem.w cb_fill_pattern(pc),d0-d3 ; fill pattern
 	move.l	extra_pf7(a3),a0
 	move.l	(a0)+,a1		; bitplane 1
 	move.l	(a0),a2			; bitplane 2
 	moveq	#(cb_source_x_size/32)-1,d7
 cb_init_chessboard_image_loop
-	move.w	d0,(a1)+ 1st word
-	move.w	d1,(a2)+ 2nd word
-	move.w	d2,(a1)+	 1st word
-	move.w	d3,(a2)+	 2nd word
+	move.w	d0,(a1)+		; 1st word: bitplane 1
+	move.w	d1,(a2)+		; 1st word: bitplane 2
+	move.w	d2,(a1)+		; 2nd word: bitplane 1
+	move.w	d3,(a2)+		; 2nd word: bitplane 2
 	dbf	d7,cb_init_chessboard_image_loop
 	rts
 
@@ -1695,10 +1698,10 @@ cl2_vp1_init_plane_ptrs_loop
 	CNOP 0,4
 cl2_vp1_init_color_gradient
 	move.l	#(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
-	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; color high values
+	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; color high
 	move.l	#(COLOR29<<16)|color00_high_bits,d2
 	move.l	#(COLOR30<<16)|color00_high_bits,d3
-	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ; color low values
+	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ; color low
 	move.l	#(COLOR29<<16)|color00_low_bits,d5
 	moveq	#1,d6
 	ror.l	#8,d6			; next line in cl
@@ -1707,10 +1710,10 @@ cl2_vp1_init_color_gradient
 	MOVEF.W vp1_visible_lines_number-1,d7
 cl2_vp1_init_color_gradient_loop
 	move.l	d0,(a0)+		; CWAIT x,y
-	move.l	d1,(a0)+		; BPLCON3 color high values
+	move.l	d1,(a0)+		; BPLCON3 color high
 	move.l	d2,(a0)+		; COLOR29
 	move.l	d3,(a0)+		; COLOR30
-	move.l	d4,(a0)+		; BPLCON3 color low values
+	move.l	d4,(a0)+		; BPLCON3 color low
 	move.l	d5,(a0)+		; COLOR39
 	move.l	a1,(a0)+		; COLOR30
 	add.l	d6,d0			; next line in cl
@@ -1757,10 +1760,10 @@ cl2_vp3_init_plane_ptrs
 	CNOP 0,4
 cl2_vp3_init_color_gradient
 	move.l	#(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
-	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ; color high values
+	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ; color high
 	move.l	#(COLOR25<<16)|color00_high_bits,d2
 	move.l	#(COLOR26<<16)|color00_high_bits,d3
-	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; color low values
+	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; color low
 	move.l	#(((CL_Y_WRAP<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; CWAIT
 	moveq	#1,d6
 	ror.l	#8,d6			; next line in cl
@@ -1769,10 +1772,10 @@ cl2_vp3_init_color_gradient
 	moveq	#vp3_visible_lines_number-1,d7
 cl2_vp3_init_color_gradient_loop
 	move.l	d0,(a0)+		; CWAIT x,y
-	move.l	d1,(a0)+		; BPLCON3 color high values
+	move.l	d1,(a0)+		; BPLCON3 color high
 	move.l	d2,(a0)+		; COLOR25
 	move.l	d3,(a0)+		; COLOR26
-	move.l	d4,(a0)+		; BPLCON3 color low values
+	move.l	d4,(a0)+		; BPLCON3 color low
 	move.l	a1,(a0)+		; COLOR25
 	move.l	a2,(a0)+		; COLOR26
 	COP_MOVEQ 0,NOOP
@@ -1815,9 +1818,9 @@ cl2_vp1_set_fill_gradient_loop
 	move.l	(a0)+,d0
 	move.l	d0,d2
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a1)			; color high value
+	move.w	d0,(a1)			; color high
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ; color low value
+	move.w	d2,cl2_ext2_COLOR29_low8-cl2_ext2_COLOR29_high8(a1) ; color low
 	add.l	a2,a1
 	dbf	d7,cl2_vp1_set_fill_gradient_loop
 	rts
@@ -1834,9 +1837,9 @@ cl2_vp1_set_outline_gradient_loop
 	move.l	(a0)+,d0
 	move.l	d0,d2
 	RGB8_TO_RGB4_HIGH d0,d1,d3
-	move.w	d0,(a1)			; color high value
+	move.w	d0,(a1)			; color high
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ; color low value
+	move.w	d2,cl2_ext2_COLOR30_low8-cl2_ext2_COLOR30_high8(a1) ; color low
 	add.l	a2,a1
 	dbf	d7,cl2_vp1_set_outline_gradient_loop
 	rts
@@ -1942,9 +1945,9 @@ cb_scale_image_loop2
 	bge.s	cb_scale_image_skip3
 	move.w	d2,d0			; x coordinate source
 	lsr.w	#3,d0			; x offset source
-	not.b	d2			; shift value source byte
+	not.b	d2			; x shift source byte
 	lsr.w	#3,d1			; x offset destination
-	not.b	d3			; shift value destination byte
+	not.b	d3			; x shift destination byte
 	btst	d2,(a1,d0.w)		; pixel set in source byte ?
 	beq.s	cb_scale_image_skip1
 	bset	d3,(a2,d1.w)		; set pixel destination byte
@@ -2084,7 +2087,7 @@ set_vp3_playfield1_loop
 	CNOP 0,4
 horiz_scrolltext
 	movem.l a4-a5,-(a7)
-	tst.w	hst_enabled(a3)
+	tst.w	hst_active(a3)
 	bne.s	horiz_scrolltext_quit
 	bsr.s	horiz_scrolltext_init
 	move.l	vp1_pf1_construction2(a3),a0
@@ -2146,18 +2149,19 @@ hst_get_text_softscroll
 	GET_NEW_char_IMAGE.W hst,hst_check_control_codes
 
 
-	CNOP 0,4
-hst_check_control_codes
+
 ; Input
 ; d0.b	ASCII code
 ; Result
-; d0.l	return value: return code
+; d0.l	return code
+	CNOP 0,4
+hst_check_control_codes
 	cmp.b	#ASCII_CTRL_S,d0
 	beq.s	hst_stop_scrolltext
 	rts
 	CNOP 0,4
 hst_stop_scrolltext
-	move.w	#FALSE,hst_enabled(a3)	; stop scrolltext
+	move.w	#FALSE,hst_active(a3)	; stop scrolltext
 	tst.w	quit_active(a3)		; quit intro ?
 	bne.s	hst_stop_scrolltext_quit
 	clr.w	pt_music_fader_active(a3)
@@ -2181,7 +2185,7 @@ hst_stop_scrolltext_quit
 
 	CNOP 0,4
 hst_horiz_scroll
-	tst.w	hst_enabled(a3)
+	tst.w	hst_active(a3)
 	bne.s	hst_horiz_scroll_quit
 	move.l	vp1_pf1_construction2(a3),a0
 	move.l	(a0),a0
@@ -2217,8 +2221,8 @@ bvm_get_channels_amplitudes
 
 
 ; Input
-; d2.w	max amplitude
-; d3.w	y angle 90°
+; d2.w	Max amplitude
+; d3.w	Y angle 90°
 ; a0.l	Pointer temporary audio channel structure
 ; a1.l	Pointer audio channel info structure
 ; Result
@@ -2235,7 +2239,7 @@ bvm_get_channel_amplitude
 	move.w	d2,d0			; max amplitude
 bvm_get_channel_amplitude_skip
 	move.w	d3,(a1)+                ; angle
-	move.w	d0,(a1)			; amplitude value
+	move.w	d0,(a1)			; amplitude
 bvm_get_channel_amplitude_quit
 	rts
 
@@ -2611,7 +2615,7 @@ set_vector_balls_skip3
 set_vector_balls_init
 	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
-	move.w	vb_copy_blit_mask(a3),BLTAFWM-DMACONR(a6)
+	move.w	mvb_mask(a3),BLTAFWM-DMACONR(a6)
 	moveq	#0,d0
 	move.w	d0,BLTALWM-DMACONR(a6)
 	move.l	#((extra_pf4_plane_width-(mvb_image_width+2))<<16)+((mvb_image_width*mvb_image_objects_number)-(mvb_image_width+2)),BLTCMOD-DMACONR(a6) ; C&B moduli
@@ -2687,7 +2691,7 @@ cb_move_chessboard_loop
 	move.w	d0,(cl2_ext5_COLOR26_high8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; color high
 	RGB8_TO_RGB4_LOW d2,d1,d3
 	move.w	d2,(cl2_ext5_COLOR26_low8-cl2_ext5_COLOR25_high8)-cl2_extension5_size(a2) ; color low
-	addq.w	#QUADWORD_SIZE,a1	; next color value
+	addq.w	#QUADWORD_SIZE,a1	; next entry
 	dbf	d7,cb_move_chessboard_loop
 	move.l	(a7)+,a4
 	rts
@@ -3012,11 +3016,11 @@ fade_balls_in
 	subq.w	#1,fbi_delay_counter(a3)
 	bne.s	fade_balls_in_quit
 	move.w	#fbi_delay,fbi_delay_counter(a3)
-	move.w	vb_copy_blit_mask(a3),d0 ; current mask
+	move.w	mvb_mask(a3),d0 	; current mask
 	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
-	move.w	d0,vb_copy_blit_mask(a3)
-	cmp.w	#-1,d0			; mask end value ?
+	move.w	d0,mvb_mask(a3)
+	cmp.w	#-1,d0			; mask end ?
 	bne.s	fade_balls_in_skip
 	move.w	#FALSE,fbi_active(a3)
 	bra.s	fade_balls_in_quit
@@ -3035,10 +3039,10 @@ fade_balls_out
 	subq.w	#1,fbo_delay_counter(a3)
 	bne.s	fade_balls_out_quit
 	move.w	#fbo_delay,fbo_delay_counter(a3)
-	move.w	vb_copy_blit_mask(a3),d0 ; current mask
+	move.w	mvb_mask(a3),d0 	; current mask
 	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
-	move.w	d0,vb_copy_blit_mask(a3) ; mask end value ?
+	move.w	d0,mvb_mask(a3) 	; mask end ?
 	bne.s	fade_balls_out_skip
 	move.w	#FALSE,fbo_active(a3)
 	bra.s	fade_balls_out_quit
@@ -3187,7 +3191,7 @@ mouse_handler
 	CNOP 0,4
 mh_exit_demo
 	move.w	#FALSE,pt_effects_handler_active(a3)
-	tst.w	hst_enabled(a3)
+	tst.w	hst_active(a3)
 	bne.s	mh_exit_demo_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
 	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; end of text
@@ -3200,7 +3204,7 @@ mh_exit_demo_skip1
 	bne.s	mh_exit_demo_skip2
 	move.w	#FALSE,fbi_active(a3)
 mh_exit_demo_skip2
-	tst.w	vb_copy_blit_mask(a3)
+	tst.w	mvb_mask(a3)
 	beq.s	mh_exit_demo_skip3
 	clr.w	fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
@@ -3211,8 +3215,9 @@ mh_exit_demo_skip3
 	bne.s	mh_exit_demo_skip4
 	move.w	#FALSE,sprfi_rgb8_active(a3)
 mh_exit_demo_skip4
-	clr.w	sprfo_rgb8_active(a3)
-	clr.w	sprf_rgb8_copy_colors_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,sprfo_rgb8_active(a3)
+	move.w	d0,sprf_rgb8_copy_colors_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	tst.w	ifi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip5
@@ -3329,7 +3334,7 @@ pt_start_colors_fader_scross
 	rts
 	CNOP 0,4
 pt_start_scrolltext
-	clr.w	hst_enabled(a3)
+	clr.w	hst_active(a3)
 	rts
 	CNOP 0,4
 pt_enable_skip_commands

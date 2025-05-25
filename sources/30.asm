@@ -2440,10 +2440,10 @@ mvb_rotation_loop
 	move.w	d2,d3			; z
 	ext.l	d0
 	add.w	a4,d3			; z+d
-	MULUF.L mvb_rotation_d,d0,d7; x projection
+	MULUF.L mvb_rotation_d,d0,d7	; x projection
 	ext.l	d1
 	divs.w	d3,d0			; x'=(x*d)/(z+d)
-	MULUF.L mvb_rotation_d,d1,d7; y projection
+	MULUF.L mvb_rotation_d,d1,d7	; y projection
 	add.w	a5,d0			; x' + x centre
 	move.w	d0,(a1)+		; x position
 	divs.w	d3,d1			; y'=(y*d)/(z+d)

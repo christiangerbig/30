@@ -2093,7 +2093,7 @@ horiz_scrolltext
 	move.l	vp1_pf1_construction2(a3),a0
 	MOVEF.L (hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),d3
 	add.l	(a0),d3
-	move.w	#(hst_text_char_y_size*hst_text_char_depth<<6)+(hst_text_char_x_size/WORD_BITS),d4 ; BLTSIZE
+	move.w	#((hst_text_char_y_size*hst_text_char_depth)<<6)+(hst_text_char_x_size/WORD_BITS),d4 ; BLTSIZE
 	move.w	#hst_text_char_x_restart,d5
 	lea	hst_chars_x_positions(pc),a0
 	lea	hst_chars_image_ptrs(pc),a1
@@ -2146,7 +2146,7 @@ hst_get_text_softscroll
 	move.w	d0,hst_text_bltcon0_bits(a3) 
 	rts
 
-	GET_NEW_char_IMAGE.W hst,hst_check_control_codes
+	GET_NEW_CHAR_IMAGE.W hst,hst_check_control_codes
 
 
 
@@ -2196,7 +2196,7 @@ hst_horiz_scroll
 	addq.w	#WORD_SIZE,a0		; skip 16 pixel
 	move.l	a0,BLTDPT-DMACONR(a6)	; destination
 	move.l	#((extra_pf1_plane_width-hst_horiz_scroll_window_width)<<16)+(extra_pf1_plane_width-hst_horiz_scroll_window_width),BLTAMOD-DMACONR(a6) ; A&D moduli
-	move.w	#(hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth<<6)+(hst_horiz_scroll_window_x_size/WORD_BITS),BLTSIZE-DMACONR(a6)
+	move.w	#((hst_horiz_scroll_window_y_size*hst_horiz_scroll_window_depth)<<6)+(hst_horiz_scroll_window_x_size/WORD_BITS),BLTSIZE-DMACONR(a6)
 hst_horiz_scroll_quit
 	rts
 
@@ -2304,7 +2304,7 @@ mvb_clear_playfield1_1
 	move.l	(a0),BLTDPT-DMACONR(a6)
 	moveq	#0,d0
 	move.w	d0,BLTDMOD-DMACONR(a6)
-	move.w	#(mvb_clear_blit_y_size<<6)+(mvb_clear_blit_x_size/WORD_BITS),BLTSIZE-DMACONR(a6)
+	move.w	#((mvb_clear_blit_y_size)<<6)+(mvb_clear_blit_x_size/WORD_BITS),BLTSIZE-DMACONR(a6)
 	rts
 
 
@@ -2562,7 +2562,7 @@ set_vector_balls
 	move.l	a7,save_a7(a3)	
 	bsr	set_vector_balls_init
 	move.w	#BC0F_SRCA|BC0F_SRCB|BC0F_SRCC|BC0F_DEST+NANBC|NABC|ABNC|ABC,d3 ; minterm D=A+B
-	move.w	#(mvb_copy_blit_y_size<<6)+(mvb_copy_blit_x_size/WORD_BITS),a4
+	move.w	#((mvb_copy_blit_y_size)<<6)+(mvb_copy_blit_x_size/WORD_BITS),a4
 	move.l	vp2_pf2_construction2(a3),a0
 	move.l	(a0),d4
 	lea	mvb_object_coords_offsets(pc),a0

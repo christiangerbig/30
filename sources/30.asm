@@ -307,7 +307,7 @@ vp1_visible_pixels_number	EQU 320
 vp1_visible_lines_number	EQU 26
 
 vp1_vstart			EQU MINROW
-vp1_vstop			EQU vp1_VSTART+vp1_visible_lines_number
+vp1_vstop			EQU vp1_vstart+vp1_visible_lines_number
 
 vp1_pf_pixel_per_datafetch	EQU 64	; 4x
 
@@ -321,8 +321,8 @@ vp2_pixel_per_line		EQU 320
 vp2_visible_pixels_number	EQU 320
 vp2_visible_lines_number	EQU 182
 
-vp2_vstart			EQU vp1_VSTOP
-vp2_vstop			EQU vp2_VSTART+vp2_visible_lines_number
+vp2_vstart			EQU vp1_vstop
+vp2_vstop			EQU vp2_vstart+vp2_visible_lines_number
 
 vp2_pf_pixel_per_datafetch	EQU 64	; 4x
 
@@ -338,8 +338,8 @@ vp3_pixel_per_line		EQU 320
 vp3_visible_pixels_number	EQU 320
 vp3_visible_lines_number	EQU 48
 
-vp3_vstart			EQU vp2_VSTOP
-vp3_vstop			EQU vp3_VSTART+vp3_visible_lines_number
+vp3_vstart			EQU vp2_vstop
+vp3_vstop			EQU vp3_vstart+vp3_visible_lines_number
 
 vp3_pf_pixel_per_datafetch	EQU 64	; 4x
 
@@ -444,17 +444,17 @@ cl2_vp1_vstart2			EQU MINROW
 
 ; Viewport 2
 cl2_vp2_hstart			EQU HSTOP_320_PIXEL-(4*CMOVE_SLOT_PERIOD)
-cl2_vp2_vstart			EQU vp1_VSTOP-1
+cl2_vp2_vstart			EQU vp1_vstop-1
 
 ; Viewport 3
 cl2_vp3_hstart1			EQU HSTOP_320_PIXEL-(9*CMOVE_SLOT_PERIOD)
-cl2_vp3_vstart1			EQU vp2_VSTOP-1
+cl2_vp3_vstart1			EQU vp2_vstop-1
 cl2_vp3_hstart2			EQU 0
-cl2_vp3_vstart2			EQU vp2_VSTOP
+cl2_vp3_vstart2			EQU vp2_vstop
 
 ; Copper-Interrupt
 cl2_hstart			EQU 0
-cl2_vstart			EQU beam_position&$ff
+cl2_vstart			EQU beam_position&CL_Y_WRAPPING
 
 sine_table_length		EQU 512
 
@@ -1656,7 +1656,7 @@ init_second_copperlist
 	bsr	cl2_vp1_init_color_gradient
 
 ; Viewport 2
-	COP_WAIT cl2_vp2_HSTART,cl2_vp2_VSTART
+	COP_WAIT cl2_vp2_hstart,cl2_vp2_vstart
 	bsr	cl2_vp2_init_playfield_props
 	bsr	cl2_vp2_init_bitplane_pointers
 
@@ -1677,6 +1677,7 @@ init_second_copperlist
 	bsr	cl2_vp3_pf2_set_bitplane_pointers
 	bsr	copy_second_copperlist
 	bsr	swap_second_copperlist
+	bsr	set_second_copperlist
 	bsr	set_vp1_playfield1
 	bra	set_vp2_playfield2
 
@@ -1788,7 +1789,7 @@ cl2_vp3_init_color_gradient_skip
 	dbf	d7,cl2_vp3_init_color_gradient_loop
 	rts
 
-	COP_INIT_COPINT cl2,cl2_HSTART,cl2_VSTART
+	COP_INIT_COPINT cl2,cl2_hstart,cl2_vstart
 
 
 ; Viewport 1 
@@ -1974,6 +1975,7 @@ cb_scale_image_skip4
 beam_routines
 	bsr	wait_copint
 	bsr	swap_second_copperlist
+	bsr	set_second_copperlist
 	bsr	swap_vp1_playfield1
 	bsr	set_vp1_playfield1
 	bsr	swap_vp2_playfield2
@@ -2018,6 +2020,9 @@ beam_routines
 
 
 	SWAP_COPPERLIST cl2,2
+
+
+	SET_COPPERLIST cl2
 
 
 	CNOP 0,4

@@ -1343,7 +1343,7 @@ init_main
 	bsr	bvm_init_audio_channels_info
 	bsr	bvm_init_rgb8_color_table
 	bsr	bg2_copy_image_to_plane
-	bsr	mvb_init_object_coords
+	bsr	mvb_init_object_coordinates
 	bsr	mvb_init_morph_shapes
 	IFEQ mvb_premorph_enabled
 		bsr	mvb_init_start_shape
@@ -1424,27 +1424,27 @@ bvm_init_rgb8_color_table_loop3
 
 ; Morph-Vector-Balls 
 	CNOP 0,4
-mvb_init_object_coords
-	lea	mvb_object_coords_offsets(pc),a0
+mvb_init_object_coordinates
+	lea	mvb_object_coordinates_offsets(pc),a0
 	moveq	#0,d0			; start offset
 	moveq	#mvb_object_points_number-1,d7
-mvb_init_object_coords_loop
+mvb_init_object_coordinates_loop
 	move.w	d0,(a0)+		; offset xyz coordinate
 	addq.w	#3,d0			; next xyz coodinate
-	dbf	d7,mvb_init_object_coords_loop
+	dbf	d7,mvb_init_object_coordinates_loop
 	rts
 
 	CNOP 0,4
 mvb_init_morph_shapes
 	lea	mvb_morph_shapes_table(pc),a0
-	lea	mvb_object_shape1_coords(pc),a1
+	lea	mvb_object_shape1_coordinates(pc),a1
 	move.l	a1,(a0)+		; shape table
-	lea	mvb_object_shape2_coords(pc),a1
+	lea	mvb_object_shape2_coordinates(pc),a1
 	IFEQ mvb_morph_loop_enabled
 		move.l	a1,(a0)		; shape table
 	ELSE
 		move.l	a1,(a0)+	; shape table
-		lea	mvb_object_shape3_coords(pc),a1
+		lea	mvb_object_shape3_coordinates(pc),a1
 		move.l	a1,(a0)		; shape table
 	ENDC
 	rts
@@ -1994,9 +1994,9 @@ beam_routines
 	bsr	mvb_rotation
 	bsr	mvb_morph_object
 	movem.l a4-a6,-(a7)
-	bsr	mvb_quicksort_coords
+	bsr	mvb_quicksort_coordinates
 	movem.l (a7)+,a4-a6
-	bsr	cb_get_stripes_y_coords
+	bsr	cb_get_stripes_y_coordinates
 	bsr	cb_make_color_offsets
 	bsr	cb_move_chessboard
 	bsr	rgb8_bar_fader_in
@@ -2427,8 +2427,8 @@ mvb_rotation_skip5
 mvb_rotation_skip6
 	ENDC
 	move.w	d1,mvb_rotation_z_angle(a3) 
-	lea	mvb_object_coords(pc),a0
-	lea	mvb_rotation_xyz_coords(pc),a1
+	lea	mvb_object_coordinates(pc),a0
+	lea	mvb_rotation_xyz_coordinates(pc),a1
 	move.w	#mvb_rotation_d*8,a4
 	move.w	#mvb_rotation_x_center,a5
 	move.w	#mvb_rotation_y_center,a6
@@ -2468,7 +2468,7 @@ mvb_morph_object
 	bne.s	mvb_morph_object_quit
 	move.w	mvb_morph_shapes_table_start(a3),d1
 	moveq	#0,d2			; coordinates counter
-	lea	mvb_object_coords(pc),a0
+	lea	mvb_object_coordinates(pc),a0
 	lea	mvb_morph_shapes_table(pc),a1
 	move.l	(a1,d1.w*4),a1		; shape table
 	MOVEF.W mvb_object_points_number*3-1,d7
@@ -2507,13 +2507,13 @@ mvb_morph_object_quit
 
 
 	CNOP 0,4
-mvb_quicksort_coords
+mvb_quicksort_coordinates
 	moveq	#-2,d2			; mask to clear bit 0
-	lea	mvb_object_coords_offsets(pc),a0
+	lea	mvb_object_coordinates_offsets(pc),a0
 	move.l	a0,a1
 	lea	(mvb_object_points_number-1)*2(a0),a2 ; last entry
 	move.l	a2,a5
-	lea	mvb_rotation_xyz_coords(pc),a6
+	lea	mvb_rotation_xyz_coordinates(pc),a6
 mvb_quicks
 	move.l	a5,d0			; 1st entry
 	add.l	a0,d0			; + last entry
@@ -2570,8 +2570,8 @@ set_vector_balls
 	move.w	#((mvb_copy_blit_y_size)<<6)+(mvb_copy_blit_x_size/WORD_BITS),a4
 	move.l	vp2_pf2_construction2(a3),a0
 	move.l	(a0),d4
-	lea	mvb_object_coords_offsets(pc),a0
-	lea	mvb_rotation_xyz_coords(pc),a1
+	lea	mvb_object_coordinates_offsets(pc),a0
+	lea	mvb_rotation_xyz_coordinates(pc),a1
 	move.w	#mvb_z_plane1,a2
 	move.w	#mvb_z_plane2,a3
 	lea	mvb_image_data,a5
@@ -2629,7 +2629,7 @@ set_vector_balls_init
 
 
 	CNOP 0,4
-cb_get_stripes_y_coords
+cb_get_stripes_y_coordinates
 	move.w	cb_stripes_y_angle(a3),d2
 	move.w	d2,d0
 	MOVEF.W (sine_table_length/4)-1,d4 ; overflow 90°
@@ -2638,9 +2638,9 @@ cb_get_stripes_y_coords
 	move.w	d0,cb_stripes_y_angle(a3) 
 	moveq	#cb_stripes_y_center,d3
 	lea	sine_table(pc),a0
-	lea	cb_stripes_y_coords(pc),a1
+	lea	cb_stripes_y_coordinates(pc),a1
 	moveq	#(cb_stripes_number*cb_stripe_height)-1,d7 ; number of lines
-cb_get_stripes_y_coords_loop
+cb_get_stripes_y_coordinates_loop
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cb_stripes_y_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
@@ -2648,14 +2648,14 @@ cb_get_stripes_y_coords_loop
 	move.w	d0,(a1)+
 	addq.w	#cb_stripes_y_step,d2; next y angle
 	and.w	d4,d2			; remove overflow
-	dbf	d7,cb_get_stripes_y_coords_loop
+	dbf	d7,cb_get_stripes_y_coordinates_loop
 	rts
 
 
 	CNOP 0,4
 cb_make_color_offsets
 	moveq	#$00000001,d1		; low word: color offset 1st stripe, high word: color offset 2nd stripe
-	lea	cb_stripes_y_coords(pc),a0
+	lea	cb_stripes_y_coordinates(pc),a0
 	lea	cb_color_offsets_table(pc),a1
 	moveq	#cb_stripes_number-1,d7
 cb_make_color_offsets_loop1
@@ -3498,13 +3498,13 @@ bvm_audio_channel4_info
 
 ; Morp-Vector-Balls 
 	CNOP 0,2
-mvb_object_coords
+mvb_object_coordinates
 ; Zoom-In
 	DS.W mvb_object_points_number*3
 
 ; Shape 1 
 	CNOP 0,2
-mvb_object_shape1_coords
+mvb_object_shape1_coordinates
 ; Letter "R"
 	DC.W -(69*8),-(32*8),25*8	; P0
 	DC.W -(69*8),-(19*8),25*8	; P1
@@ -3547,7 +3547,7 @@ mvb_object_shape1_coords
 
 ; Shape 2 
 	CNOP 0,2
-mvb_object_shape2_coords
+mvb_object_shape2_coordinates
 ; Letter "3"
 	DC.W -(44*8),-(44*8),25*8	; P0
 	DC.W -(38*8),-(6*8),25*8	; P1
@@ -3589,17 +3589,17 @@ mvb_object_shape2_coords
 	IFNE mvb_morph_loop_enabled
 ; Shape 3
 		CNOP 0,2
-mvb_object_shape3_coords
+mvb_object_shape3_coordinates
 ; Zoom-Out
 		DS.W mvb_object_points_number*3
 	ENDC
 
 	CNOP 0,2
-mvb_object_coords_offsets
+mvb_object_coordinates_offsets
 	DS.W mvb_object_points_number
 
 	CNOP 0,2
-mvb_rotation_xyz_coords
+mvb_rotation_xyz_coordinates
 	DS.W mvb_object_points_number*3
 
 	CNOP 0,4
@@ -3621,7 +3621,7 @@ cb_fill_pattern
 	DC.W $ffff,$0000,$0000,$ffff
 
 	CNOP 0,2
-cb_stripes_y_coords
+cb_stripes_y_coordinates
 	DS.W cb_stripe_height*cb_stripes_number
 
 	CNOP 0,2

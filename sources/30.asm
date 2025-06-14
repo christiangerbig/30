@@ -93,7 +93,7 @@
 ; 8a0	Trigger Morphing
 
 
-; Execution time 68020: 240 raster lines
+; Execution time 68020: 240 rasterlines
 
 
 	MC68040
@@ -154,7 +154,7 @@ pt_usedfx			EQU %1101010101011110
 pt_usedefx			EQU %0000001001000000
 pt_mute_enabled			EQU FALSE
 pt_music_fader_enabled		EQU TRUE
-pt_fade_out_delay		EQU 1 ; tick
+pt_fade_out_delay		EQU 1	; tick
 pt_split_module_enabled		EQU TRUE
 pt_track_notes_played_enabled	EQU TRUE
 pt_track_volumes_enabled	EQU TRUE
@@ -386,7 +386,7 @@ vp3_pf2_plane_moduli		EQU (extra_pf8_plane_width*(extra_pf8_depth-1))+extra_pf8_
 ; View 
 diwstrt_bits			EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)|(display_window_hstart&$ff)
 diwstop_bits			EQU ((display_window_vstop&$ff)*DIWSTOPF_V0)|(display_window_hstop&$ff)
-bplcon0_bits			EQU BPLCON0F_ECSENA|((pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((pf_depth&$07)*BPLCON0F_BPU0)
+bplcon0_bits			EQU BPLCON0F_ECSENA|((pf_depth>>3)*BPLCON0F_BPU3)|BPLCON0F_COLOR|((pf_depth&$07)*BPLCON0F_BPU0)
 bplcon3_bits1			EQU BPLCON3F_SPRES0
 bplcon3_bits2			EQU bplcon3_bits1|BPLCON3F_LOCT
 bplcon4_bits			EQU (BPLCON4F_OSPRM4*spr_odd_color_table_select)|(BPLCON4F_ESPRM4*spr_even_color_table_select)
@@ -397,9 +397,9 @@ color00_high_bits		EQU $002
 color00_low_bits		EQU $491
 
 ; Viewport 1
-vp1_ddfstrt_bits		EQU DDFSTART_320_PIXEL
+vp1_ddfstrt_bits		EQU DDFSTRT_320_PIXEL
 vp1_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
-vp1_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
+vp1_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp1_pf_depth>>3)*BPLCON0F_BPU3)|BPLCON0F_COLOR|((vp1_pf_depth&$07)*BPLCON0F_BPU0)
 vp1_bplcon1_bits		EQU 0
 vp1_bplcon2_bits		EQU 0
 vp1_bplcon3_bits1		EQU bplcon3_bits1
@@ -411,9 +411,9 @@ vp1_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp1_color00_bits		EQU color00_bits
 
 ; Viewport 2
-vp2_ddfstrt_bits		EQU DDFSTART_320_PIXEL
+vp2_ddfstrt_bits		EQU DDFSTRT_320_PIXEL
 vp2_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
-vp2_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
+vp2_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp2_pf_depth>>3)*BPLCON0F_BPU3)|BPLCON0F_COLOR|BPLCON0F_DPF|((vp2_pf_depth&$07)*BPLCON0F_BPU0)
 vp2_bplcon1_bits		EQU 0
 vp2_bplcon2_bits		EQU BPLCON2F_PF2PRI
 vp2_bplcon3_bits1		EQU bplcon3_bits1|BPLCON3F_PF2OF2
@@ -423,9 +423,9 @@ vp2_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp2_color00_bits		EQU color00_bits
 
 ; Viewport 3
-vp3_ddfstrt_bits		EQU DDFSTART_320_PIXEL
+vp3_ddfstrt_bits		EQU DDFSTRT_320_PIXEL
 vp3_ddfstop_bits		EQU DDFSTOP_320_PIXEL_4X
-vp3_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|(BPLCON0F_COLOR)|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
+vp3_bplcon0_bits		EQU BPLCON0F_ECSENA|((vp3_pf_depth>>3)*BPLCON0F_BPU3)|BPLCON0F_COLOR|BPLCON0F_DPF|((vp3_pf_depth&$07)*BPLCON0F_BPU0)
 vp3_bplcon1_bits		EQU 0
 vp3_bplcon2_bits		EQU 0
 vp3_bplcon3_bits1		EQU bplcon3_bits1|BPLCON3F_PF2OF0|BPLCON3F_PF2OF1
@@ -508,7 +508,7 @@ hst_text_y_position		EQU 0
 bvm_bar_height			EQU 6
 bvm_bars_number			EQU 4
 bvm_max_amplitude		EQU vp1_visible_lines_number-bvm_bar_height
-bvm_y_centre			EQU vp1_visible_lines_number-bvm_bar_height
+bvm_y_center			EQU vp1_visible_lines_number-bvm_bar_height
 bvm_y_angle_speed		EQU 8
 
 ; Morph-Vector-Balls 
@@ -1813,7 +1813,7 @@ cl2_vp1_set_fill_gradient
 	move.l	cl2_construction2(a3),a1
 	ADDF.W	cl2_extension2_entry+cl2_ext2_COLOR29_high8+WORD_SIZE,a1
 	move.w	#cl2_extension2_size,a2
-	lea	(a1,a2.l*2),a1		; skip two raster lines
+	lea	(a1,a2.l*2),a1		; skip two rasterlines
 	MOVEF.W (vp1_visible_lines_number-4)-1,d7
 cl2_vp1_set_fill_gradient_loop
 	move.l	(a0)+,d0
@@ -2258,7 +2258,7 @@ bvm_clear_second_copperlist
 	moveq	#vp1_visible_lines_number-1,d7
 bvm_clear_second_copperlist_loop
 	move.b	d0,(a0)			; BPLCON4 low
-	add.l	a1,a0			; next raster line in cl
+	add.l	a1,a0			; next rasterline in cl
 	dbf	d7,bvm_clear_second_copperlist_loop
 	rts
 
@@ -2272,7 +2272,7 @@ bvm_set_bars
 	lea	bvm_sprm_table(pc),a4
 	move.l	cl2_construction2(a3),a5 
 	ADDF.W	cl2_extension2_entry+cl2_ext2_BPLCON4+WORD_SIZE+BYTE_SIZE,a5
-	move.w	#bvm_y_centre,a3
+	move.w	#bvm_y_center,a3
 	move.w	#cl2_extension2_size,a6
 	moveq	#bvm_bars_number-1,d7
 bvm_set_bars_loop1
@@ -2288,13 +2288,13 @@ bvm_set_bars_loop1
 bvm_set_bars_skip
 	and.w	d5,d3			; remove overflow
 	move.w	d3,-4(a1)	
-	add.w	a3,d0			; y' + y centre
+	add.w	a3,d0			; y' + y center
 	MULUF.W cl2_extension2_size/LONGWORD_SIZE,d0,d1
 	lea	(a5,d0.w*4),a2		; y offset in cl
 	moveq	#bvm_bar_height-1,d6
 bvm_set_bars_loop2
 	move.b	(a4)+,(a2)		; BPLCON4 low
-	add.l	a6,a2			; next raster line in cl
+	add.l	a6,a2			; next rasterline in cl
 	dbf	d6,bvm_set_bars_loop2
 	dbf	d7,bvm_set_bars_loop1
 	movem.l (a7)+,a3-a6
@@ -2449,10 +2449,10 @@ mvb_rotation_loop
 	ext.l	d1
 	divs.w	d3,d0			; x'=(x*d)/(z+d)
 	MULUF.L mvb_rotation_d,d1,d7	; y projection
-	add.w	a5,d0			; x' + x centre
+	add.w	a5,d0			; x' + x center
 	move.w	d0,(a1)+		; x position
 	divs.w	d3,d1			; y'=(y*d)/(z+d)
-	add.w	a6,d1			; y' + y centre
+	add.w	a6,d1			; y' + y center
 	move.w	d1,(a1)+		; y position
 	asr.w	#3,d2			; z/8
 	move.l	a2,d7			; loop counter
@@ -2644,7 +2644,7 @@ cb_get_stripes_y_coordinates_loop
 	move.l	(a0,d2.w*4),d0		; sin(w)
 	MULUF.L cb_stripes_y_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
-	add.w	d3,d0			; y' + y centre
+	add.w	d3,d0			; y' + y center
 	move.w	d0,(a1)+
 	addq.w	#cb_stripes_y_step,d2; next y angle
 	and.w	d4,d2			; remove overflow

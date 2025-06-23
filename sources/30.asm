@@ -78,6 +78,7 @@
 ; - final version
 ; - with updated includes
 ; - with updated nfo file
+; - exe file crunched with Powerpacker
 
 
 ; PT 8xy command

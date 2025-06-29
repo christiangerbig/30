@@ -145,7 +145,7 @@ requires_060_cpu		EQU FALSE
 requires_fast_memory		EQU FALSE
 requires_multiscan_monitor	EQU FALSE
 
-workbench_start_enabled		EQU TRUE
+workbench_start_enabled		EQU FALSE ; [TRUE]
 screen_fader_enabled		EQU TRUE
 text_output_enabled		EQU FALSE
 
@@ -1042,21 +1042,21 @@ spr7_x_size1			EQU spr_x_size1
 spr7_y_size1			EQU 0
 
 spr0_x_size2			EQU spr_x_size2
-spr0_y_size2			EQU sprite0_size/(spr_x_size2/8)
+spr0_y_size2			EQU sprite0_size/(spr_x_size2/4)
 spr1_x_size2			EQU spr_x_size2
-spr1_y_size2			EQU sprite1_size/(spr_x_size2/8)
+spr1_y_size2			EQU sprite1_size/(spr_x_size2/4)
 spr2_x_size2			EQU spr_x_size2
-spr2_y_size2			EQU sprite2_size/(spr_x_size2/8)
+spr2_y_size2			EQU sprite2_size/(spr_x_size2/4)
 spr3_x_size2			EQU spr_x_size2
-spr3_y_size2			EQU sprite3_size/(spr_x_size2/8)
+spr3_y_size2			EQU sprite3_size/(spr_x_size2/4)
 spr4_x_size2			EQU spr_x_size2
-spr4_y_size2			EQU sprite4_size/(spr_x_size2/8)
+spr4_y_size2			EQU sprite4_size/(spr_x_size2/4)
 spr5_x_size2			EQU spr_x_size2
-spr5_y_size2			EQU sprite5_size/(spr_x_size2/8)
+spr5_y_size2			EQU sprite5_size/(spr_x_size2/4)
 spr6_x_size2			EQU spr_x_size2
-spr6_y_size2			EQU sprite6_size/(spr_x_size2/8)
+spr6_y_size2			EQU sprite6_size/(spr_x_size2/4)
 spr7_x_size2			EQU spr_x_size2
-spr7_y_size2			EQU sprite7_size/(spr_x_size2/8)
+spr7_y_size2			EQU sprite7_size/(spr_x_size2/4)
 
 
 ; Extra-Memory 
@@ -1343,7 +1343,7 @@ init_main
 	bsr	hst_init_chars_images
 	bsr	bvm_init_audio_channels_info
 	bsr	bvm_init_rgb8_color_table
-	bsr	bg2_copy_image_to_plane
+	bsr	bg2_copy_image_to_bitplane
 	bsr	mvb_init_object_coordinates
 	bsr	mvb_init_morph_shapes
 	IFEQ mvb_premorph_enabled
@@ -1561,7 +1561,7 @@ init_CIA_timers
 init_first_copperlist
 	move.l	cl1_display(a3),a0
 	bsr.s	cl1_init_playfield_props
-	bsr	cl1_init_sprite_pointers
+	bsr.s	cl1_init_sprite_pointers
 	bsr	cl1_init_colors
 	bsr	cl1_vp2_init_bitplane_pointers
 	COP_MOVEQ 0,COPJMP2
@@ -2777,7 +2777,7 @@ rgb8_bar_fader_out_quit
 	rts
 
 
-	COPY_RGB8_COLORS_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR16_high2,cl1_COLOR16_low2
+	COPY_RGB8_COLORS_TO_COPPERLIST bf,bvm,cl1,cl1_COLOR00_high2,cl1_COLOR00_low2
 
 
 ; Fade in temple
@@ -2859,7 +2859,7 @@ rgb8_image_fader_out_quit
 	RGB8_COLOR_FADER if
 
 
-	COPY_RGB8_COLORS_TO_COPPERLIST if,vp2_pf1,cl1,cl1_COLOR01_high1,cl1_COLOR01_low1
+	COPY_RGB8_COLORS_TO_COPPERLIST if,vp2_pf1,cl1,cl1_COLOR00_high1,cl1_COLOR00_low1
 
 
 	CNOP 0,4
@@ -3012,7 +3012,7 @@ rgb8_sprite_fader_out_quit
 	rts
 
 
-	COPY_RGB8_COLORS_TO_COPPERLIST sprf,spr,cl1,cl1_COLOR01_high2,cl1_COLOR01_low2
+	COPY_RGB8_COLORS_TO_COPPERLIST sprf,spr,cl1,cl1_COLOR00_high2,cl1_COLOR00_low2
 
 
 	CNOP 0,4
@@ -3113,14 +3113,14 @@ cfc_rgb8_copy_color_table
 	ENDC
 	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
 	move.l	cl1_display(a3),a1 
-	ADDF.W	cl1_COLOR17_high1+WORD_SIZE,a1
+	ADDF.W	cl1_COLOR00_high1+(cfc_rgb8_start_color*LONGWORD_SIZE)+WORD_SIZE,a1
 	IFNE cl1_size1
 		move.l	cl1_construction1(a3),a2 
-		ADDF.W	cl1_COLOR17_high1+WORD_SIZE,a2
+		ADDF.W	cl1_COLOR00_high1+(cfc_rgb8_start_color*LONGWORD_SIZE)+WORD_SIZE,a2
 	ENDC
 	IFNE cl1_size2
 		move.l	cl1_construction2(a3),a4 
-		ADDF.W	cl1_COLOR17_high1+WORD_SIZE,a4
+		ADDF.W	cl1_COLOR00_high1+(cfc_rgb8_start_color*LONGWORD_SIZE)+WORD_SIZE,a4
 	ENDC
 	MOVEF.W cfc_rgb8_colors_number-1,d7
 cfc_rgb8_copy_color_table_loop
@@ -3135,14 +3135,14 @@ cfc_rgb8_copy_color_table_loop
 		move.w	d0,(a4)		; color high
 	ENDC
 	RGB8_TO_RGB4_LOW d2,d1,d3
-	move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a1) ; color low
+	move.w	d2,cl1_COLOR00_low1-cl1_COLOR00_high1(a1) ; color low
 	addq.w	#LONGWORD_SIZE,a1	; next color register
 	IFNE cl1_size1
-		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a2) ; color low
+		move.w	d2,cl1_COLOR00_low1-cl1_COLOR00_high1(a2) ; color low
 		addq.w	#LONGWORD_SIZE,a2 ; next color register
 	ENDC
 	IFNE cl1_size2
-		move.w	d2,cl1_COLOR17_low1-cl1_COLOR17_high1(a4) ; color low
+		move.w	d2,cl1_COLOR00_low1-cl1_COLOR00_high1(a4) ; color low
 		addq.w	#LONGWORD_SIZE,a4 ; next color register
 	ENDC
 	IFGT cfc_rgb8_colors_number-32
@@ -3716,7 +3716,7 @@ hst_text
 		DC.B " "
 	ENDR
 
-	DC.B "FROM THE VERY 1st STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
+	DC.B "FROM THE VERY FIRST STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 		DC.B " "

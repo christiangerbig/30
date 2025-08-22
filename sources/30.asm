@@ -218,7 +218,7 @@ pf_depth			EQU pf1_depth3+pf2_depth3
 pf_extra_number			EQU 8
 ; Viewport 1 
 ; Playfield 1 
-extra_pf1_x_size		EQU 384
+extra_pf1_x_size		EQU 384	; double buffering
 extra_pf1_y_size		EQU 26
 extra_pf1_depth			EQU 2
 extra_pf2_x_size		EQU 384
@@ -230,7 +230,7 @@ extra_pf3_x_size		EQU 320
 extra_pf3_y_size		EQU 182
 extra_pf3_depth			EQU 4
 ; Playfield 2 
-extra_pf4_x_size		EQU 320
+extra_pf4_x_size		EQU 320	; tripple buffering
 extra_pf4_y_size		EQU 182
 extra_pf4_depth			EQU 3
 extra_pf5_x_size		EQU 320
@@ -295,6 +295,7 @@ beam_position			EQU $133
 
 MINROW				EQU VSTART_256_LINES
 
+; View
 display_window_hstart		EQU HSTART_320_PIXEL
 display_window_vstart		EQU MINROW
 display_window_hstop		EQU HSTOP_320_PIXEL
@@ -310,12 +311,13 @@ vp1_visible_lines_number	EQU 26
 vp1_vstart			EQU MINROW
 vp1_vstop			EQU vp1_vstart+vp1_visible_lines_number
 
-vp1_pf_pixel_per_datafetch	EQU 64	; 4x
-
 vp1_pf1_depth			EQU 2
 vp1_pf_depth			EQU vp1_pf1_depth
+
 vp1_pf1_colors_number		EQU 4
 vp1_pf_colors_number		EQU vp1_pf1_colors_number
+
+vp1_pf_pixel_per_datafetch	EQU 64	; 4x
 
 ; Viewport 2 
 vp2_pixel_per_line		EQU 320
@@ -325,14 +327,15 @@ vp2_visible_lines_number	EQU 182
 vp2_vstart			EQU vp1_vstop
 vp2_vstop			EQU vp2_vstart+vp2_visible_lines_number
 
-vp2_pf_pixel_per_datafetch	EQU 64	; 4x
-
 vp2_pf1_depth			EQU 4
 vp2_pf2_depth			EQU 3
 vp2_pf_depth			EQU vp2_pf1_depth+vp2_pf2_depth
+
 vp2_pf1_colors_number		EQU 16
 vp2_pf2_colors_number		EQU 8
 vp2_pf_colors_number		EQU vp2_pf1_colors_number+vp2_pf2_colors_number
+
+vp2_pf_pixel_per_datafetch	EQU 64	; 4x
 
 ; Viewport 3 
 vp3_pixel_per_line		EQU 320
@@ -342,26 +345,26 @@ vp3_visible_lines_number	EQU 48
 vp3_vstart			EQU vp2_vstop
 vp3_vstop			EQU vp3_vstart+vp3_visible_lines_number
 
-vp3_pf_pixel_per_datafetch	EQU 64	; 4x
-
 vp3_pf1_depth			EQU 3
 vp3_pf2_depth			EQU 2
 vp3_pf_depth			EQU vp3_pf1_depth+vp3_pf2_depth
+
 vp3_pf1_colors_number		EQU 8
 vp3_pf2_colors_number		EQU 4
 vp3_pf_colors_number		EQU vp3_pf1_colors_number+vp3_pf2_colors_number
 
+vp3_pf_pixel_per_datafetch	EQU 64	; 4x
 
 ; Viewport 1 
 ; Playfield 1 
-extra_pf1_plane_width		EQU extra_pf1_x_size/8
+extra_pf1_plane_width		EQU extra_pf1_x_size/8 ; double buffering
 extra_pf2_plane_width		EQU extra_pf2_x_size/8
 
 ; Viewport 2
 ; Playfield1 
 extra_pf3_plane_width		EQU extra_pf3_x_size/8
 ; Playfield2 
-extra_pf4_plane_width		EQU extra_pf4_x_size/8
+extra_pf4_plane_width		EQU extra_pf4_x_size/8 ; tripple buffering
 extra_pf5_plane_width		EQU extra_pf5_x_size/8
 extra_pf6_plane_width		EQU extra_pf6_x_size/8
 
@@ -369,6 +372,7 @@ extra_pf6_plane_width		EQU extra_pf6_x_size/8
 extra_pf7_plane_width		EQU extra_pf7_x_size/8
 ; Playfield2 
 extra_pf8_plane_width		EQU extra_pf8_x_size/8
+
 
 ; Viewport 1 
 vp1_data_fetch_width		EQU vp1_pixel_per_line/8
@@ -383,6 +387,7 @@ vp2_pf2_plane_moduli		EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_
 vp3_data_fetch_width		EQU vp3_pixel_per_line/8
 vp3_pf1_plane_moduli		EQU vp3_data_fetch_width*8
 vp3_pf2_plane_moduli		EQU (extra_pf8_plane_width*(extra_pf8_depth-1))+extra_pf8_plane_width-vp3_data_fetch_width
+
 
 ; View 
 diwstrt_bits			EQU ((display_window_vstart&$ff)*DIWSTRTF_V0)|(display_window_hstart&$ff)
@@ -437,6 +442,7 @@ vp3_bplcon4_bits		EQU bplcon4_bits|(BPLCON4F_BPLAM0*240)
 vp3_fmode_bits			EQU fmode_bits|FMODEF_BPL32|FMODEF_BPAGEM
 vp3_color00_bits		EQU color00_bits
 
+
 ; Viewport 1 
 cl2_vp1_hstart1			EQU 0
 cl2_vp1_vstart1			EQU MINROW
@@ -456,6 +462,7 @@ cl2_vp3_vstart2			EQU vp2_vstop
 ; Copper-Interrupt
 cl2_hstart			EQU 0
 cl2_vstart			EQU beam_position&CL_Y_WRAPPING
+
 
 sine_table_length		EQU 512
 
@@ -705,7 +712,7 @@ cl1_begin			RS.B 0
 
 	INCLUDE "copperlist1.i"
 
-cl1_extension1_entry	RS.B cl1_extension1_size
+cl1_extension1_entry		RS.B cl1_extension1_size
 
 cl1_COPJMP2			RS.L 1
 
@@ -729,6 +736,8 @@ cl2_ext1_BPL1PTH		RS.L 1
 cl2_ext1_BPL1PTL		RS.L 1
 cl2_ext1_BPL2PTH		RS.L 1
 cl2_ext1_BPL2PTL		RS.L 1
+cl2_ext1_WAIT1			RS.L 1
+cl2_ext1_BPLCON0		RS.L 1
 
 cl2_extension1_size		RS.B 0
 
@@ -827,8 +836,6 @@ cl2_begin			RS.B 0
 
 ; Viewport 1 
 cl2_extension1_entry		RS.B cl2_extension1_size
-cl2_WAIT1			RS.L 1
-cl2_bplcon0_1			RS.L 1
 cl2_extension2_entry		RS.B cl2_extension2_size*vp1_visible_lines_number
 
 ; Viewport 2
@@ -850,6 +857,7 @@ copperlist2_size		RS.B 0
 cl1_size1			EQU 0
 cl1_size2			EQU 0
 cl1_size3			EQU copperlist1_size
+
 cl2_size1			EQU 0
 cl2_size2			EQU copperlist2_size
 cl2_size3			EQU copperlist2_size
@@ -1338,26 +1346,36 @@ init_main
 	bsr	pt_InitAudTempStrucs
 	bsr	pt_ExamineSongStruc
 	bsr	pt_InitFtuPeriodTableStarts
+
 	bsr	hst_init_chars_offsets
 	bsr	hst_init_chars_x_positions
 	bsr	hst_init_chars_images
+
 	bsr	bvm_init_audio_channels_info
 	bsr	bvm_init_rgb8_color_table
+
 	bsr	bg2_copy_image_to_bitplane
+
 	bsr	mvb_init_object_coordinates
 	bsr	mvb_init_morph_shapes
 	IFEQ mvb_premorph_enabled
 		bsr	mvb_init_start_shape
 	ENDC
 	bsr	mvb_rotation
+
 	bsr	cb_init_chessboard_image
 	bsr	cb_init_bitmap_table
 	bsr	cb_init_color_tables
+
 	bsr	init_colors
+
 	bsr	init_sprites
+
 	bsr	init_CIA_timers
+
 	bsr	init_first_copperlist
-	bra	init_second_copperlist
+	bsr	init_second_copperlist
+	rts
 
 
 ; PT-Replay 
@@ -1412,7 +1430,7 @@ bvm_init_rgb8_color_table_loop2
 	move.l	d1,(a1)+		; COLOR00
 	moveq	#(spr_colors_number-1)-1,d5 ; number of color values per palette
 bvm_init_rgb8_color_table_loop3
-	move.l	d0,(a1)+		; color
+	move.l	d0,(a1)+		; RGB8
 	dbf	d5,bvm_init_rgb8_color_table_loop3
 	dbf	d6,bvm_init_rgb8_color_table_loop2
 	dbf	d7,bvm_init_rgb8_color_table_loop1
@@ -1540,7 +1558,8 @@ init_colors
 	CNOP 0,4
 init_sprites
 	bsr.s	spr_init_pointers_table
-	bra.s	bg1_init_attached_sprites_cluster
+	bsr.s	bg1_init_attached_sprites_cluster
+	rts
 
 
 	INIT_SPRITE_POINTERS_TABLE
@@ -1566,7 +1585,8 @@ init_first_copperlist
 	bsr	cl1_vp2_init_bitplane_pointers
 	COP_MOVEQ 0,COPJMP2
 	bsr	cl1_set_sprite_pointers
-	bra	cl1_vp2_pf1_set_bitplane_pointers
+	bsr	cl1_vp2_pf1_set_bitplane_pointers
+	rts
 
 
 	COP_INIT_PLAYFIELD_REGISTERS cl1,NOBITPLANESSPR
@@ -1648,39 +1668,41 @@ cl1_vp2_pf1_set_bitplane_pointers_loop
 	CNOP 0,4
 init_second_copperlist
 	move.l	cl2_construction2(a3),a0
-
 ; Viewport 1
 	bsr	cl2_vp1_init_playfield_props
 	bsr	cl2_vp1_init_bitplane_pointers
-	COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
-	COP_MOVEQ vp1_bplcon0_bits,BPLCON0
+	bsr	cl2_vp1_init_start_display
 	bsr	cl2_vp1_init_color_gradient
-
 ; Viewport 2
-	COP_WAIT cl2_vp2_hstart,cl2_vp2_vstart
+	bsr	cl2_vp2_init_start_display
 	bsr	cl2_vp2_init_playfield_props
 	bsr	cl2_vp2_init_bitplane_pointers
-
 ; Viewport 3
-	COP_WAIT cl2_vp3_hstart1,cl2_vp3_vstart1
+	bsr	cl2_vp3_init_start_display
 	bsr	cl2_vp3_init_playfield_props
 	bsr	cl2_vp3_init_bitplane_pointers
 	bsr	cl2_vp3_init_color_gradient
-
 ; Copper-Interrupt
 	bsr	cl2_init_copper_interrupt
 	COP_LISTEND
+; Viewport 1
 	bsr	cl2_vp1_pf1_set_bitplane_pointers
 	bsr	cl2_vp1_set_fill_gradient
 	bsr	cl2_vp1_set_outline_gradient
+; Viewport 2
 	bsr	cl2_vp2_pf1_set_bitplane_pointers
+; Viewport 3
 	bsr	cl2_vp3_pf1_set_bitplane_pointers
 	bsr	cl2_vp3_pf2_set_bitplane_pointers
+
 	bsr	copy_second_copperlist
 	bsr	swap_second_copperlist
 	bsr	set_second_copperlist
+
 	bsr	set_vp1_playfield1
-	bra	set_vp2_playfield2
+
+	bsr	set_vp2_playfield2
+	rts
 
 
 ; Viewport 1 
@@ -1698,6 +1720,12 @@ cl2_vp1_init_bitplane_pointers_loop
 	rts
 
 	CNOP 0,4
+cl2_vp1_init_start_display
+	COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
+	COP_MOVEQ vp1_bplcon0_bits,BPLCON0
+	rts
+
+	CNOP 0,4
 cl2_vp1_init_color_gradient
 	move.l	#(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
 	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; color high
@@ -1705,13 +1733,12 @@ cl2_vp1_init_color_gradient
 	move.l	#(COLOR30<<16)|color00_high_bits,d3
 	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits4,d4 ; color low
 	move.l	#(COLOR29<<16)|color00_low_bits,d5
-	moveq	#1,d6
-	ror.l	#8,d6			; next line in cl
+	move.l	#1<<24,d6		; next line
 	move.l	#(COLOR30<<16)|color00_low_bits,a1
 	move.l	#(BPLCON4<<16)|vp1_bplcon4_bits,a2
 	MOVEF.W vp1_visible_lines_number-1,d7
 cl2_vp1_init_color_gradient_loop
-	move.l	d0,(a0)+		; CWAIT x,y
+	move.l	d0,(a0)+		; CWAIT
 	move.l	d1,(a0)+		; BPLCON3 color high
 	move.l	d2,(a0)+		; COLOR29
 	move.l	d3,(a0)+		; COLOR30
@@ -1724,7 +1751,12 @@ cl2_vp1_init_color_gradient_loop
 	rts
 
 
-; Viewport 2 
+; Viewport 2
+	CNOP 0,4
+cl2_vp2_init_start_display
+	COP_WAIT cl2_vp2_hstart,cl2_vp2_vstart
+	rts
+
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp2
 
 	CNOP 0,4
@@ -1742,6 +1774,11 @@ cl2_vp2_init_bitplane_pointers
 
 
 ; Viewport 3
+	CNOP 0,4
+cl2_vp3_init_start_display
+	COP_WAIT cl2_vp3_hstart1,cl2_vp3_vstart1
+	rts
+
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp3
 
 	CNOP 0,4
@@ -1767,13 +1804,12 @@ cl2_vp3_init_color_gradient
 	move.l	#(COLOR26<<16)|color00_high_bits,d3
 	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; color low
 	move.l	#(((CL_Y_WRAPPING<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; CWAIT
-	moveq	#1,d6
-	ror.l	#8,d6			; next line in cl
+	move.l	#1<<24,d6		; next line
 	move.l	#(COLOR25<<16)|color00_low_bits,a1
 	move.l	#(COLOR26<<16)|color00_low_bits,a2
 	moveq	#vp3_visible_lines_number-1,d7
 cl2_vp3_init_color_gradient_loop
-	move.l	d0,(a0)+		; CWAIT x,y
+	move.l	d0,(a0)+		; CWAIT
 	move.l	d1,(a0)+		; BPLCON3 color high
 	move.l	d2,(a0)+		; COLOR25
 	move.l	d3,(a0)+		; COLOR26
@@ -1784,11 +1820,12 @@ cl2_vp3_init_color_gradient_loop
 	cmp.l	d5,d0			; y wrapping ?
 	bne.s	cl2_vp3_init_color_gradient_skip
 	subq.w	#LONGWORD_SIZE,a0
-	COP_WAIT CL_X_WRAPPING,CL_Y_WRAPPING	; patch cl
+	COP_WAIT CL_X_WRAPPING,CL_Y_WRAPPING ; patch cl
 cl2_vp3_init_color_gradient_skip
 	add.l	d6,d0			; next line in cl
 	dbf	d7,cl2_vp3_init_color_gradient_loop
 	rts
+
 
 	COP_INIT_COPINT cl2,cl2_hstart,cl2_vstart
 
@@ -1896,7 +1933,8 @@ cl2_vp3_pf2_set_bitplane_pointers_loop
 	CNOP 0,4
 main
 	bsr.s	no_sync_routines
-	bra	beam_routines
+	bsr	beam_routines
+	rts
 
 
 	CNOP 0,4
@@ -1904,7 +1942,8 @@ no_sync_routines
 	IFEQ cfc_rgb8_prefade_enabled
 		bsr	cfc_rgb8_init_start_colors
 	ENDC
-	bra	cb_scale_image
+	bsr	cb_scale_image
+	rts
 
 
 	IFEQ cfc_rgb8_prefade_enabled
@@ -2121,7 +2160,7 @@ horiz_scrolltext_loop
 	sub.w	hst_horiz_scroll_speed(a3),d2
 	bpl.s	horiz_scrolltext_skip
 	move.l	a0,-(a7)
-	bsr.s   hst_get_new_char_image
+	bsr.s		hst_get_new_char_image
 	move.l	(a7)+,a0
 	move.l	d0,-LONGWORD_SIZE(a1)	; new character image
 	add.w	d5,d2			; restart x position
@@ -2152,8 +2191,8 @@ hst_get_text_softscroll
 	move.w	d0,hst_text_bltcon0_bits(a3) 
 	rts
 
-	GET_NEW_CHAR_IMAGE.W hst,hst_check_control_codes
 
+	GET_NEW_CHAR_IMAGE.W hst,hst_check_control_codes
 
 
 ; Input
@@ -2647,7 +2686,7 @@ cb_get_stripes_y_coordinates_loop
 	swap	d0
 	add.w	d3,d0			; y' + y center
 	move.w	d0,(a1)+
-	addq.w	#cb_stripes_y_step,d2; next y angle
+	addq.w	#cb_stripes_y_step,d2	; next y angle
 	and.w	d4,d2			; remove overflow
 	dbf	d7,cb_get_stripes_y_coordinates_loop
 	rts
@@ -3176,16 +3215,16 @@ cfc_rgb8_copy_color_table_quit
 	CNOP 0,4
 control_counters
 	move.w	cfc_rgb8_fader_delay_counter(a3),d0
-	bmi.s	control_counters_skip2
+	bmi.s	control_counters_quit
 	subq.w	#1,d0
-	bpl.s	control_counters_skip1
+	bpl.s	control_counters_skip
 	move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
 	clr.w	cfc_rgb8_copy_colors_active(a3)
 	clr.w	cfc_rgb8_active(a3)
 	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90°
-control_counters_skip1
+control_counters_skip
 	move.w	d0,cfc_rgb8_fader_delay_counter(a3) 
-control_counters_skip2
+control_counters_quit
 	rts
 
 
@@ -3281,7 +3320,7 @@ pt_effects_handler
 	tst.w	pt_effects_handler_active(a3)
 	bne.s	pt_effects_handler_quit
 	move.b	n_cmdlo(a2),d0
-	lsr.b	#4,d0
+	lsr.b	#4,d0			; 80y
 	tst.w	pt_skip_commands_enabled(a3)
 	beq.s	pt_effects_handler_skip1
 	cmp.b	#$1,d0
@@ -3400,6 +3439,7 @@ vp3_pf1_rgb8_color_table
 	REPT vp3_pf1_colors_number-1
 		DC.L $202020		; balls shadow color
 	ENDR
+
 
 	CNOP 0,4
 spr_rgb8_color_table

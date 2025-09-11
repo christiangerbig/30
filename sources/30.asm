@@ -145,7 +145,7 @@ requires_060_cpu		EQU FALSE
 requires_fast_memory		EQU FALSE
 requires_multiscan_monitor	EQU FALSE
 
-workbench_start_enabled		EQU TRUE
+workbench_start_enabled		EQU FALSE ; [TRUE]
 screen_fader_enabled		EQU TRUE
 text_output_enabled		EQU FALSE
 
@@ -308,6 +308,7 @@ vp1_pixel_per_line		EQU 320
 vp1_visible_pixels_number	EQU 320
 vp1_visible_lines_number	EQU 26
 
+vp1_hstart			EQU 0
 vp1_vstart			EQU MINROW
 vp1_vstop			EQU vp1_vstart+vp1_visible_lines_number
 
@@ -324,6 +325,7 @@ vp2_pixel_per_line		EQU 320
 vp2_visible_pixels_number	EQU 320
 vp2_visible_lines_number	EQU 182
 
+vp2_hstart			EQU HSTOP_320_PIXEL-(4*CMOVE_SLOT_PERIOD)
 vp2_vstart			EQU vp1_vstop
 vp2_vstop			EQU vp2_vstart+vp2_visible_lines_number
 
@@ -342,6 +344,7 @@ vp3_pixel_per_line		EQU 320
 vp3_visible_pixels_number	EQU 320
 vp3_visible_lines_number	EQU 48
 
+vp3_hstart			EQU HSTOP_320_PIXEL-(9*CMOVE_SLOT_PERIOD)
 vp3_vstart			EQU vp2_vstop
 vp3_vstop			EQU vp3_vstart+vp3_visible_lines_number
 
@@ -355,22 +358,23 @@ vp3_pf_colors_number		EQU vp3_pf1_colors_number+vp3_pf2_colors_number
 
 vp3_pf_pixel_per_datafetch	EQU 64	; 4x
 
+
 ; Viewport 1 
 ; Playfield 1 
 extra_pf1_plane_width		EQU extra_pf1_x_size/8 ; double buffering
 extra_pf2_plane_width		EQU extra_pf2_x_size/8
 
 ; Viewport 2
-; Playfield1 
+; Playfield 1
 extra_pf3_plane_width		EQU extra_pf3_x_size/8
-; Playfield2 
+; Playfield 2
 extra_pf4_plane_width		EQU extra_pf4_x_size/8 ; tripple buffering
 extra_pf5_plane_width		EQU extra_pf5_x_size/8
 extra_pf6_plane_width		EQU extra_pf6_x_size/8
 
 ; Viewport 3
+; Playfield 1 & 2
 extra_pf7_plane_width		EQU extra_pf7_x_size/8
-; Playfield2 
 extra_pf8_plane_width		EQU extra_pf8_x_size/8
 
 
@@ -444,24 +448,16 @@ vp3_color00_bits		EQU color00_bits
 
 
 ; Viewport 1 
-cl2_vp1_hstart1			EQU 0
-cl2_vp1_vstart1			EQU MINROW
-cl2_vp1_hstart2			EQU 0
-cl2_vp1_vstart2			EQU MINROW
-
-; Viewport 2
-cl2_vp2_hstart			EQU HSTOP_320_PIXEL-(4*CMOVE_SLOT_PERIOD)
-cl2_vp2_vstart			EQU vp1_vstop-1
+cl2_hstart1			EQU 0
+cl2_vstart1			EQU vp1_vstart
 
 ; Viewport 3
-cl2_vp3_hstart1			EQU HSTOP_320_PIXEL-(9*CMOVE_SLOT_PERIOD)
-cl2_vp3_vstart1			EQU vp2_vstop-1
-cl2_vp3_hstart2			EQU 0
-cl2_vp3_vstart2			EQU vp2_vstop
+cl2_hstart2			EQU 0
+cl2_vstart2			EQU vp3_vstart
 
 ; Copper-Interrupt
-cl2_hstart			EQU 0
-cl2_vstart			EQU beam_position&CL_Y_WRAPPING
+cl2_hstart3			EQU 0
+cl2_vstart3			EQU beam_position&CL_Y_WRAPPING
 
 
 sine_table_length		EQU 512
@@ -649,7 +645,7 @@ cfc_rgb8_fader_speed_max	EQU 6
 cfc_rgb8_fader_radius		EQU cfc_rgb8_fader_speed_max
 cfc_rgb8_fader_center		EQU cfc_rgb8_fader_speed_max+1
 cfc_rgb8_fader_angle_speed	EQU 1
-cfc_rgb8_fader_delay		EQU 9*PAL_FPS
+cfc_rgb8_fader_delay		EQU 9*PAL_FPS ; 9 seconds
 
 
 vp1_pf1_plane_x_offset		EQU 1*vp1_pf_pixel_per_datafetch
@@ -1721,13 +1717,13 @@ cl2_vp1_init_bitplane_pointers_loop
 
 	CNOP 0,4
 cl2_vp1_init_start_display
-	COP_WAIT cl2_vp1_hstart1,cl2_vp1_vstart1
+	COP_WAIT vp1_hstart,vp1_vstart
 	COP_MOVEQ vp1_bplcon0_bits,BPLCON0
 	rts
 
 	CNOP 0,4
 cl2_vp1_init_color_gradient
-	move.l	#(((cl2_vp1_vstart2<<24)|(((cl2_vp1_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
+	move.l	#(((cl2_vstart1<<24)|(((cl2_hstart1/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
 	move.l	#(BPLCON3<<16)|vp1_bplcon3_bits3,d1 ; color high
 	move.l	#(COLOR29<<16)|color00_high_bits,d2
 	move.l	#(COLOR30<<16)|color00_high_bits,d3
@@ -1754,7 +1750,7 @@ cl2_vp1_init_color_gradient_loop
 ; Viewport 2
 	CNOP 0,4
 cl2_vp2_init_start_display
-	COP_WAIT cl2_vp2_hstart,cl2_vp2_vstart
+	COP_WAIT vp2_hstart,vp2_vstart-1
 	rts
 
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp2
@@ -1776,7 +1772,7 @@ cl2_vp2_init_bitplane_pointers
 ; Viewport 3
 	CNOP 0,4
 cl2_vp3_init_start_display
-	COP_WAIT cl2_vp3_hstart1,cl2_vp3_vstart1
+	COP_WAIT vp3_hstart,vp3_vstart-1
 	rts
 
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp3
@@ -1798,12 +1794,12 @@ cl2_vp3_init_bitplane_pointers
 
 	CNOP 0,4
 cl2_vp3_init_color_gradient
-	move.l	#(((cl2_vp3_vstart2<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
+	move.l	#(((cl2_vstart2<<24)|(((cl2_hstart2/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
 	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits3,d1 ; color high
 	move.l	#(COLOR25<<16)|color00_high_bits,d2
 	move.l	#(COLOR26<<16)|color00_high_bits,d3
 	move.l	#(BPLCON3<<16)|vp3_bplcon3_bits4,d4 ; color low
-	move.l	#(((CL_Y_WRAPPING<<24)|(((cl2_vp3_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; CWAIT
+	move.l	#(((CL_Y_WRAPPING<<24)|(((cl2_hstart2/4)*2)<<16))|$10000)|$fffe,d5 ; CWAIT
 	move.l	#1<<24,d6		; next line
 	move.l	#(COLOR25<<16)|color00_low_bits,a1
 	move.l	#(COLOR26<<16)|color00_low_bits,a2
@@ -1827,7 +1823,7 @@ cl2_vp3_init_color_gradient_skip
 	rts
 
 
-	COP_INIT_COPINT cl2,cl2_hstart,cl2_vstart
+	COP_INIT_COPINT cl2,cl2_hstart3,cl2_vstart3
 
 
 ; Viewport 1 
@@ -3290,12 +3286,12 @@ mh_exit_demo_quit
 
 	IFEQ pt_ciatiming_enabled
 		CNOP 0,4
-ciab_ta_int_server
+ciab_ta_server
 	ENDC
 
 	IFNE pt_ciatiming_enabled
 		CNOP 0,4
-VERTB_int_server
+VERTB_server
 	ENDC
 
 
@@ -3397,15 +3393,15 @@ pt_trigger_morphing
 	rts
 
 	CNOP 0,4
-ciab_tb_int_server
+ciab_tb_server
 	PT_TIMER_INTERRUPT_SERVER
 
 	CNOP 0,4
-EXTER_int_server
+EXTER_server
 	rts
 
 	CNOP 0,4
-NMI_int_server
+NMI_server
 	rts
 
 

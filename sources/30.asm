@@ -3258,26 +3258,27 @@ mh_exit_demo_skip3
 mh_exit_demo_skip4
 	moveq	#TRUE,d0
 	move.w	d0,sprfo_rgb8_active(a3)
+	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	move.w	d0,sprf_rgb8_copy_colors_active(a3)
-	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	tst.w	ifi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip5
 	move.w	#FALSE,ifi_rgb8_active(a3)
 mh_exit_demo_skip5
-	clr.w	ifo_rgb8_active(a3)
-	clr.w	if_rgb8_copy_colors_active(a3)
+	move.w	d0,ifo_rgb8_active(a3)
+	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
+	move.w	d0,if_rgb8_copy_colors_active(a3)
 	tst.w	cfi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip6
 	move.w	#FALSE,cfi_rgb8_active(a3)
 mh_exit_demo_skip6
-	clr.w	cfo_rgb8_active(a3)
-	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
+	move.w	d0,cfo_rgb8_active(a3)
 	tst.w	bfi_rgb8_active(a3)
 	bne.s	mh_exit_demo_skip7
 	move.w	#FALSE,bfi_rgb8_active(a3)
 mh_exit_demo_skip7
-	clr.w	bfo_rgb8_active(a3)
-	clr.w	bf_rgb8_copy_colors_active(a3)
+	move.w	d0,bfo_rgb8_active(a3)
+	move.w	d0,bf_rgb8_colors_counter(a3)
+	move.w	d0,bf_rgb8_copy_colors_active(a3)
 mh_exit_demo_quit
 	rts
 

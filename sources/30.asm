@@ -2323,7 +2323,7 @@ bvm_set_bars_loop1
 	lsr.w	-2(a1)			; amplitude/2
 bvm_set_bars_skip
 	and.w	d5,d3			; remove overflow
-	move.w	d3,-4(a1)	
+	move.w	d3,-LONGWORD_SIZE(a1)	
 	add.w	a3,d0			; y' + y center
 	MULUF.W cl2_extension2_size/LONGWORD_SIZE,d0,d1
 	lea	(a5,d0.w*4),a2		; y offset in cl

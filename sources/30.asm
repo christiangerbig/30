@@ -2313,14 +2313,14 @@ bvm_set_bars
 	moveq	#bvm_bars_number-1,d7
 bvm_set_bars_loop1
 	move.w	(a1)+,d3		; y angle
-	move.w	2(a0,d3.w*4),d0		; sin(w)
+	move.w	WORD_SIZE(a0,d3.w*4),d0	; sin(w)
 	addq.w	#bvm_y_angle_speed,d3	; next y angle
 	muls.w	(a1)+,d0		; y'=(yr*sin(w))/2^15
 	MULUF.L 2,d0,d1
 	swap	d0
 	cmp.w	d5,d3			; 180° ?
 	ble.s	bvm_set_bars_skip
-	lsr.w	-2(a1)			; amplitude/2
+	lsr.w	-WORD_SIZE(a1)		; amplitude/2
 bvm_set_bars_skip
 	and.w	d5,d3			; remove overflow
 	move.w	d3,-LONGWORD_SIZE(a1)	
@@ -2387,7 +2387,7 @@ mvb_rotation
 	move.w	mvb_rotation_x_angle(a3),d1
 	move.w	d1,d0	
 	lea	sine_table(pc),a2	
-	move.w	2(a2,d0.w*4),d4		; sin(a)
+	move.w	WORD_SIZE(a2,d0.w*4),d4	; sin(a)
 	move.w	#sine_table_length/4,a4
 	IFEQ sine_table_length-512
 		MOVEF.W sine_table_length-1,d3 ; overflow 360°
@@ -2404,7 +2404,7 @@ mvb_rotation
 		sub.w	d3,d0
 mvb_rotation_skip1
 	ENDC
-	move.w	2(a2,d0.w*4),d4	 	; low word: cos(a)
+	move.w	WORD_SIZE(a2,d0.w*4),d4	; low word: cos(a)
 	addq.w	#mvb_rotation_x_angle_speed,d1 ; next x angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2417,7 +2417,7 @@ mvb_rotation_skip2
 	move.w	d1,mvb_rotation_x_angle(a3) 
 	move.w	mvb_rotation_y_angle(a3),d1
 	move.w	d1,d0	
-	move.w	2(a2,d0.w*4),d5		; sin(b)
+	move.w	WORD_SIZE(a2,d0.w*4),d5	; sin(b)
 	add.w	a4,d0			; + 90°
 	swap	d5 			; high word: sin(b)
 	IFEQ sine_table_length-512
@@ -2428,7 +2428,7 @@ mvb_rotation_skip2
 		sub.w	d3,d0		; restart
 mvb_rotation_skip3
 	ENDC
-	move.w	2(a2,d0.w*4),d5	 	; low word: cos(b)
+	move.w	WORD_SIZE(a2,d0.w*4),d5	; low word: cos(b)
 	addq.w	#mvb_rotation_y_angle_speed,d1 ; next y angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
@@ -2441,7 +2441,7 @@ mvb_rotation_skip4
 	move.w	d1,mvb_rotation_y_angle(a3) 
 	move.w	mvb_rotation_z_angle(a3),d1
 	move.w	d1,d0	
-	move.w	2(a2,d0.w*4),d6		; sin(c)
+	move.w	WORD_SIZE(a2,d0.w*4),d6	; sin(c)
 	add.w	a4,d0			; + 90°
 	swap	d6 			; high word: sin(c)
 	IFEQ sine_table_length-512
@@ -2452,7 +2452,7 @@ mvb_rotation_skip4
 		sub.w	d3,d0		; restart
 mvb_rotation_skip5
 	ENDC
-	move.w	2(a2,d0.w*4),d6	 	; low word: cos(c)
+	move.w	WORD_SIZE(a2,d0.w*4),d6	; low word: cos(c)
 	addq.w	#mvb_rotation_z_angle_speed,d1 ; next z angle
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow

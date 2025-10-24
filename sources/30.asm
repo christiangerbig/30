@@ -1741,7 +1741,7 @@ cl2_vp1_init_color_gradient_loop
 	move.l	d4,(a0)+		; BPLCON3 color low
 	move.l	d5,(a0)+		; COLOR39
 	move.l	a1,(a0)+		; COLOR30
-	add.l	d6,d0			; next line in cl
+	add.l	d6,d0			; next line
 	move.l	a2,(a0)+		; BPLCON4
 	dbf	d7,cl2_vp1_init_color_gradient_loop
 	rts
@@ -1818,7 +1818,7 @@ cl2_vp3_init_color_gradient_loop
 	subq.w	#LONGWORD_SIZE,a0
 	COP_WAIT CL_X_WRAPPING,CL_Y_WRAPPING ; patch cl
 cl2_vp3_init_color_gradient_skip
-	add.l	d6,d0			; next line in cl
+	add.l	d6,d0			; next line
 	dbf	d7,cl2_vp3_init_color_gradient_loop
 	rts
 
@@ -2171,7 +2171,7 @@ horiz_scrolltext_quit
 horiz_scrolltext_init
 	move.w	#DMAF_BLITHOG|DMAF_SETCLR,DMACON-DMACONR(a6)
 	WAITBLIT
-	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D=A
+	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D = A
 	moveq	#-1,d0
 	move.l	d0,BLTAFWM-DMACONR(a6)
 	move.l	#((hst_image_plane_width-hst_text_char_width)<<16)|(extra_pf1_plane_width-hst_text_char_width),BLTAMOD-DMACONR(a6) ; A&D-moduli
@@ -2183,7 +2183,7 @@ hst_get_text_softscroll
 	moveq	#hst_text_char_x_size-1,d0
 	and.w	(a0),d0			; x
 	ror.w	#4,d0			; adjust shift bits
-	or.w	#BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC,d0 ; minterm D=A
+	or.w	#BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC,d0 ; minterm D = A
 	move.w	d0,hst_text_bltcon0_bits(a3) 
 	rts
 
@@ -2602,7 +2602,7 @@ set_vector_balls
 	movem.l a3-a5,-(a7)
 	move.l	a7,save_a7(a3)	
 	bsr	set_vector_balls_init
-	move.w	#BC0F_SRCA|BC0F_SRCB|BC0F_SRCC|BC0F_DEST+NANBC|NABC|ABNC|ABC,d3 ; minterm D=A+B
+	move.w	#BC0F_SRCA|BC0F_SRCB|BC0F_SRCC|BC0F_DEST+NANBC|NABC|ABNC|ABC,d3 ; minterm D = A+B
 	move.w	#((mvb_copy_blit_y_size)<<6)|(mvb_copy_blit_x_size/WORD_BITS),a4
 	move.l	vp2_pf2_construction2(a3),a0
 	move.l	(a0),d4
@@ -3822,12 +3822,12 @@ hst_stop_text
 ; PT-Replay
 	IFEQ pt_split_module_enabled
 pt_auddata			SECTION pt_audio,DATA
-		INCBIN "30:modules/MOD.run in neon lights.song"
+		INCBIN "30:trackermodules/MOD.run in neon lights.song"
 pt_audsmps			SECTION pt_audio2,DATA_C
-		INCBIN "30:modules/MOD.run in neon lights.smps"
+		INCBIN "30:trackermodules/MOD.run in neon lights.smps"
 	ELSE
 pt_auddata			SECTION pt_audio,DATA_C
-		INCBIN "30:modules/MOD.run in neon lights"
+		INCBIN "30:trackermodules/MOD.run in neon lights"
 	ENDC
 
 

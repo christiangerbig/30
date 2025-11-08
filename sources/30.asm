@@ -82,16 +82,16 @@
 
 
 ; PT 8xy command
-; 810	Start Fade-Bars-In
-; 820	Start Fade-Image-In (temple)
-; 830	Start Fade-Chessboard-In
-; 840	Start Fade-Sprites-In
-; 850	Start Fade-Balls-In
-; 860	Start Fade-Cross
-; 870	Start Scrolltext
-; 880	Enable Skip-Commands
-; 89n	Set Chessboars-Speed
-; 8a0	Trigger Morphing
+; 810	Start fade bars in
+; 820	Start fade image in (temple)
+; 830	Start fade chessboard in
+; 840	Start fade sprites in
+; 850	Start fade balls in
+; 860	Start cross fader
+; 870	Start scrolltext
+; 880	Enable skip fx commands
+; 89n	Set chessboars speed
+; 8a0	Trigger balls morphing
 
 
 ; Execution time 68020: 240 rasterlines
@@ -3299,7 +3299,8 @@ VERTB_server
 ; PT-Replay
 	IFEQ pt_music_fader_enabled
 		bsr.s	pt_music_fader
-		bra.s	pt_PlayMusic
+		bsr.s	pt_PlayMusic
+		rts
 
 		PT_FADE_OUT_VOLUME stop_fx_active
 		CNOP 0,4
@@ -3317,7 +3318,7 @@ pt_effects_handler
 	tst.w	pt_effects_handler_active(a3)
 	bne.s	pt_effects_handler_quit
 	move.b	n_cmdlo(a2),d0
-	lsr.b	#4,d0			; 80y
+	lsr.b	#4,d0			; x
 	tst.w	pt_skip_commands_enabled(a3)
 	beq.s	pt_effects_handler_skip1
 	cmp.b	#$1,d0

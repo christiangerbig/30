@@ -2373,7 +2373,7 @@ mvb_clear_playfield1_2
 	moveq	#5-1,d7			; number of runs
 mvb_clear_playfield1_2_loop
 	REPT ((extra_pf4_plane_width*extra_pf4_y_size*(extra_pf4_depth-1))/56)/5
-		movem.l d0-d6/a0-a6,-(a7) ; clear 56 bytes
+	movem.l d0-d6/a0-a6,-(a7) ; clear 56 bytes
 	ENDR
 	dbf	d7,mvb_clear_playfield1_2_loop
 	move.l	variables+save_a7(pc),a7
@@ -3422,12 +3422,12 @@ pf1_rgb8_color_table
 	CNOP 0,4
 vp2_pf1_rgb8_color_table
 	REPT vp2_visible_lines_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 	CNOP 0,4
 vp2_pf2_rgb8_color_table
 	REPT vp2_pf2_colors_number*2
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 ; Viewport 3
@@ -3435,14 +3435,14 @@ vp2_pf2_rgb8_color_table
 vp3_pf1_rgb8_color_table
 	DC.L color00_bits
 	REPT vp3_pf1_colors_number-1
-		DC.L $202020		; balls shadow color
+	DC.L $202020		; balls shadow color
 	ENDR
 
 
 	CNOP 0,4
 spr_rgb8_color_table
 	REPT spr_colors_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 	CNOP 0,4
@@ -3509,7 +3509,7 @@ bvm_rgb8_color_gradients
 	CNOP 0,4
 bvm_rgb8_color_table
 	REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 bvm_sprm_table
@@ -3676,13 +3676,13 @@ bfi_rgb8_color_table
 	CNOP 0,4
 bfo_rgb8_color_table
 	REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 	CNOP 0,4
 bf_rgb8_color_cache
 	REPT spr_colors_number*(bvm_bar_height/2)*bvm_bars_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 
@@ -3694,7 +3694,7 @@ ifi_rgb8_color_table
 	CNOP 0,4
 ifo_rgb8_color_table
 	REPT vp2_pf1_colors_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 
@@ -3702,13 +3702,13 @@ ifo_rgb8_color_table
 	CNOP 0,4
 cfi_rgb8_color_table
 	REPT vp3_visible_lines_number*2
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 	CNOP 0,4
 cfo_rgb8_color_table
 	REPT vp3_visible_lines_number*2
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 
@@ -3720,7 +3720,7 @@ sprfi_rgb8_color_table
 	CNOP 0,4
 sprfo_rgb8_color_table
 	REPT spr_colors_number
-		DC.L color00_bits
+	DC.L color00_bits
 	ENDR
 
 
@@ -3745,67 +3745,67 @@ cfc_rgb8_color_table
 ; Horiz-Scrolltext 
 hst_text
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "WE ARE CELEBRATING 30 YEARS OF DEMOS FUN AND SHARED ACHIEVEMENTS TOGETHER IN RESISTANCE"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "FROM THE VERY FIRST STEPS WE TOOK TOGETHER TO THE CHALLENGES WE'VE OVERCOME AND THE VICTORIES WE'VE CELEBRATED THIS JOURNEY HAS BEEN FUN!"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "WE HAVE ALL CONTRIBUTED TO MAKING THIS GROUP WHAT IT IS TODAY"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "IT'S NOT JUST THE ACCOMPLISHMENTS BUT THE MEMORIES THE FRIENDSHIPS AND THE SPIRIT OF COLLABORATION THAT HAVE SHAPED US INTO A GROUP OF STRENGTH AND SUPPORT"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "AS WE REFLECT ON THE DECADES TOGETHER LET'S TAKE PRIDE IN HOW FAR WE HAVE COME BUT ALSO LOOK FORWARD TO THE EXCITING POSSIBILITIES AHEAD"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "THE NEXT CHAPTER IS OURS TO WRITE AND WITH THE SAME PASSION AND DEDICATION THAT GOT US HERE THE BEST IS YET TO COME"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "THANK YOU ALL FOR BEING A PART OF THIS JOURNEY"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "SIGNED 4PLAY"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B "CODING BY DISSIDENT       GRAPHICS BY GRASS       MUSIC BY MA2E"
 
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 
 	DC.B FALSE
 hst_stop_text
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
-		DC.B " "
+	DC.B " "
 	ENDR
 	DC.B ASCII_CTRL_S," "
 	EVEN

@@ -598,20 +598,20 @@ ifo_rgb8_fader_center		EQU ifo_rgb8_fader_speed_max+1
 ifo_rgb8_fader_angle_speed	EQU 3
 
 ; Chessboard-Fader 
-cf_rgb8_color_table_offset	EQU 0
-cf_rgb8_colors_number		EQU vp3_visible_lines_number*2
+cbf_rgb8_color_table_offset	EQU 0
+cbf_rgb8_colors_number		EQU vp3_visible_lines_number*2
 
 ; Chessboard-Fader-In 
-cfi_rgb8_fader_speed_max	EQU 10
-cfi_rgb8_fader_radius		EQU cfi_rgb8_fader_speed_max
-cfi_rgb8_fader_center		EQU cfi_rgb8_fader_speed_max+1
-cfi_rgb8_fader_angle_speed	EQU 6
+cbfi_rgb8_fader_speed_max	EQU 10
+cbfi_rgb8_fader_radius		EQU cbfi_rgb8_fader_speed_max
+cbfi_rgb8_fader_center		EQU cbfi_rgb8_fader_speed_max+1
+cbfi_rgb8_fader_angle_speed	EQU 6
 
 ; Chessboard-Fader-Out 
-cfo_rgb8_fader_speed_max	EQU 10
-cfo_rgb8_fader_radius		EQU cfo_rgb8_fader_speed_max
-cfo_rgb8_fader_center		EQU cfo_rgb8_fader_speed_max+1
-cfo_rgb8_fader_angle_speed	EQU 4
+cbfo_rgb8_fader_speed_max	EQU 10
+cbfo_rgb8_fader_radius		EQU cbfo_rgb8_fader_speed_max
+cbfo_rgb8_fader_center		EQU cbfo_rgb8_fader_speed_max+1
+cbfo_rgb8_fader_angle_speed	EQU 4
 
 ; Sprite-Fader 
 sprf_rgb8_start_color		EQU 1
@@ -1147,15 +1147,15 @@ ifo_rgb8_active			RS.W 1
 ifo_rgb8_fader_angle		RS.W 1
 
 ; Chessboard-Fader 
-cf_rgb8_colors_counter		RS.W 1
+cbf_rgb8_colors_counter		RS.W 1
 
 ; Chessboard-Fader-In 
-cfi_rgb8_active			RS.W 1
-cfi_rgb8_fader_angle		RS.W 1
+cbfi_rgb8_active		RS.W 1
+cbfi_rgb8_fader_angle		RS.W 1
 
 ; Chessboard-Fader-Out 
-cfo_rgb8_active			RS.W 1
-cfo_rgb8_fader_angle		RS.W 1
+cbfo_rgb8_active		RS.W 1
+cbfo_rgb8_fader_angle		RS.W 1
 
 ; Sprite-Fader 
 sprf_rgb8_colors_counter	RS.W 1
@@ -1281,15 +1281,15 @@ init_main_variables
 	move.w	d2,ifo_rgb8_fader_angle(a3) ; 90°
 
 ; Chessboard-Fader 
-	move.w	d0,cf_rgb8_colors_counter(a3)
+	move.w	d0,cbf_rgb8_colors_counter(a3)
 
 ; Chessboard-Fader-In 
-	move.w	d1,cfi_rgb8_active(a3)
-	move.w	d2,cfi_rgb8_fader_angle(a3) ; 90°
+	move.w	d1,cbfi_rgb8_active(a3)
+	move.w	d2,cbfi_rgb8_fader_angle(a3) ; 90°
 
 ; Chessboard-Fader-Out 
-	move.w	d1,cfo_rgb8_active(a3)
-	move.w	d2,cfo_rgb8_fader_angle(a3) ; 90°
+	move.w	d1,cbfo_rgb8_active(a3)
+	move.w	d2,cbfo_rgb8_fader_angle(a3) ; 90°
 
 ; Sprite-Fader 
 	move.w	d0,sprf_rgb8_colors_counter(a3)
@@ -1323,6 +1323,7 @@ init_main_variables
 	ELSE
 		move.w	d1,cfc_rgb8_active(a3)
 		move.w	d0,cfc_rgb8_colors_counter(a3)
+		move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
 		move.w	d1,cfc_rgb8_copy_colors_active(a3)
 	ENDC
 	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90°
@@ -1524,7 +1525,7 @@ cb_init_bitmap_table_loop2
 cb_init_color_tables
 	lea	cb_color_gradient1(pc),a0 ; source1
 	lea	cb_color_gradient2(pc),a1 ; source2
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; destination
+	lea	cbfi_rgb8_color_table+(cbf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a2 ; destination
 	moveq	#vp3_visible_lines_number-1,d7
 cb_init_color_tables_loop1
 	move.l	(a0)+,(a2)+
@@ -2205,20 +2206,44 @@ hst_stop_scrolltext
 	move.w	#FALSE,hst_active(a3)	; stop scrolltext
 	tst.w	quit_active(a3)		; quit intro ?
 	bne.s	hst_stop_scrolltext_quit
-	clr.w	pt_music_fader_active(a3)
-	clr.w	fbo_active(a3)
+	moveq	#TRUE,d0
+	moveq	#FALSE,d1
+	move.w	d0,pt_music_fader_active(a3)
+; Balls-Fader
+	move.w	d0,fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
-	clr.w	sprfo_rgb8_active(a3)
+; Sprites-Fader
+	tst.w	sprfi_rgb8_active(a3)	; fader still running ?
+	bne.s	hst_stop_scrolltext_skip1
+	move.w	d1,sprfi_rgb8_active(a3) ; force fader stop
+hst_stop_scrolltext_skip1
+	move.w	d0,sprfo_rgb8_active(a3)
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
-	clr.w	sprf_rgb8_copy_colors_active(a3)
-	clr.w	ifo_rgb8_active(a3)
+	move.w	d0,sprf_rgb8_copy_colors_active(a3)
+; Image-Fader
+	tst.w	ifi_rgb8_active(a3)	; fader still running ?
+	bne.s	hst_stop_scrolltext_skip2
+	move.w	d1,ifi_rgb8_active(a3)	; force fader stop
+hst_stop_scrolltext_skip2
+	move.w	d0,ifo_rgb8_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
-	clr.w	if_rgb8_copy_colors_active(a3)
-	clr.w	cfo_rgb8_active(a3)
-	clr.w	bfo_rgb8_active(a3)
+	move.w	d0,if_rgb8_copy_colors_active(a3)
+; Chessboard-Fader
+	tst.w	cbfi_rgb8_active(a3)	; fader still running ?
+	bne.s	hst_stop_scrolltext_skip3
+	move.w	d1,cbfi_rgb8_active(a3) ; force fader stop
+hst_stop_scrolltext_skip3
+	move.w	d0,cbfo_rgb8_active(a3)
+	move.w	#cbf_rgb8_colors_number*3,cbf_rgb8_colors_counter(a3)
+; Bar-Fader
+	tst.w	bfi_rgb8_active(a3)	; fader still running ?
+	bne.s	hst_stop_scrolltext_skip4
+	move.w	d1,bfi_rgb8_active(a3) ; force fader stop
+hst_stop_scrolltext_skip4
+	move.w	d0,bfo_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
-	clr.w	bf_rgb8_copy_colors_active(a3)
+	move.w	d0,bf_rgb8_copy_colors_active(a3)
 hst_stop_scrolltext_quit
 	moveq	#RETURN_OK,d0
 	rts
@@ -2900,36 +2925,36 @@ rgb8_image_fader_out_quit
 	CNOP 0,4
 rgb8_chessboard_fader_in
 	movem.l a4-a6,-(a7)
-	tst.w	cfi_rgb8_active(a3)
+	tst.w	cbfi_rgb8_active(a3)
 	bne.s	rgb8_chessboard_fader_in_quit
-	move.w	cfi_rgb8_fader_angle(a3),d2
+	move.w	cbfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfi_rgb8_fader_angle_speed,d0
+	ADDF.W	cbfi_rgb8_fader_angle_speed,d0
 	cmp.w	#sine_table_length/2,d0	; 180° ?
 	ble.s	rgb8_chessboard_fader_in_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_chessboard_fader_in_skip
-	move.w	d0,cfi_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB counter
+	move.w	d0,cbfi_rgb8_fader_angle(a3)
+	MOVEF.W cbf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
-	MULUF.L cfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L cbfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
-	ADDF.W	cfi_rgb8_fader_center,d0
+	ADDF.W	cbfi_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
-	lea	cfi_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
+	ADDF.L	em_rgb8_color_table+(cbf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
+	lea	cbfi_rgb8_color_table+(cbf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
 	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
 	move.l	d0,a4			; increase/decrease green
-	MOVEF.W cf_rgb8_colors_number-1,d7
+	MOVEF.W cbf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	move.w	d6,cf_rgb8_colors_counter(a3)
+	move.w	d6,cbf_rgb8_colors_counter(a3)
 	bne.s	rgb8_chessboard_fader_in_quit
-	move.w	#FALSE,cfi_rgb8_active(a3)
+	move.w	#FALSE,cbfi_rgb8_active(a3)
 rgb8_chessboard_fader_in_quit
 	movem.l (a7)+,a4-a6
 	rts
@@ -2938,36 +2963,36 @@ rgb8_chessboard_fader_in_quit
 	CNOP 0,4
 rgb8_chessboard_fader_out
 	movem.l a4-a6,-(a7)
-	tst.w	cfo_rgb8_active(a3)
+	tst.w	cbfo_rgb8_active(a3)
 	bne.s	rgb8_chessboard_fader_out_quit
-	move.w	cfo_rgb8_fader_angle(a3),d2
+	move.w	cbfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
-	ADDF.W	cfo_rgb8_fader_angle_speed,d0
+	ADDF.W	cbfo_rgb8_fader_angle_speed,d0
 	cmp.w	#sine_table_length/2,d0	; 180° ?
 	ble.s	rgb8_chessboard_fader_out_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_chessboard_fader_out_skip
-	move.w	d0,cfo_rgb8_fader_angle(a3)
-	MOVEF.W cf_rgb8_colors_number*3,d6 ; RGB counter
+	move.w	d0,cbfo_rgb8_fader_angle(a3)
+	MOVEF.W cbf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
-	MULUF.L cfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L cbfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
 	swap	d0
-	ADDF.W	cfo_rgb8_fader_center,d0
+	ADDF.W	cbfo_rgb8_fader_center,d0
 	move.l	extra_memory(a3),a0
-	ADDF.L	em_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
-	lea	cfo_rgb8_color_table+(cf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
+	ADDF.L	em_rgb8_color_table+(cbf_rgb8_color_table_offset*LONGWORD_SIZE),a0 ; colors buffer
+	lea	cbfo_rgb8_color_table+(cbf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
 	clr.w	d0
 	move.l	d0,a2			; increase/decrease red
 	lsr.l	#8,d0
 	move.l	d0,a4			; increase/decrease green
-	MOVEF.W cf_rgb8_colors_number-1,d7
+	MOVEF.W cbf_rgb8_colors_number-1,d7
 	bsr	if_rgb8_fader_loop
-	move.w	d6,cf_rgb8_colors_counter(a3)
+	move.w	d6,cbf_rgb8_colors_counter(a3)
 	bne.s	rgb8_chessboard_fader_out_quit
-	move.w	#FALSE,cfo_rgb8_active(a3)
+	move.w	#FALSE,cbfo_rgb8_active(a3)
 rgb8_chessboard_fader_out_quit
 	movem.l (a7)+,a4-a6
 	rts
@@ -3231,53 +3256,59 @@ mouse_handler
 	rts
 	CNOP 0,4
 mh_exit_demo
-	move.w	#FALSE,pt_effects_handler_active(a3)
+	moveq	#FALSE,d1
+	move.w	d1,pt_effects_handler_active(a3)
+	moveq	#TRUE,d0
 	tst.w	hst_active(a3)
 	bne.s	mh_exit_demo_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
 	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; end of text
-	clr.w	quit_active(a3)		; quit intro after text stop
+	move.w	d0,quit_active(a3)	; quit intro after text stop
 	bra	mh_exit_demo_quit
 	CNOP 0,4
 mh_exit_demo_skip1
-	clr.w	pt_music_fader_active(a3)
-	tst.w	fbi_active(a3)
+	move.w	d0,pt_music_fader_active(a3)
+; Balls-Fader
+	tst.w	fbi_active(a3)		; fader still running ?
 	bne.s	mh_exit_demo_skip2
-	move.w	#FALSE,fbi_active(a3)
+	move.w	d1,fbi_active(a3)	; force fader stop
 mh_exit_demo_skip2
 	tst.w	mvb_mask(a3)
 	beq.s	mh_exit_demo_skip3
-	clr.w	fbo_active(a3)
+	move.w	d0,fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
 mh_exit_demo_skip3
-	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
-	tst.w	sprfi_rgb8_active(a3)
+; Sprites-Fader
+	tst.w	sprfi_rgb8_active(a3)	; fader still running ?
 	bne.s	mh_exit_demo_skip4
-	move.w	#FALSE,sprfi_rgb8_active(a3)
+	move.w	d1,sprfi_rgb8_active(a3) ; force fader stop
 mh_exit_demo_skip4
-	moveq	#TRUE,d0
 	move.w	d0,sprfo_rgb8_active(a3)
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	move.w	d0,sprf_rgb8_copy_colors_active(a3)
-	tst.w	ifi_rgb8_active(a3)
+; Image-Fader
+	tst.w	ifi_rgb8_active(a3)	; fader still running ?
 	bne.s	mh_exit_demo_skip5
-	move.w	#FALSE,ifi_rgb8_active(a3)
+	move.w	d1,ifi_rgb8_active(a3)	; force fader stop
 mh_exit_demo_skip5
 	move.w	d0,ifo_rgb8_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	move.w	d0,if_rgb8_copy_colors_active(a3)
-	tst.w	cfi_rgb8_active(a3)
+; Chessboard-Fader
+	tst.w	cbfi_rgb8_active(a3)	; fader still running ?
 	bne.s	mh_exit_demo_skip6
-	move.w	#FALSE,cfi_rgb8_active(a3)
+	move.w	d1,cbfi_rgb8_active(a3)	; force fader stop
 mh_exit_demo_skip6
-	move.w	d0,cfo_rgb8_active(a3)
-	tst.w	bfi_rgb8_active(a3)
+	move.w	d0,cbfo_rgb8_active(a3)
+	move.w	#cbf_rgb8_colors_number*3,cbf_rgb8_colors_counter(a3)
+; Bar-Fader
+	tst.w	bfi_rgb8_active(a3)	; fader still running ?
 	bne.s	mh_exit_demo_skip7
-	move.w	#FALSE,bfi_rgb8_active(a3)
+	move.w	d1,bfi_rgb8_active(a3)	; force fader stop
 mh_exit_demo_skip7
 	move.w	d0,bfo_rgb8_active(a3)
-	move.w	d0,bf_rgb8_colors_counter(a3)
+	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	move.w	d0,bf_rgb8_copy_colors_active(a3)
 mh_exit_demo_quit
 	rts
@@ -3288,9 +3319,7 @@ mh_exit_demo_quit
 	IFEQ pt_ciatiming_enabled
 		CNOP 0,4
 ciab_ta_server
-	ENDC
-
-	IFNE pt_ciatiming_enabled
+	ELSE
 		CNOP 0,4
 VERTB_server
 	ENDC
@@ -3346,25 +3375,30 @@ pt_effects_handler_quit
 	rts
 	CNOP 0,4
 pt_start_fade_bars_in
-	clr.w	bfi_rgb8_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,bfi_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
-	clr.w	bf_rgb8_copy_colors_active(a3)
+	move.w	d0,bf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_image_fader_in
-	clr.w	ifi_rgb8_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,ifi_rgb8_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
-	clr.w	if_rgb8_copy_colors_active(a3)
+	move.w	d0,if_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_fade_chessboard_in
-	clr.w	cfi_rgb8_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,cbfi_rgb8_active(a3)
+	move.w	#cbf_rgb8_colors_number*3,cbf_rgb8_colors_counter(a3)
 	rts
 	CNOP 0,4
 pt_start_fade_sprites_in
-	clr.w	sprfi_rgb8_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,sprfi_rgb8_active(a3)
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
-	clr.w	sprf_rgb8_copy_colors_active(a3)
+	move.w	d0,sprf_rgb8_copy_colors_active(a3)
 	rts
 	CNOP 0,4
 pt_start_fade_balls_in
@@ -3700,13 +3734,13 @@ ifo_rgb8_color_table
 
 ; Chessboard-Fader
 	CNOP 0,4
-cfi_rgb8_color_table
+cbfi_rgb8_color_table
 	REPT vp3_visible_lines_number*2
 	DC.L color00_bits
 	ENDR
 
 	CNOP 0,4
-cfo_rgb8_color_table
+cbfo_rgb8_color_table
 	REPT vp3_visible_lines_number*2
 	DC.L color00_bits
 	ENDR

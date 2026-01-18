@@ -132,6 +132,7 @@
 
 
 PROTRACKER_VERSION_3		SET 1
+START_SECOND_COPPERLIST		SET 1
 
 
 	INCLUDE "macros.i"
@@ -1693,11 +1694,12 @@ init_second_copperlist
 	bsr	cl2_vp3_pf2_set_bitplane_pointers
 
 	bsr	copy_second_copperlist
+
 	bsr	swap_second_copperlist
-	bsr	set_second_copperlist
-
 	bsr	set_vp1_playfield1
-
+	bsr	set_vp2_playfield2
+	bsr	swap_second_copperlist
+	bsr	set_vp1_playfield1
 	bsr	set_vp2_playfield2
 	rts
 

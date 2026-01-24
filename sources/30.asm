@@ -254,8 +254,8 @@ spr_x_size1			EQU 0
 spr_x_size2			EQU 64
 spr_depth			EQU 2
 spr_colors_number		EQU 16
-spr_odd_color_table_select	EQU 2
-spr_even_color_table_select	EQU 2
+spr_odd_color_table_select	EQU 2	; COLOR32..COLOR47
+spr_even_color_table_select	EQU 2	; COLOR32..COLOR47
 spr_used_number			EQU 8
 
 	IFD PROTRACKER_VERSION_2 

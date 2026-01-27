@@ -1235,8 +1235,7 @@ init_main_variables
 	move.w	d0,hst_text_table_start(a3)
 	move.w	d0,hst_text_bltcon0_bits(a3)
 	move.w	d0,hst_char_toggle_image(a3)
-	moveq	#hst_horiz_scroll_speed1,d2
-	move.w	d2,hst_horiz_scroll_speed(a3)
+	move.w	#hst_horiz_scroll_speed1,hst_horiz_scroll_speed(a3)
 
 ; Morph-Vector-Balls
 	move.w	d0,mvb_rotation_x_angle(a3)
@@ -2159,7 +2158,7 @@ horiz_scrolltext_loop
 	sub.w	hst_horiz_scroll_speed(a3),d2
 	bpl.s	horiz_scrolltext_skip
 	move.l	a0,-(a7)
-	bsr.s		hst_get_new_char_image
+	bsr.s	hst_get_new_char_image
 	move.l	(a7)+,a0
 	move.l	d0,-LONGWORD_SIZE(a1)	; new character image
 	add.w	d5,d2			; restart x position
@@ -3254,65 +3253,63 @@ control_counters_quit
 	CNOP 0,4
 mouse_handler
 	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; LMB pressed ?
-	beq.s	mh_exit_demo
-	rts
-	CNOP 0,4
-mh_exit_demo
+	bne	mouse_handler_quit
 	moveq	#FALSE,d1
 	move.w	d1,pt_effects_handler_active(a3)
 	moveq	#TRUE,d0
 	tst.w	hst_active(a3)
-	bne.s	mh_exit_demo_skip1
+	bne.s	mouse_handler_skip1
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
-	move.w	#hst_stop_text-hst_text,hst_text_table_start(a3) ; end of text
+	move.w	#hst_text_stop-hst_text,hst_text_table_start(a3) ; end of text
 	move.w	d0,quit_active(a3)	; quit intro after text stop
-	bra	mh_exit_demo_quit
+	bra	mouse_handler_quit
 	CNOP 0,4
-mh_exit_demo_skip1
+mouse_handler_skip1
+; Music-Fader
 	move.w	d0,pt_music_fader_active(a3)
 ; Balls-Fader
 	tst.w	fbi_active(a3)		; fader still running ?
-	bne.s	mh_exit_demo_skip2
+	bne.s	mouse_handler_skip2
 	move.w	d1,fbi_active(a3)	; force fader stop
-mh_exit_demo_skip2
+mouse_handler_skip2
 	tst.w	mvb_mask(a3)
-	beq.s	mh_exit_demo_skip3
+	beq.s	mouse_handler_skip3
 	move.w	d0,fbo_active(a3)
 	move.w	#fbo_delay,fbo_delay_counter(a3)
 	move.w	#$8888,fb_mask(a3)
-mh_exit_demo_skip3
+mouse_handler_skip3
 ; Sprites-Fader
 	tst.w	sprfi_rgb8_active(a3)	; fader still running ?
-	bne.s	mh_exit_demo_skip4
+	bne.s	mouse_handler_skip4
 	move.w	d1,sprfi_rgb8_active(a3) ; force fader stop
-mh_exit_demo_skip4
+mouse_handler_skip4
 	move.w	d0,sprfo_rgb8_active(a3)
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	move.w	d0,sprf_rgb8_copy_colors_active(a3)
 ; Image-Fader
 	tst.w	ifi_rgb8_active(a3)	; fader still running ?
-	bne.s	mh_exit_demo_skip5
+	bne.s	mouse_handler_skip5
 	move.w	d1,ifi_rgb8_active(a3)	; force fader stop
-mh_exit_demo_skip5
+mouse_handler_skip5
 	move.w	d0,ifo_rgb8_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	move.w	d0,if_rgb8_copy_colors_active(a3)
 ; Chessboard-Fader
 	tst.w	cbfi_rgb8_active(a3)	; fader still running ?
-	bne.s	mh_exit_demo_skip6
+	bne.s	mouse_handler_skip6
 	move.w	d1,cbfi_rgb8_active(a3)	; force fader stop
-mh_exit_demo_skip6
+mouse_handler_skip6
 	move.w	d0,cbfo_rgb8_active(a3)
 	move.w	#cbf_rgb8_colors_number*3,cbf_rgb8_colors_counter(a3)
 ; Bar-Fader
 	tst.w	bfi_rgb8_active(a3)	; fader still running ?
-	bne.s	mh_exit_demo_skip7
+	bne.s	mouse_handler_skip7
 	move.w	d1,bfi_rgb8_active(a3)	; force fader stop
-mh_exit_demo_skip7
+mouse_handler_skip7
 	move.w	d0,bfo_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	move.w	d0,bf_rgb8_copy_colors_active(a3)
-mh_exit_demo_quit
+mouse_handler_quit
 	rts
 
 
@@ -3839,7 +3836,7 @@ hst_text
 	ENDR
 
 	DC.B FALSE
-hst_stop_text
+hst_text_stop
 	REPT (hst_text_chars_number/(hst_origin_char_x_size/hst_text_char_x_size))+1
 	DC.B " "
 	ENDR

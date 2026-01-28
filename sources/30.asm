@@ -3259,7 +3259,7 @@ mouse_handler
 	moveq	#TRUE,d0
 	tst.w	hst_active(a3)
 	bne.s	mouse_handler_skip1
-	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; scrolltext double speed
+	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3)
 	move.w	#hst_text_stop-hst_text,hst_text_table_start(a3) ; end of text
 	move.w	d0,quit_active(a3)	; quit intro after text stop
 	bra	mouse_handler_quit

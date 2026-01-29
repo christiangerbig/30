@@ -3236,16 +3236,17 @@ cfc_rgb8_copy_color_table_quit
 
 	CNOP 0,4
 control_counters
-	move.w	cfc_rgb8_fader_delay_counter(a3),d0
+	move.w	cfc_rgb8_fader_delay_counter(a3),d1
 	bmi.s	control_counters_quit
-	subq.w	#1,d0
+	subq.w	#1,d1
 	bpl.s	control_counters_skip
 	move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
-	clr.w	cfc_rgb8_copy_colors_active(a3)
-	clr.w	cfc_rgb8_active(a3)
+	moveq	#TRUE,d0
+	move.w	d0,cfc_rgb8_copy_colors_active(a3)
+	move.w	d0,cfc_rgb8_active(a3)
 	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90°
 control_counters_skip
-	move.w	d0,cfc_rgb8_fader_delay_counter(a3) 
+	move.w	d1,cfc_rgb8_fader_delay_counter(a3)
 control_counters_quit
 	rts
 
@@ -3259,7 +3260,7 @@ mouse_handler
 	moveq	#TRUE,d0
 	tst.w	hst_active(a3)
 	bne.s	mouse_handler_skip1
-	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3)
+	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; speed up scrolltext
 	move.w	#hst_text_stop-hst_text,hst_text_table_start(a3) ; end of text
 	move.w	d0,quit_active(a3)	; quit intro after text stop
 	bra	mouse_handler_quit

@@ -364,7 +364,6 @@ vp3_pf_pixel_per_datafetch	EQU 64	; 4x
 ; Playfield 1 
 extra_pf1_plane_width		EQU extra_pf1_x_size/8 ; double buffering
 extra_pf2_plane_width		EQU extra_pf2_x_size/8
-
 ; Viewport 2
 ; Playfield 1
 extra_pf3_plane_width		EQU extra_pf3_x_size/8
@@ -372,7 +371,6 @@ extra_pf3_plane_width		EQU extra_pf3_x_size/8
 extra_pf4_plane_width		EQU extra_pf4_x_size/8 ; tripple buffering
 extra_pf5_plane_width		EQU extra_pf5_x_size/8
 extra_pf6_plane_width		EQU extra_pf6_x_size/8
-
 ; Viewport 3
 ; Playfield 1 & 2
 extra_pf7_plane_width		EQU extra_pf7_x_size/8
@@ -382,12 +380,10 @@ extra_pf8_plane_width		EQU extra_pf8_x_size/8
 ; Viewport 1 
 vp1_data_fetch_width		EQU vp1_pixel_per_line/8
 vp1_pf1_plane_moduli		EQU (extra_pf1_plane_width*(extra_pf1_depth-1))+extra_pf1_plane_width-vp1_data_fetch_width
-
 ; Viewport 2
 vp2_data_fetch_width		EQU vp2_pixel_per_line/8
 vp2_pf1_plane_moduli		EQU (extra_pf3_plane_width*(extra_pf3_depth-1))+extra_pf3_plane_width-vp2_data_fetch_width
 vp2_pf2_plane_moduli		EQU (extra_pf4_plane_width*(extra_pf4_depth-1))+extra_pf4_plane_width-vp2_data_fetch_width
-
 ; Viewport 3
 vp3_data_fetch_width		EQU vp3_pixel_per_line/8
 vp3_pf1_plane_moduli		EQU vp3_data_fetch_width*8
@@ -451,11 +447,9 @@ vp3_color00_bits		EQU color00_bits
 ; Viewport 1 
 cl2_hstart1			EQU 0
 cl2_vstart1			EQU vp1_vstart
-
 ; Viewport 3
 cl2_hstart2			EQU 0
 cl2_vstart2			EQU vp3_vstart
-
 ; Copper-Interrupt
 cl2_hstart3			EQU 0
 cl2_vstart3			EQU beam_position&CL_Y_WRAPPING
@@ -724,7 +718,7 @@ cl2_ext1_DDFSTRT		RS.L 1
 cl2_ext1_DDFSTOP		RS.L 1
 cl2_ext1_BPLCON1		RS.L 1
 cl2_ext1_BPLCON2		RS.L 1
-cl2_ext1_BPLCON3_1		RS.L 1
+cl2_ext1_BPLCON3		RS.L 1
 cl2_ext1_BPL1MOD		RS.L 1
 cl2_ext1_BPL2MOD		RS.L 1
 cl2_ext1_BPLCON4		RS.L 1
@@ -764,7 +758,7 @@ cl2_ext3_DDFSTRT		RS.L 1
 cl2_ext3_DDFSTOP		RS.L 1
 cl2_ext3_BPLCON1		RS.L 1
 cl2_ext3_BPLCON2		RS.L 1
-cl2_ext3_BPLCON3_1		RS.L 1
+cl2_ext3_BPLCON3		RS.L 1
 cl2_ext3_BPL1MOD		RS.L 1
 cl2_ext3_BPL2MOD		RS.L 1
 cl2_ext3_BPLCON4		RS.L 1
@@ -791,7 +785,7 @@ cl2_ext4_DDFSTRT		RS.L 1
 cl2_ext4_DDFSTOP		RS.L 1
 cl2_ext4_BPLCON1		RS.L 1
 cl2_ext4_BPLCON2		RS.L 1
-cl2_ext4_BPLCON3_1		RS.L 1
+cl2_ext4_BPLCON3		RS.L 1
 cl2_ext4_BPL1MOD		RS.L 1
 cl2_ext4_BPL2MOD		RS.L 1
 cl2_ext4_BPLCON4		RS.L 1

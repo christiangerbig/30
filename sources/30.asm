@@ -828,17 +828,14 @@ cl2_begin			RS.B 0
 ; Viewport 1 
 cl2_extension1_entry		RS.B cl2_extension1_size
 cl2_extension2_entry		RS.B cl2_extension2_size*vp1_visible_lines_number
-
 ; Viewport 2
 cl2_extension3_entry		RS.B cl2_extension3_size
-
 ; Viewport 3
 cl2_extension4_entry		RS.B cl2_extension4_size
 cl2_extension5_entry		RS.B cl2_extension5_size*vp3_visible_lines_number
-
 ; Copper-Interrupt
-cl1_WAIT			RS.L 1
-cl1_INTREQ			RS.L 1
+cl2_WAIT			RS.L 1
+cl2_INTREQ			RS.L 1
 
 cl2_end				RS.L 1
 
@@ -1073,6 +1070,15 @@ extra_memory_size		RS.B 0
 
 save_a7				RS.L 1
 
+; Viewport 1 
+vp1_pf1_construction2		RS.L 1
+vp1_pf1_display			RS.L 1
+
+; Viewport 2 
+vp2_pf2_construction1		RS.L 1
+vp2_pf2_construction2		RS.L 1
+vp2_pf2_display			RS.L 1
+
 ; PT-Replay 
 	IFD PROTRACKER_VERSION_2 
 		INCLUDE "music-tracker/pt2-variables.i"
@@ -1084,22 +1090,12 @@ save_a7				RS.L 1
 pt_effects_handler_active	RS.W 1
 pt_skip_commands_enabled	RS.W 1
 
-; Viewport 1 
-	RS_ALIGN_LONGWORD
-vp1_pf1_construction2		RS.L 1
-vp1_pf1_display			RS.L 1
-
-; Viewport 2 
-vp2_pf2_construction1		RS.L 1
-vp2_pf2_construction2		RS.L 1
-vp2_pf2_display			RS.L 1
-
 ; Horiz-Scrolltext 
 hst_active			RS.W 1
 	RS_ALIGN_LONGWORD
 hst_image			RS.L 1
 hst_text_table_start		RS.W 1
-hst_text_BLTCON0_bits		RS.W 1
+hst_text_softscroll		RS.W 1
 hst_char_toggle_image		RS.W 1
 hst_horiz_scroll_speed		RS.W 1
 
@@ -1227,7 +1223,7 @@ init_main_variables
 	lea	hst_image_data,a0
 	move.l	a0,hst_image(a3)
 	move.w	d0,hst_text_table_start(a3)
-	move.w	d0,hst_text_bltcon0_bits(a3)
+	move.w	d0,hst_text_softscroll(a3)
 	move.w	d0,hst_char_toggle_image(a3)
 	move.w	#hst_horiz_scroll_speed1,hst_horiz_scroll_speed(a3)
 
@@ -2178,9 +2174,7 @@ horiz_scrolltext_init
 hst_get_text_softscroll
 	moveq	#hst_text_char_x_size-1,d0
 	and.w	(a0),d0			; x
-	ror.w	#4,d0			; adjust shift bits
-	or.w	#BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC,d0 ; minterm D = A
-	move.w	d0,hst_text_bltcon0_bits(a3) 
+	move.w	d0,hst_text_softscroll(a3)
 	rts
 
 
@@ -2251,8 +2245,15 @@ hst_horiz_scroll
 	move.l	vp1_pf1_construction2(a3),a0
 	move.l	(a0),a0
 	ADDF.W	(hst_text_x_position/8)+(hst_text_y_position*extra_pf1_plane_width*vp1_pf1_depth),a0
+	moveq	#0,d0
+	move.w	hst_text_softscroll(a3),d0
+	ror.w	#4,d0			; adjust shift bits
+	or.w	#BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC,d0 ; minterm D = A
+	swap	d0
 	WAITBLIT
-	move.w	hst_text_bltcon0_bits(a3),BLTCON0-DMACONR(a6)
+	move.l	d0,BLTCON0-DMACONR(a6)
+	moveq	#-1,d0
+	move.l	d0,BLTAFWM-DMACONR(a6)	; no mask
 	move.l	a0,BLTAPT-DMACONR(a6)	; source
 	addq.w	#WORD_SIZE,a0		; skip 16 pixel
 	move.l	a0,BLTDPT-DMACONR(a6)	; destination

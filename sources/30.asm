@@ -1685,11 +1685,11 @@ init_second_copperlist
 	bsr	copy_second_copperlist
 
 	bsr	swap_second_copperlist
-	bsr	set_vp1_playfield1
-	bsr	set_vp2_playfield2
+	bsr	vp1_pf1_set_playfield
+	bsr	vp2_pf2_set_playfield
 	bsr	swap_second_copperlist
-	bsr	set_vp1_playfield1
-	bsr	set_vp2_playfield2
+	bsr	vp1_pf1_set_playfield
+	bsr	vp2_pf2_set_playfield
 	rts
 
 
@@ -2004,11 +2004,11 @@ beam_routines
 	bsr	wait_copint
 	bsr	swap_second_copperlist
 	bsr	set_second_copperlist
-	bsr	swap_vp1_playfield1
-	bsr	set_vp1_playfield1
-	bsr	swap_vp2_playfield2
-	bsr	set_vp2_playfield2
-	bsr	set_vp3_playfield1
+	bsr	vp1_pf1_swap_playfields
+	bsr	vp1_pf1_set_playfield
+	bsr	vp2_pf2_swap_playfields
+	bsr	vp2_pf2_set_playfield
+	bsr	vp3_pf1_set_playfield
 	bsr	horiz_scrolltext
 	bsr	hst_horiz_scroll
 	bsr	mvb_clear_playfield1_2
@@ -2053,67 +2053,55 @@ beam_routines
 	SET_COPPERLIST cl2
 
 
-	CNOP 0,4
-swap_vp1_playfield1
-	move.l	vp1_pf1_construction2(a3),a0
-	move.l	vp1_pf1_display(a3),vp1_pf1_construction2(a3)
-	move.l	a0,vp1_pf1_display(a3)
-	rts
+	SWAP_PLAYFIELD_BUFFERS vp1_pf1,2
 
 
 	CNOP 0,4
-set_vp1_playfield1
+vp1_pf1_set_playfield
 	MOVEF.L (vp1_pf1_plane_x_offset/8)+(vp1_pf1_plane_y_offset*extra_pf1_plane_width*vp1_pf1_depth),d1
 	move.l	cl2_display(a3),a0
 	ADDF.W	cl2_extension1_entry+cl2_ext1_BPL1PTH+WORD_SIZE,a0
 	move.l	vp1_pf1_display(a3),a1
 	moveq	#vp1_pf1_depth-1,d7
-set_vp1_playfield1_loop
+vp1_pf1_set_playfield_loop
 	move.l	(a1)+,d0
 	add.l	d1,d0
 	move.w	d0,LONGWORD_SIZE(a0)	; BPLxPTL
 	swap	d0
 	move.w	d0,(a0)			; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
-	dbf	d7,set_vp1_playfield1_loop
+	dbf	d7,vp1_pf1_set_playfield_loop
 	rts
 
 
-	CNOP 0,4
-swap_vp2_playfield2
-	move.l	vp2_pf2_construction1(a3),a0
-	move.l	vp2_pf2_construction2(a3),a1
-	move.l	vp2_pf2_display(a3),vp2_pf2_construction1(a3)
-	move.l	a0,vp2_pf2_construction2(a3)
-	move.l	a1,vp2_pf2_display(a3)
-	rts
+	SWAP_PLAYFIELD_BUFFERS vp2_pf2,3
 
 
 	CNOP 0,4
-set_vp2_playfield2
+vp2_pf2_set_playfield
 	move.l	cl2_display(a3),a0
 	ADDF.W	cl2_extension3_entry+cl2_ext3_BPL2PTH+WORD_SIZE,a0
 	move.l	vp2_pf2_display(a3),a1
 	moveq	#vp2_pf2_depth-1,d7
-set_vp2_playfield2_loop
+vp2_pf2_set_playfield_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
 	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; BPLxPTL
-	dbf	d7,set_vp2_playfield2_loop
+	dbf	d7,vp2_pf2_set_playfield_loop
 	rts
 
 
 	CNOP 0,4
-set_vp3_playfield1
+vp3_pf1_set_playfield
 	move.l	cl2_display(a3),a0
 	ADDF.W	cl2_extension4_entry+cl2_ext4_BPL1PTH+WORD_SIZE,a0
 	move.l	vp2_pf2_display(a3),a1
 	moveq	#vp3_pf1_depth-1,d7
-set_vp3_playfield1_loop
+vp3_pf1_set_playfield_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	ADDF.W	QUADWORD_SIZE*2,a0
 	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
-	dbf	d7,set_vp3_playfield1_loop
+	dbf	d7,vp3_pf1_set_playfield_loop
 	rts
 
 

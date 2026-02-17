@@ -4,6 +4,9 @@
 ; 3.0+
 
 
+; Code optimized for O.M.A. 2.0 Assembler
+
+
 ; History / Changes
 
 ; V.1.0 beta
@@ -69,7 +72,7 @@
 
 ; V.1.1
 ; - "Y" and "'" centered in font
-; - all colortables optimized
+; - all colorpalettes optimized
 
 ; V.1.2
 ; - with Lunix' updated icon
@@ -1360,8 +1363,8 @@ init_main
 
 	bsr	init_CIA_timers
 
-	bsr	init_first_copperlist
-	bsr	init_second_copperlist
+	bsr	cl1_init_copperlist
+	bsr	cl2_init_copperlist
 	rts
 
 
@@ -1564,7 +1567,7 @@ init_CIA_timers
 
 
 	CNOP 0,4
-init_first_copperlist
+cl1_init_copperlist
 	move.l	cl1_display(a3),a0
 	bsr.s	cl1_init_playfield_props
 	bsr.s	cl1_init_sprite_pointers
@@ -1653,7 +1656,7 @@ cl1_vp2_pf1_set_bitplane_pointers_loop
 
 
 	CNOP 0,4
-init_second_copperlist
+cl2_init_copperlist
 	move.l	cl2_construction2(a3),a0
 ; Viewport 1
 	bsr	cl2_vp1_init_playfield_props
@@ -3494,11 +3497,11 @@ sine_table
 ; Horiz-Scrolltext 
 	CNOP 0,4
 hst_fill_gradient
-	INCLUDE "30:colortables/24-Colorgradient.ct"
+	INCLUDE "30:colorpalettes/24-Colorgradient.ct"
 
 	CNOP 0,4
 hst_outline_gradient
-	INCLUDE "30:colortables/26-Colorgradient.ct"
+	INCLUDE "30:colorpalettes/26-Colorgradient.ct"
 
 hst_ascii
 	DC.B "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?-'():\/#+<>",ASCII_CTRL_O," "
@@ -3521,7 +3524,7 @@ hst_chars_image_pointers
 ; Bounce-VU-Meter 
 	CNOP 0,4
 bvm_rgb8_color_gradients
-	INCLUDE "30:colortables/4x3-Colorgradient.ct"
+	INCLUDE "30:colorpalettes/4x3-Colorgradient.ct"
 
 	CNOP 0,4
 bvm_rgb8_color_table
@@ -3666,11 +3669,11 @@ mvb_morph_shapes_table
 ; Chessboard
 	CNOP 0,4
 cb_color_gradient1
-	INCLUDE "30:colortables/48-ColorgradientA.ct"
+	INCLUDE "30:colorpalettes/48-ColorgradientA.ct"
 
 	CNOP 0,4
 cb_color_gradient2
-	INCLUDE "30:colortables/48-ColorgradientB.ct"
+	INCLUDE "30:colorpalettes/48-ColorgradientB.ct"
 
 	CNOP 0,2
 cb_fill_pattern
@@ -3706,7 +3709,7 @@ bf_rgb8_color_cache
 ; Image-Fader
 	CNOP 0,4
 ifi_rgb8_color_table
-	INCLUDE "30:colortables/320x182x16-Temple.ct"m
+	INCLUDE "30:colorpalettes/320x182x16-Temple.ct"m
 
 	CNOP 0,4
 ifo_rgb8_color_table
@@ -3732,7 +3735,7 @@ cbfo_rgb8_color_table
 ; Sprite-Fader
 	CNOP 0,4
 sprfi_rgb8_color_table
-	INCLUDE "30:colortables/256x208x16-Desert-Sunset.ct"
+	INCLUDE "30:colorpalettes/256x208x16-Desert-Sunset.ct"
 
 	CNOP 0,4
 sprfo_rgb8_color_table
@@ -3744,10 +3747,10 @@ sprfo_rgb8_color_table
 ; Color-Fader-Cross
 	CNOP 0,4
 cfc_rgb8_color_table
-	INCLUDE "30:colortables/4x16x11x8-BallsDarkBlue.ct"
-	INCLUDE "30:colortables/4x16x11x8-BallsGreen.ct"
-	INCLUDE "30:colortables/4x16x11x8-BallsOrange.ct"
-	INCLUDE "30:colortables/4x16x11x8-BallsLightBlue.ct"
+	INCLUDE "30:colorpalettes/4x16x11x8-BallsDarkBlue.ct"
+	INCLUDE "30:colorpalettes/4x16x11x8-BallsGreen.ct"
+	INCLUDE "30:colorpalettes/4x16x11x8-BallsOrange.ct"
+	INCLUDE "30:colorpalettes/4x16x11x8-BallsLightBlue.ct"
 
 
 	INCLUDE "sys-variables.i"

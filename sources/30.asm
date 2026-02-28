@@ -710,7 +710,7 @@ cl1_extension1_entry		RS.B cl1_extension1_size
 
 cl1_COPJMP2			RS.L 1
 
-copperlist1_size		RS.B 0
+cl1_copperlist_size		RS.B 0
 
 
 	RSRESET
@@ -842,16 +842,16 @@ cl2_INTREQ			RS.L 1
 
 cl2_end				RS.L 1
 
-copperlist2_size		RS.B 0
+cl2_copperlist_size		RS.B 0
 
 
 cl1_size1			EQU 0
 cl1_size2			EQU 0
-cl1_size3			EQU copperlist1_size
+cl1_size3			EQU cl1_copperlist_size
 
 cl2_size1			EQU 0
-cl2_size2			EQU copperlist2_size
-cl2_size3			EQU copperlist2_size
+cl2_size2			EQU cl2_copperlist_size
+cl2_size3			EQU cl2_copperlist_size
 
 
 ; Sprite0 additional structure 
@@ -1572,18 +1572,16 @@ cl1_init_copperlist
 	bsr.s	cl1_init_playfield_props
 	bsr.s	cl1_init_sprite_pointers
 	bsr	cl1_init_colors
-	bsr	cl1_vp2_init_bitplane_pointers
+	bsr	cl1_vp2_init_plane_pointers
 	COP_MOVEQ 0,COPJMP2
 	bsr	cl1_set_sprite_pointers
-	bsr	cl1_vp2_pf1_set_bitplane_pointers
-	rts
 
+	bsr	cl1_vp2_pf1_set_plane_pointers
+	rts
 
 	COP_INIT_PLAYFIELD_REGISTERS cl1,NOBITPLANESSPR
 
-
 	COP_INIT_SPRITE_POINTERS cl1
-
 
 	CNOP 0,4
 cl1_init_colors
@@ -1625,9 +1623,8 @@ cl1_init_colors
 	COP_INIT_COLOR_LOW COLOR00,16
 	rts
 
-
 	CNOP 0,4
-cl1_vp2_init_bitplane_pointers
+cl1_vp2_init_plane_pointers
 	COP_MOVEQ 0,BPL3PTH
 	COP_MOVEQ 0,BPL3PTL
 	COP_MOVEQ 0,BPL5PTH
@@ -1636,22 +1633,20 @@ cl1_vp2_init_bitplane_pointers
 	COP_MOVEQ 0,BPL7PTL
 	rts
 
-
 	COP_SET_SPRITE_POINTERS cl1,display,spr_number
 
-
 	CNOP 0,4
-cl1_vp2_pf1_set_bitplane_pointers
+cl1_vp2_pf1_set_plane_pointers
 	move.l	cl1_display(a3),a0
 	ADDF.L	cl1_extension1_entry+cl1_ext1_BPL3PTH+WORD_SIZE,a0
 	move.l	extra_pf3(a3),a1
 	addq.w	#LONGWORD_SIZE,a1	; bitplane 2
 	moveq	#(vp2_pf1_depth-1)-1,d7
-cl1_vp2_pf1_set_bitplane_pointers_loop
+cl1_vp2_pf1_set_plane_pointers_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
 	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE)(a0) ; BPLxPTL
-	dbf	d7,cl1_vp2_pf1_set_bitplane_pointers_loop
+	dbf	d7,cl1_vp2_pf1_set_plane_pointers_loop
 	rts
 
 
@@ -1660,37 +1655,35 @@ cl2_init_copperlist
 	move.l	cl2_construction2(a3),a0
 ; Viewport 1
 	bsr	cl2_vp1_init_playfield_props
-	bsr	cl2_vp1_init_bitplane_pointers
+	bsr	cl2_vp1_init_plane_pointers
 	bsr	cl2_vp1_init_start_display
 	bsr	cl2_vp1_init_color_gradient
 ; Viewport 2
 	bsr	cl2_vp2_init_start_display
 	bsr	cl2_vp2_init_playfield_props
-	bsr	cl2_vp2_init_bitplane_pointers
+	bsr	cl2_vp2_init_plane_pointers
 ; Viewport 3
 	bsr	cl2_vp3_init_start_display
 	bsr	cl2_vp3_init_playfield_props
-	bsr	cl2_vp3_init_bitplane_pointers
+	bsr	cl2_vp3_init_plane_pointers
 	bsr	cl2_vp3_init_color_gradient
 ; Copper-Interrupt
 	bsr	cl2_init_copper_interrupt
 	COP_LISTEND
 ; Viewport 1
-	bsr	cl2_vp1_pf1_set_bitplane_pointers
+	bsr	cl2_vp1_pf1_set_plane_pointers
 	bsr	cl2_vp1_set_fill_gradient
 	bsr	cl2_vp1_set_outline_gradient
 ; Viewport 2
-	bsr	cl2_vp2_pf1_set_bitplane_pointers
+	bsr	cl2_vp2_pf1_set_plane_pointers
 ; Viewport 3
-	bsr	cl2_vp3_pf1_set_bitplane_pointers
-	bsr	cl2_vp3_pf2_set_bitplane_pointers
+	bsr	cl2_vp3_pf1_set_plane_pointers
+	bsr	cl2_vp3_pf2_set_plane_pointers
+	bsr	cl2_copy_copperlist
 
-	bsr	copy_second_copperlist
-
-	bsr	swap_second_copperlist
 	bsr	vp1_pf1_set_playfield
 	bsr	vp2_pf2_set_playfield
-	bsr	swap_second_copperlist
+	bsr	cl2_swap_copperlist
 	bsr	vp1_pf1_set_playfield
 	bsr	vp2_pf2_set_playfield
 	rts
@@ -1700,14 +1693,14 @@ cl2_init_copperlist
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp1
 
 	CNOP 0,4
-cl2_vp1_init_bitplane_pointers
+cl2_vp1_init_plane_pointers
 	move.w #BPL1PTH,d0
 	moveq	#(vp1_pf1_depth*2)-1,d7
-cl2_vp1_init_bitplane_pointers_loop
+cl2_vp1_init_plane_pointers_loop
 	move.w	d0,(a0)			; BPLxPTH/L
 	addq.w	#WORD_SIZE,d0		; next register
 	addq.w	#LONGWORD_SIZE,a0	; next bitplane pointer in cl
-	dbf	d7,cl2_vp1_init_bitplane_pointers_loop
+	dbf	d7,cl2_vp1_init_plane_pointers_loop
 	rts
 
 	CNOP 0,4
@@ -1751,7 +1744,7 @@ cl2_vp2_init_start_display
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp2
 
 	CNOP 0,4
-cl2_vp2_init_bitplane_pointers
+cl2_vp2_init_plane_pointers
 	COP_MOVEQ 0,BPL1PTH
 	COP_MOVEQ 0,BPL1PTL
 	COP_MOVEQ 0,BPL2PTH
@@ -1773,7 +1766,7 @@ cl2_vp3_init_start_display
 	COP_INIT_PLAYFIELD_REGISTERS cl2,,vp3
 
 	CNOP 0,4
-cl2_vp3_init_bitplane_pointers
+cl2_vp3_init_plane_pointers
 	COP_MOVEQ 0,BPL1PTH
 	COP_MOVEQ 0,BPL1PTL
 	COP_MOVEQ 0,BPL2PTH
@@ -1823,16 +1816,16 @@ cl2_vp3_init_color_gradient_skip
 
 ; Viewport 1 
 	CNOP 0,4
-cl2_vp1_pf1_set_bitplane_pointers
+cl2_vp1_pf1_set_plane_pointers
 	move.l	cl2_display(a3),a0 
 	ADDF.W	cl2_extension1_entry+cl2_ext1_BPL1PTH+WORD_SIZE,a0
 	move.l	vp1_pf1_display(a3),a1
 	moveq	#vp1_pf1_depth-1,d7
-cl2_vp1_pf1_set_bitplane_pointers_loop
+cl2_vp1_pf1_set_plane_pointers_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
 	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; BPLxPTL
-	dbf	d7,cl2_vp1_pf1_set_bitplane_pointers_loop
+	dbf	d7,cl2_vp1_pf1_set_plane_pointers_loop
 	rts
 
 	CNOP 0,4
@@ -1877,44 +1870,44 @@ cl2_vp1_set_outline_gradient_loop
 
 ; Viewport 2 
 	CNOP 0,4
-cl2_vp2_pf1_set_bitplane_pointers
+cl2_vp2_pf1_set_plane_pointers
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension3_entry+cl2_ext3_BPL1PTH+WORD_SIZE,a0
 	move.l	extra_pf3(a3),a1
 	moveq	#(vp2_pf1_depth-3)-1,d7
-cl2_vp2_pf1_set_bitplane_pointers_loop
+cl2_vp2_pf1_set_plane_pointers_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	addq.w	#QUADWORD_SIZE,a0
 	move.w	(a1)+,LONGWORD_SIZE-QUADWORD_SIZE(a0) ; BPLxPTL
-	dbf	d7,cl2_vp2_pf1_set_bitplane_pointers_loop
+	dbf	d7,cl2_vp2_pf1_set_plane_pointers_loop
 	rts
 
 
 ; Viewport 3 
 	CNOP 0,4
-cl2_vp3_pf1_set_bitplane_pointers
+cl2_vp3_pf1_set_plane_pointers
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension4_entry+cl2_ext4_BPL1PTH+WORD_SIZE,a0
 	move.l	extra_pf4(a3),a1
 	moveq	#vp3_pf1_depth-1,d7
-cl2_vp3_pf1_set_bitplane_pointers_loop
+cl2_vp3_pf1_set_plane_pointers_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	ADDF.W	QUADWORD_SIZE*2,a0
 	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
-	dbf	d7,cl2_vp3_pf1_set_bitplane_pointers_loop
+	dbf	d7,cl2_vp3_pf1_set_plane_pointers_loop
 	rts
 
 	CNOP 0,4
-cl2_vp3_pf2_set_bitplane_pointers
+cl2_vp3_pf2_set_plane_pointers
 	move.l	cl2_construction2(a3),a0
 	ADDF.L	cl2_extension4_entry+cl2_ext4_BPL2PTH+WORD_SIZE,a0
 	move.l	extra_pf8(a3),a1
 	moveq	#vp3_pf2_depth-1,d7
-cl2_vp3_pf2_set_bitplane_pointers_loop
+cl2_vp3_pf2_set_plane_pointers_loop
 	move.w	(a1)+,(a0)		; BPLxPTH
 	ADDF.W	QUADWORD_SIZE*2,a0
 	move.w	(a1)+,LONGWORD_SIZE-(QUADWORD_SIZE*2)(a0) ; BPLxPTL
-	dbf	d7,cl2_vp3_pf2_set_bitplane_pointers_loop
+	dbf	d7,cl2_vp3_pf2_set_plane_pointers_loop
 	rts
 
 
@@ -2005,18 +1998,18 @@ cb_scale_image_skip4
 	CNOP 0,4
 beam_routines
 	bsr	wait_copint
-	bsr	swap_second_copperlist
-	bsr	set_second_copperlist
-	bsr	vp1_pf1_swap_playfields
+	bsr	cl2_swap_copperlist
+	bsr	cl2_set_copperlist
+	bsr	vp1_pf1_swap_playfield
 	bsr	vp1_pf1_set_playfield
-	bsr	vp2_pf2_swap_playfields
+	bsr	vp2_pf2_swap_playfield
 	bsr	vp2_pf2_set_playfield
 	bsr	vp3_pf1_set_playfield
 	bsr	horiz_scrolltext
 	bsr	hst_horiz_scroll
 	bsr	mvb_clear_playfield1_2
 	bsr	bvm_get_channels_amplitudes
-	bsr	bvm_clear_second_copperlist
+	bsr	bvm_cl2_clear_copperlist
 	bsr	bvm_set_bars
 	bsr	fade_balls_in
 	bsr	fade_balls_out
@@ -2156,7 +2149,7 @@ horiz_scrolltext_init
 	WAITBLIT
 	move.l	#(BC0F_SRCA|BC0F_DEST|ANBNC|ANBC|ABNC|ABC)<<16,BLTCON0-DMACONR(a6) ; minterm D = A
 	moveq	#-1,d0
-	move.l	d0,BLTAFWM-DMACONR(a6)
+	move.l	d0,BLTAFWM-DMACONR(a6)	; no mask
 	move.l	#((hst_image_plane_width-hst_text_char_width)<<16)|(extra_pf1_plane_width-hst_text_char_width),BLTAMOD-DMACONR(a6) ; A&D-moduli
 	rts
 
@@ -2180,6 +2173,7 @@ hst_get_text_softscroll
 hst_check_control_codes
 	cmp.b	#ASCII_CTRL_S,d0
 	beq.s	hst_stop_scrolltext
+hst_check_control_codes_quit
 	rts
 	CNOP 0,4
 hst_stop_scrolltext
@@ -2226,7 +2220,7 @@ hst_stop_scrolltext_skip4
 	move.w	d0,bf_rgb8_copy_colors_active(a3)
 hst_stop_scrolltext_quit
 	moveq	#RETURN_OK,d0
-	rts
+	bra	hst_check_control_codes_quit
 
 
 	CNOP 0,4
@@ -2298,16 +2292,16 @@ bvm_get_channel_amplitude_quit
 
 
 	CNOP 0,4
-bvm_clear_second_copperlist
+bvm_cl2_clear_copperlist
 	MOVEF.W vp1_bplcon4_bits&FALSE_BYTE,d0
 	move.l	cl2_construction2(a3),a0
 	ADDF.W	cl2_extension2_entry+cl2_ext2_BPLCON4+WORD_SIZE+BYTE_SIZE,a0
 	move.w	#cl2_extension2_size,a1
 	moveq	#vp1_visible_lines_number-1,d7
-bvm_clear_second_copperlist_loop
+bvm_cl2_clear_copperlist_loop
 	move.b	d0,(a0)			; BPLCON4 low
 	add.l	a1,a0			; next rasterline in cl
-	dbf	d7,bvm_clear_second_copperlist_loop
+	dbf	d7,bvm_cl2_clear_copperlist_loop
 	rts
 
 
@@ -3240,7 +3234,7 @@ control_counters_quit
 	CNOP 0,4
 mouse_handler
 	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; LMB pressed ?
-	bne	mouse_handler_quit
+	bne.s	mouse_handler_quit
 	moveq	#FALSE,d1
 	move.w	d1,pt_effects_handler_active(a3)
 	moveq	#TRUE,d0
@@ -3249,7 +3243,8 @@ mouse_handler
 	move.w	#hst_horiz_scroll_speed2,hst_horiz_scroll_speed(a3) ; speed up scrolltext
 	move.w	#hst_text_stop-hst_text,hst_text_table_start(a3) ; end of text
 	move.w	d0,quit_active(a3)	; quit intro after text stop
-	bra	mouse_handler_quit
+mouse_handler_quit
+	rts
 	CNOP 0,4
 mouse_handler_skip1
 ; Music-Fader
@@ -3296,8 +3291,7 @@ mouse_handler_skip7
 	move.w	d0,bfo_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	move.w	d0,bf_rgb8_copy_colors_active(a3)
-mouse_handler_quit
-	rts
+	bra	mouse_handler_quit
 
 
 	INCLUDE "int-autovectors-handlers.i"
@@ -3365,62 +3359,65 @@ pt_start_fade_bars_in
 	move.w	d0,bfi_rgb8_active(a3)
 	move.w	#bf_rgb8_colors_number*3,bf_rgb8_colors_counter(a3)
 	move.w	d0,bf_rgb8_copy_colors_active(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_image_fader_in
 	moveq	#TRUE,d0
 	move.w	d0,ifi_rgb8_active(a3)
 	move.w	#if_rgb8_colors_number*3,if_rgb8_colors_counter(a3)
 	move.w	d0,if_rgb8_copy_colors_active(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_fade_chessboard_in
 	moveq	#TRUE,d0
 	move.w	d0,cbfi_rgb8_active(a3)
 	move.w	#cbf_rgb8_colors_number*3,cbf_rgb8_colors_counter(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_fade_sprites_in
 	moveq	#TRUE,d0
 	move.w	d0,sprfi_rgb8_active(a3)
 	move.w	#sprf_rgb8_colors_number*3,sprf_rgb8_colors_counter(a3)
 	move.w	d0,sprf_rgb8_copy_colors_active(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_fade_balls_in
 	clr.w	fbi_active(a3)
 	move.w	#fbi_delay,fbi_delay_counter(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_colors_fader_scross
 	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_delay_counter(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_scrolltext
 	clr.w	hst_active(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_enable_skip_commands
 	clr.w	pt_skip_commands_enabled(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_set_stripes_y_angle_speed
 	moveq	#NIBBLE_MASK_LOW,d0
 	and.b	n_cmdlo(a2),d0
 	move.w	d0,cb_stripes_y_angle_speed(a3)
-	rts
+	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_trigger_morphing
 	clr.w	mvb_morph_active(a3)
-	rts
+	bra	pt_effects_handler_quit
+
 
 	CNOP 0,4
 ciab_tb_interrupt_server
 	PT_TIMER_INTERRUPT_SERVER
 
+
 	CNOP 0,4
 exter_interrupt_server
 	rts
+
 
 	CNOP 0,4
 nmi_interrupt_server

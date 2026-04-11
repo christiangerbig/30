@@ -2270,9 +2270,10 @@ bvm_get_channels_amplitudes
 ; Input
 ; d2.w	Max amplitude
 ; d3.w	Y angle 90°
-; a0.l	Pointer temporary audio channel structure
-; a1.l	Pointer audio channel info structure
+; a0.l	Pointer structure temporary audio channel
+; a1.l	Pointer structure audio channel info
 ; Result
+; no return value
 	CNOP 0,4
 bvm_get_channel_amplitude
 	tst.b	n_notetrigger(a0)	; new note played ?

@@ -1579,7 +1579,7 @@ cl1_init_copperlist
 	bsr	cl1_vp2_pf1_set_plane_pointers
 	rts
 
-	COP_INIT_PLAYFIELD_REGISTERS cl1,NOBITPLANESSPR
+	COP_INIT_PLAYFIELD_REGISTERS cl1
 
 	COP_INIT_SPRITE_POINTERS cl1
 
@@ -3313,7 +3313,9 @@ vertb_interrupt_server
 		rts
 
 		PT_FADE_OUT_VOLUME stop_fx_active
-		CNOP 0,4
+	ELSE
+		bsr.s	pt_PlayMusic
+		rts
 	ENDC
 
 	IFD PROTRACKER_VERSION_2 

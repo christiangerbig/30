@@ -1173,16 +1173,16 @@ fb_mask				RS.W 1
 
 ; Fade-Balls-In 
 fbi_active			RS.W 1
-fbi_delay_counter		RS.W 1
+fbi_counter		RS.W 1
 
 ; Fade-Balls-Out 
 fbo_active			RS.W 1
-fbo_delay_counter		RS.W 1
+fbo_counter		RS.W 1
 
 ; Colors-Fader-Cross 
 cfc_rgb8_active			RS.W 1
 cfc_rgb8_fader_angle		RS.W 1
-cfc_rgb8_fader_delay_counter	RS.W 1
+cfc_rgb8_fader_counter	RS.W 1
 cfc_rgb8_color_table_start	RS.W 1
 cfc_rgb8_colors_counter		RS.W 1
 cfc_rgb8_copy_colors_active	RS.W 1
@@ -1307,11 +1307,11 @@ init_main_variables
 
 ; Fade-Balls-In 
 	move.w	d1,fbi_active(a3)
-	move.w	d1,fbi_delay_counter(a3)
+	move.w	d1,fbi_counter(a3)
 
 ; Fade-Balls-Out 
 	move.w	d1,fbo_active(a3)
-	move.w	d1,fbo_delay_counter(a3)
+	move.w	d1,fbo_counter(a3)
 
 ; Colors-Fader-Cross 
 	IFEQ cfc_rgb8_prefade_enabled
@@ -1325,7 +1325,7 @@ init_main_variables
 		move.w	d1,cfc_rgb8_copy_colors_active(a3)
 	ENDC
 	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90°
-	move.w	d1,cfc_rgb8_fader_delay_counter(a3)
+	move.w	d1,cfc_rgb8_fader_counter(a3)
 	move.w	d0,cfc_rgb8_color_table_start(a3)
 
 ; Main 
@@ -2181,7 +2181,7 @@ hst_stop_scrolltext
 	move.w	d0,pt_music_fader_active(a3)
 ; Balls-Fader
 	move.w	d0,fbo_active(a3)
-	move.w	#fbo_delay,fbo_delay_counter(a3)
+	move.w	#fbo_delay,fbo_counter(a3)
 	move.w	#$8888,fb_mask(a3)
 ; Sprites-Fader
 	tst.w	sprfi_rgb8_active(a3)	; fader still running ?
@@ -3057,14 +3057,14 @@ rgb8_sprite_fader_out_quit
 fade_balls_in
 	tst.w	fbi_active(a3)
 	bne.s	fade_balls_in_quit
-	subq.w	#1,fbi_delay_counter(a3)
+	subq.w	#1,fbi_counter(a3)
 	bne.s	fade_balls_in_quit
-	move.w	#fbi_delay,fbi_delay_counter(a3)
+	move.w	#fbi_delay,fbi_counter(a3)
 	move.w	mvb_mask(a3),d0 	; current mask
 	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
 	move.w	d0,mvb_mask(a3)
-	cmp.w	#-1,d0			; mask end ?
+	cmp.w	#-1,d0			; final mask ?
 	bne.s	fade_balls_in_skip
 	move.w	#FALSE,fbi_active(a3)
 	bra.s	fade_balls_in_quit
@@ -3080,13 +3080,13 @@ fade_balls_in_quit
 fade_balls_out
 	tst.w	fbo_active(a3)
 	bne.s	fade_balls_out_quit
-	subq.w	#1,fbo_delay_counter(a3)
+	subq.w	#1,fbo_counter(a3)
 	bne.s	fade_balls_out_quit
-	move.w	#fbo_delay,fbo_delay_counter(a3)
+	move.w	#fbo_delay,fbo_counter(a3)
 	move.w	mvb_mask(a3),d0 	; current mask
 	move.w	fb_mask(a3),d1		; 2nd mask
 	eor.w	d1,d0			; merge masks
-	move.w	d0,mvb_mask(a3) 	; mask end ?
+	move.w	d0,mvb_mask(a3) 	; final mask ?
 	bne.s	fade_balls_out_skip
 	move.w	#FALSE,fbo_active(a3)
 	bra.s	fade_balls_out_quit
@@ -3199,7 +3199,7 @@ cfc_rgb8_copy_color_table_skip
 	tst.w	cfc_rgb8_colors_counter(a3) ; fading finished ?
 	bne.s	cfc_rgb8_copy_color_table_quit
 	move.w	#FALSE,cfc_rgb8_copy_colors_active(a3)
-	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_delay_counter(a3)
+	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_counter(a3)
 	move.w	cfc_rgb8_color_table_start(a3),d0
 	addq.w	#1,d0			; next color table
 	and.w	#cfc_rgb8_color_tables_number-1,d0 ; remove overflow
@@ -3213,7 +3213,7 @@ cfc_rgb8_copy_color_table_quit
 
 	CNOP 0,4
 control_counters
-	move.w	cfc_rgb8_fader_delay_counter(a3),d1
+	move.w	cfc_rgb8_fader_counter(a3),d1
 	bmi.s	control_counters_quit
 	subq.w	#1,d1
 	bpl.s	control_counters_skip
@@ -3223,7 +3223,7 @@ control_counters
 	move.w	d0,cfc_rgb8_active(a3)
 	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90°
 control_counters_skip
-	move.w	d1,cfc_rgb8_fader_delay_counter(a3)
+	move.w	d1,cfc_rgb8_fader_counter(a3)
 control_counters_quit
 	rts
 
@@ -3254,7 +3254,7 @@ mouse_handler_skip2
 	tst.w	mvb_mask(a3)
 	beq.s	mouse_handler_skip3
 	move.w	d0,fbo_active(a3)
-	move.w	#fbo_delay,fbo_delay_counter(a3)
+	move.w	#fbo_delay,fbo_counter(a3)
 	move.w	#$8888,fb_mask(a3)
 mouse_handler_skip3
 ; Sprites-Fader
@@ -3382,11 +3382,11 @@ pt_start_fade_sprites_in
 	CNOP 0,4
 pt_start_fade_balls_in
 	clr.w	fbi_active(a3)
-	move.w	#fbi_delay,fbi_delay_counter(a3)
+	move.w	#fbi_delay,fbi_counter(a3)
 	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_colors_fader_scross
-	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_delay_counter(a3)
+	move.w	#cfc_rgb8_fader_delay,cfc_rgb8_fader_counter(a3)
 	bra.s	pt_effects_handler_quit
 	CNOP 0,4
 pt_start_scrolltext
@@ -3529,10 +3529,10 @@ bvm_rgb8_color_table
 	ENDR
 
 bvm_sprm_table
-	DC.B $33,$44,$55,$55,$44,$33	; bar1
-	DC.B $66,$77,$88,$88,$77,$66	; bar2
-	DC.B $99,$aa,$bb,$bb,$aa,$99	; bar3
-	DC.B $cc,$dd,$ee,$ee,$dd,$cc	; bar4
+	DC.B $33,$44,$55,$55,$44,$33	; bar 1
+	DC.B $66,$77,$88,$88,$77,$66	; bar 2
+	DC.B $99,$aa,$bb,$bb,$aa,$99	; bar 3
+	DC.B $cc,$dd,$ee,$ee,$dd,$cc	; bar 4
 
 	CNOP 0,2
 bvm_audio_channel1_info

@@ -280,13 +280,13 @@ ciab_crb_bits			EQU CIACRBF_LOAD|CIACRBF_RUNMODE ; oneshot mode
 ciaa_ta_time			EQU 0
 ciaa_tb_time			EQU 0
 	IFEQ pt_ciatiming_enabled
-ciab_ta_time			EQU 14187 ; = 0.709379 MHz * [20000 µs = 50 Hz duration for one frame on a PAL machine]
-; ciab_ta_time			EQU 14318 ; = 0.715909 MHz * [20000 µs = 50 Hz duration for one frame on a NTSC machine]
+ciab_ta_time			EQU 14187 ; = 0.709379 MHz * [20000 ï¿½s = 50 Hz duration for one frame on a PAL machine]
+; ciab_ta_time			EQU 14318 ; = 0.715909 MHz * [20000 ï¿½s = 50 Hz duration for one frame on a NTSC machine]
 	ELSE
 ciab_ta_time			EQU 0
 	ENDC
-ciab_tb_time			EQU 362	; = 0.709379 MHz * [511.43 µs = Lowest note period C1 with Tuning=-8 * 2 / PAL clock constant = 907*2/3546895 ticks per second]
-					; = 0.715909 MHz * [506.76 µs = Lowest note period C1 with Tuning=-8 * 2 / NTSC clock constant = 907*2/3579545 ticks per second]
+ciab_tb_time			EQU 362	; = 0.709379 MHz * [511.43 ï¿½s = Lowest note period C1 with Tuning=-8 * 2 / PAL clock constant = 907*2/3546895 ticks per second]
+					; = 0.715909 MHz * [506.76 ï¿½s = Lowest note period C1 with Tuning=-8 * 2 / NTSC clock constant = 907*2/3579545 ticks per second]
 ciaa_ta_continuous_enabled	EQU FALSE
 ciaa_tb_continuous_enabled	EQU FALSE
 	IFEQ pt_ciatiming_enabled
@@ -1260,11 +1260,11 @@ init_main_variables
 ; Bar-Fader-In 
 	move.w	d1,bfi_rgb8_active(a3)
 	MOVEF.W sine_table_length/4,d2
-	move.w	d2,bfi_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,bfi_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Bar-Fader-Out 
 	move.w	d1,bfo_rgb8_active(a3)
-	move.w	d2,bfo_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,bfo_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Image-Fader 
 	move.w	d0,if_rgb8_colors_counter(a3)
@@ -1272,22 +1272,22 @@ init_main_variables
 
 ; Image-Fader-In 
 	move.w	d1,ifi_rgb8_active(a3)
-	move.w	d2,ifi_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,ifi_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Image-Fader-Out 
 	move.w	d1,ifo_rgb8_active(a3)
-	move.w	d2,ifo_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,ifo_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Chessboard-Fader 
 	move.w	d0,cbf_rgb8_colors_counter(a3)
 
 ; Chessboard-Fader-In 
 	move.w	d1,cbfi_rgb8_active(a3)
-	move.w	d2,cbfi_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,cbfi_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Chessboard-Fader-Out 
 	move.w	d1,cbfo_rgb8_active(a3)
-	move.w	d2,cbfo_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,cbfo_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Sprite-Fader 
 	move.w	d0,sprf_rgb8_colors_counter(a3)
@@ -1296,11 +1296,11 @@ init_main_variables
 ; Sprite-Fader-In 
 	move.w	d1,sprfi_rgb8_active(a3)
 	MOVEF.W sine_table_length/4,d2
-	move.w	d2,sprfi_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,sprfi_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Sprite-Fader-Out 
 	move.w	d1,sprfo_rgb8_active(a3)
-	move.w	d2,sprfo_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,sprfo_rgb8_fader_angle(a3) ; 90ï¿½
 
 ; Fade-Balls 
 	move.w	#$8888,fb_mask(a3)
@@ -1324,7 +1324,7 @@ init_main_variables
 		move.w	#cfc_rgb8_colors_number*3,cfc_rgb8_colors_counter(a3)
 		move.w	d1,cfc_rgb8_copy_colors_active(a3)
 	ENDC
-	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90°
+	move.w	d2,cfc_rgb8_fader_angle(a3) ; 90ï¿½
 	move.w	d1,cfc_rgb8_fader_counter(a3)
 	move.w	d0,cfc_rgb8_color_table_start(a3)
 
@@ -1397,7 +1397,7 @@ init_main
 	CNOP 0,4
 bvm_init_audio_channels_info
 	lea	bvm_audio_channel1_info(pc),a0
-	move.w	#sine_table_length/4,(a0)+ ; y angle 90° = max amplitude
+	move.w	#sine_table_length/4,(a0)+ ; y angle 90ï¿½ = max amplitude
 	moveq	#0,d1
 	move.w	d1,(a0)			; amplitude = 0
 	lea	bvm_audio_channel2_info(pc),a0
@@ -2265,7 +2265,7 @@ bvm_get_channels_amplitudes
 
 ; Input
 ; d2.w	Max amplitude
-; d3.w	Y angle 90°
+; d3.w	Y angle 90ï¿½
 ; a0.l	Pointer structure temporary audio channel
 ; a1.l	Pointer structure audio channel info
 ; Result
@@ -2305,7 +2305,7 @@ bvm_cl2_clear_copperlist_loop
 	CNOP 0,4
 bvm_set_bars
 	movem.l a3-a6,-(a7)
-	MOVEF.W (sine_table_length/2)-1,d5 ; overflow 180°
+	MOVEF.W (sine_table_length/2)-1,d5 ; overflow 180ï¿½
 	lea	sine_table(pc),a0	
 	lea	bvm_audio_channel1_info(pc),a1
 	lea	bvm_sprm_table(pc),a4
@@ -2321,7 +2321,7 @@ bvm_set_bars_loop1
 	muls.w	(a1)+,d0		; y'=(yr*sin(w))/2^15
 	MULUF.L 2,d0,d1
 	swap	d0
-	cmp.w	d5,d3			; 180° ?
+	cmp.w	d5,d3			; 180ï¿½ ?
 	ble.s	bvm_set_bars_skip
 	lsr.w	-WORD_SIZE(a1)		; amplitude/2
 bvm_set_bars_skip
@@ -2393,16 +2393,16 @@ mvb_rotation
 	move.w	WORD_SIZE(a2,d0.w*4),d4	; sin(a)
 	move.w	#sine_table_length/4,a4
 	IFEQ sine_table_length-512
-		MOVEF.W sine_table_length-1,d3 ; overflow 360°
+		MOVEF.W sine_table_length-1,d3 ; overflow 360ï¿½
 	ELSE
-		MOVEF.W sine_table_length,d3 ; overflow 360 °
+		MOVEF.W sine_table_length,d3 ; overflow 360 ï¿½
 	ENDC
-	add.w	a4,d0			; + 90°
+	add.w	a4,d0			; + 90ï¿½
 	swap	d4 			; high word:  sin(a)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360° ?
+		cmp.w	d3,d0		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip1
 		sub.w	d3,d0
 mvb_rotation_skip1
@@ -2412,7 +2412,7 @@ mvb_rotation_skip1
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360° ?
+		cmp.w	d3,d1		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip2
 		sub.w	d3,d1
 mvb_rotation_skip2
@@ -2421,12 +2421,12 @@ mvb_rotation_skip2
 	move.w	mvb_rotation_y_angle(a3),d1
 	move.w	d1,d0	
 	move.w	WORD_SIZE(a2,d0.w*4),d5	; sin(b)
-	add.w	a4,d0			; + 90°
+	add.w	a4,d0			; + 90ï¿½
 	swap	d5 			; high word: sin(b)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360° ?
+		cmp.w	d3,d0		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip3
 		sub.w	d3,d0		; restart
 mvb_rotation_skip3
@@ -2436,7 +2436,7 @@ mvb_rotation_skip3
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360° ?
+		cmp.w	d3,d1		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip4
 		sub.w	d3,d1		; restart
 mvb_rotation_skip4
@@ -2445,12 +2445,12 @@ mvb_rotation_skip4
 	move.w	mvb_rotation_z_angle(a3),d1
 	move.w	d1,d0	
 	move.w	WORD_SIZE(a2,d0.w*4),d6	; sin(c)
-	add.w	a4,d0			; + 90°
+	add.w	a4,d0			; + 90ï¿½
 	swap	d6 			; high word: sin(c)
 	IFEQ sine_table_length-512
 		and.w	d3,d0		; remove overflow
 	ELSE
-		cmp.w	d3,d0		; 360° ?
+		cmp.w	d3,d0		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip5
 		sub.w	d3,d0		; restart
 mvb_rotation_skip5
@@ -2460,7 +2460,7 @@ mvb_rotation_skip5
 	IFEQ sine_table_length-512
 		and.w	d3,d1		; remove overflow
 	ELSE
-		cmp.w	d3,d1		; 360° ?
+		cmp.w	d3,d1		; 360ï¿½ ?
 		blt.s	mvb_rotation_skip6
 		sub.w	d3,d1
 mvb_rotation_skip6
@@ -2671,7 +2671,7 @@ set_vector_balls_init
 cb_get_stripes_y_coordinates
 	move.w	cb_stripes_y_angle(a3),d2
 	move.w	d2,d0
-	MOVEF.W (sine_table_length/4)-1,d4 ; overflow 90°
+	MOVEF.W (sine_table_length/4)-1,d4 ; overflow 90ï¿½
 	sub.w	cb_stripes_y_angle_speed(a3),d0 ; next y angle
 	and.w	d4,d0			; remove overflow
 	move.w	d0,cb_stripes_y_angle(a3) 
@@ -2749,7 +2749,7 @@ rgb8_bar_fader_in
 	move.w	bfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	bfi_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_bar_fader_in_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_bar_fader_in_skip
@@ -2786,7 +2786,7 @@ rgb8_bar_fader_out
 	move.w	bfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	bfo_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_bar_fader_out_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_bar_fader_out_skip
@@ -2827,7 +2827,7 @@ rgb8_image_fader_in
 	move.w	ifi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	ifi_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0 ; 180° ?
+	cmp.w	#sine_table_length/2,d0 ; 180ï¿½ ?
 	ble.s	rgb8_image_fader_in_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_image_fader_in_skip
@@ -2865,7 +2865,7 @@ rgb8_image_fader_out
 	move.w	ifo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	ifo_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_image_fader_out_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_image_fader_out_skip
@@ -2908,7 +2908,7 @@ rgb8_chessboard_fader_in
 	move.w	cbfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	cbfi_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_chessboard_fader_in_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_chessboard_fader_in_skip
@@ -2946,7 +2946,7 @@ rgb8_chessboard_fader_out
 	move.w	cbfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	cbfo_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_chessboard_fader_out_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_chessboard_fader_out_skip
@@ -2984,9 +2984,9 @@ rgb8_sprite_fader_in
 	move.w	sprfi_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	sprfi_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_sprite_fader_in_skip
-	MOVEF.W sine_table_length/2,d0	; 180°
+	MOVEF.W sine_table_length/2,d0	; 180ï¿½
 rgb8_sprite_fader_in_skip
 	move.w	d0,sprfi_rgb8_fader_angle(a3) 
 	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
@@ -3021,9 +3021,9 @@ rgb8_sprite_fader_out
 	move.w	sprfo_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	sprfo_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_sprite_fader_out_skip
-	MOVEF.W sine_table_length/2,d0	; 180°
+	MOVEF.W sine_table_length/2,d0	; 180ï¿½
 rgb8_sprite_fader_out_skip
 	move.w	d0,sprfo_rgb8_fader_angle(a3) 
 	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
@@ -3106,7 +3106,7 @@ rgb8_colors_fader_cross
 	move.w	cfc_rgb8_fader_angle(a3),d2
 	move.w	d2,d0
 	ADDF.W	cfc_rgb8_fader_angle_speed,d0
-	cmp.w	#sine_table_length/2,d0	; 180° ?
+	cmp.w	#sine_table_length/2,d0	; 180ï¿½ ?
 	ble.s	rgb8_colors_fader_cross_skip
 	MOVEF.W sine_table_length/2,d0
 rgb8_colors_fader_cross_skip
@@ -3221,7 +3221,7 @@ control_counters
 	moveq	#TRUE,d0
 	move.w	d0,cfc_rgb8_copy_colors_active(a3)
 	move.w	d0,cfc_rgb8_active(a3)
-	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90°
+	move.w	#sine_table_length/4,cfc_rgb8_fader_angle(a3) ; 90ï¿½
 control_counters_skip
 	move.w	d1,cfc_rgb8_fader_counter(a3)
 control_counters_quit
@@ -3830,7 +3830,7 @@ hst_text_stop
 	DC.B "$VER: "
 	DC.B "RSE-30 1.3  "
 	DC.B "(18.4.25) "
-	DC.B "© 2025 by Resistance",0
+	DC.B "ï¿½ 2025 by Resistance",0
 	EVEN
 
 

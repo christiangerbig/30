@@ -1341,6 +1341,7 @@ init_main
 	bsr	pt_InitAudTempStrucs
 	bsr	pt_ExamineSongStruc
 	bsr	pt_InitFtuPeriodTableStarts
+	bsr	init_CIA_timers
 
 	bsr	hst_init_chars_offsets
 	bsr	hst_init_chars_x_positions
@@ -1366,8 +1367,6 @@ init_main
 
 	bsr	init_sprites
 
-	bsr	init_CIA_timers
-
 	bsr	cl1_init_copperlist
 	bsr	cl2_init_copperlist
 	rts
@@ -1391,6 +1390,14 @@ init_main
 	INIT_CHARS_X_POSITIONS hst,LORES
 
 	INIT_CHARS_IMAGES hst
+
+
+	CNOP 0,4
+init_CIA_timers
+
+; PT-Replay
+	PT_INIT_TIMERS
+	rts
 
 
 ; Bouncing-VU-Meter 
@@ -1561,14 +1568,6 @@ init_sprites
 
 
 	INIT_ATTACHED_SPRITES_CLUSTER bg1,spr_pointers_display,bg1_image_x_position,bg1_image_y_position,spr_x_size2,bg1_image_y_size,,,REPEAT
-
-
-	CNOP 0,4
-init_CIA_timers
-
-; PT-Replay
-	PT_INIT_TIMERS
-	rts
 
 
 	CNOP 0,4
@@ -2265,7 +2264,7 @@ bvm_get_channels_amplitudes
 
 ; Input
 ; d2.w	Max amplitude
-; d3.w	Y angle 90ï¿½
+; d3.w	Y angle 90°
 ; a0.l	Pointer structure temporary audio channel
 ; a1.l	Pointer structure audio channel info
 ; Result
@@ -2274,8 +2273,8 @@ bvm_get_channels_amplitudes
 bvm_get_channel_amplitude
 	tst.b	n_notetrigger(a0)	; new note played ?
 	bne.s	bvm_get_channel_amplitude_quit
-	move.w	n_currentvolume(a0),d0
 	move.b	#FALSE,n_notetrigger(a0)
+	move.w	n_currentvolume(a0),d0
 	MULUF.W bvm_max_amplitude,d0,d1
 	lsr.w	#6,d0
 	cmp.w	d2,d0			; amplitude <= max amplitude ?

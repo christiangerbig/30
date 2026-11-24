@@ -2318,7 +2318,7 @@ bvm_set_bars_loop1
 	move.w	WORD_SIZE(a0,d3.w*4),d0	; sin(w)
 	addq.w	#bvm_y_angle_speed,d3	; next y angle
 	muls.w	(a1)+,d0		; y'=(yr*sin(w))/2^15
-	MULUF.L 2,d0,d1
+	MULUF.L 2,d0
 	swap	d0
 	cmp.w	d5,d3			; 180� ?
 	ble.s	bvm_set_bars_skip
@@ -2327,7 +2327,7 @@ bvm_set_bars_skip
 	and.w	d5,d3			; remove overflow
 	move.w	d3,-LONGWORD_SIZE(a1)	
 	add.w	a3,d0			; y' + y center
-	MULUF.W cl2_extension2_size/LONGWORD_SIZE,d0,d1
+	MULUF.W cl2_extension2_size/LONGWORD_SIZE,d0
 	lea	(a5,d0.w*4),a2		; y offset in cl
 	moveq	#bvm_bar_height-1,d6
 bvm_set_bars_loop2
@@ -2483,10 +2483,10 @@ mvb_rotation_loop
 	move.w	d2,d3			; z
 	ext.l	d0
 	add.w	a4,d3			; z+d
-	MULUF.L mvb_rotation_d,d0,d7	; x projection
+	MULUF.L mvb_rotation_d,d0	; x projection
 	ext.l	d1
 	divs.w	d3,d0			; x'=(x*d)/(z+d)
-	MULUF.L mvb_rotation_d,d1,d7	; y projection
+	MULUF.L mvb_rotation_d,d1	; y projection
 	add.w	a5,d0			; x' + x center
 	move.w	d0,(a1)+		; x position
 	divs.w	d3,d1			; y'=(y*d)/(z+d)
@@ -2636,7 +2636,7 @@ set_vector_balls_skip3
 	move.l	d5,d6
 	add.w	d0,d1			; add y offset
 	add.l	a5,d5			; add image address
-	MULUF.L 2,d1,d2			; xy offset
+	MULUF.L 2,d1			; xy offset
 	swap	d0			; shift bits
 	add.l	d4,d1			; add playfield address
 	add.l	a7,d6			; add masks address
@@ -2834,7 +2834,7 @@ rgb8_image_fader_in_skip
 	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
-	MULUF.L ifi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L ifi_rgb8_fader_radius*2,d0 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifi_rgb8_fader_center,d0
 	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
@@ -2872,7 +2872,7 @@ rgb8_image_fader_out_skip
 	MOVEF.W if_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0	;sin(w)
-	MULUF.L ifo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L ifo_rgb8_fader_radius*2,d0 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	ifo_rgb8_fader_center,d0
 	lea	vp2_pf1_rgb8_color_table+(if_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
@@ -2991,7 +2991,7 @@ rgb8_sprite_fader_in_skip
 	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
-	MULUF.L sprfi_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L sprfi_rgb8_fader_radius*2,d0 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfi_rgb8_fader_center,d0
 	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
@@ -3028,7 +3028,7 @@ rgb8_sprite_fader_out_skip
 	MOVEF.W sprf_rgb8_colors_number*3,d6 ; RGB counter
 	lea	sine_table(pc),a0	
 	move.l	(a0,d2.w*4),d0		; sin(w)
-	MULUF.L sprfo_rgb8_fader_radius*2,d0,d1 ; y'=(yr*sin(w))/2^15
+	MULUF.L sprfo_rgb8_fader_radius*2,d0 ; y'=(yr*sin(w))/2^15
 	swap	d0
 	ADDF.W	sprfo_rgb8_fader_center,d0
 	lea	spr_rgb8_color_table+(sprf_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
@@ -3119,7 +3119,7 @@ rgb8_colors_fader_cross_skip
 	lea	vp2_pf2_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a0 ; colors buffer
 	lea	cfc_rgb8_color_table+(cfc_rgb8_color_table_offset*LONGWORD_SIZE)(pc),a1 ; destination colors
 	move.w	cfc_rgb8_color_table_start(a3),d1
-	MULUF.W LONGWORD_SIZE,d1	; *32
+	MULUF.W 4,d1
 	lea	(a1,d1.w*8),a1
 	move.w	d0,a5			; increase/decrease blue
 	swap	d0
